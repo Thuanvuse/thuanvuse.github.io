@@ -1,0 +1,64 @@
+h1+p{
+    background-color: brown;
+    border: rgb(26, 25, 25);
+    padding: 1em;
+    border-radius: 15px;
+}
+p[name="thuan333"]{
+    padding: 1em;
+    background-color: aqua;
+    border-radius: 5px;
+
+}
+p[name="v1"]{
+    font-family:'Comic Sans MS', cursive, sans-serif;
+    font-size: 2em;
+    color: burlywood;
+    text-align: center;
+}
+p#thuan0{
+    background-color: rgb(171, 125, 125);
+    border: rgb(26, 25, 25);
+    font-size: 1em;
+    padding: 1em;
+    text-align: center;
+    color: rgb(36, 29, 29);
+    border-radius: 10px;
+    
+}
+p#thuan1{
+    background-color: rgb(221, 10, 168);
+    border: rgb(174, 132, 132);
+    font-size: 1em;
+    padding: 1em;
+    text-align: center;
+    color: rgb(248, 248, 248);
+    border-radius: 10px;
+    
+}
+p#thuan2{
+    background-color: rgb(128, 136, 9);
+    border: rgb(0, 0, 0);
+    font-size: 1em;
+    padding: 1em;
+    text-align: center;
+    color: rgb(36, 29, 29);
+    border-radius: 15px;
+    
+}
+
+em#thuanvip{
+    background-color: aqua;
+}
+img{
+    width: 2%;
+    height: auto;
+}
+body {
+    background-image: url('https://scr.vn/wp-content/uploads/2020/07/%E1%BA%A2nh-si%C3%AAu-xe-Lamborghini-c%E1%BB%B1c-ng%E1%BA%A7u.jpg');
+    background-size: cover; /* hoặc sử dụng 'contain' nếu bạn muốn giữ tỷ lệ khung hình của ảnh */
+    background-position: center; /* Để căn giữa ảnh */
+    background-repeat: no-repeat; /* Không lặp lại ảnh nền */
+    height: 100vh; /* Đảm bảo chiều cao của body chiếm toàn bộ chiều cao của cửa sổ trình duyệt */
+    margin: 0; /* Bỏ margin để ảnh chiếm toàn bộ trang */
+}
