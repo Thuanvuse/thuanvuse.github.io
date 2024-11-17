@@ -1,0 +1,160 @@
+<div class="main-content">
+        <h2>Giới Thiệu Các Món Ăn</h2>
+        <div class="menu-items">
+            <!-- Món ăn 1 -->
+            <a href="order.html" class="menu-item">
+                <img src="anh/anh1.jpg" alt="Món 1" class="menu-img">
+                <div class="menu-details">
+                    <h3>Món 1</h3>
+                    <p>Giá: 150,000 VND</p>
+                    <input type="button" value="Đặt Ngay" class="Nutmua">
+                </div>
+            </a>
+            <!-- Món ăn 2 -->
+            <a href="order.html" class="menu-item">
+                <img src="anh/anh2.jpg" alt="Món 2" class="menu-img">
+                <div class="menu-details">
+                    <h3>Món 2</h3>
+                    <p>Giá: 200,000 VND</p>
+                    <input type="button" value="Đặt Ngay" class="Nutmua">
+
+                </div>
+            </a>
+            <!-- Món ăn 3 -->
+            <a href="order.html" class="menu-item">
+                <img src="anh/anh3.jpg" alt="Món 3" class="menu-img">
+                <div class="menu-details">
+                    <h3>Món 3</h3>
+                    <p>Giá: 180,000 VND</p>
+                    <input type="button" value="Đặt Ngay" class="Nutmua">
+
+                </div>
+            </a>
+            <!-- Món ăn 4 -->
+            <a href="order.html" class="menu-item">
+                <img src="anh/anh4.jpg" alt="Món 4" class="menu-img">
+                <div class="menu-details">
+                    <h3>Món 4</h3>
+                    <p>Giá: 250,000 VND</p>
+                    <input type="button" value="Đặt Ngay" class="Nutmua">
+
+                </div>
+            </a>
+            <!-- Món ăn 5 -->
+            <a href="order.html" class="menu-item">
+                <img src="anh/anh5.jpg" alt="Món 5" class="menu-img">
+                <div class="menu-details">
+                    <h3>Món 5</h3>
+                    <p>Giá: 300,000 VND</p>
+                    <input type="button" value="Đặt Ngay" class="Nutmua">
+                </div>
+            </a>
+        </div>
+    </div>
+
+
+
+
+
+    <div class="main-content">
+        <h2>Giới Thiệu Các Đồ Uống</h2>
+        <div class="menu-items">
+            
+            <a href="order.html" class="menu-item">
+                <img src="anh/nuoc1.jpg" alt="Món 1" class="menu-img">
+                <div class="menu-details">
+                    <h3>Món 1</h3>
+                    <p>Giá: 150,000 VND</p>
+                    <input type="button" value="Đặt Ngay" class="Nutmua">
+                </div>
+            </a>
+
+            <a href="order.html" class="menu-item">
+                <img src="anh/nuoc2.jpg" alt="Món 2" class="menu-img">
+                <div class="menu-details">
+                    <h3>Món 2</h3>
+                    <p>Giá: 200,000 VND</p>
+                    <input type="button" value="Đặt Ngay" class="Nutmua">
+
+                </div>
+            </a>
+
+            <a href="order.html" class="menu-item">
+                <img src="anh/nuoc3.jpg" alt="Món 3" class="menu-img">
+                <div class="menu-details">
+                    <h3>Món 3</h3>
+                    <p>Giá: 180,000 VND</p>
+                    <input type="button" value="Đặt Ngay" class="Nutmua">
+
+                </div>
+            </a>
+
+            <a href="order.html" class="menu-item">
+                <img src="anh/nuoc4.jpg" alt="Món 4" class="menu-img">
+                <div class="menu-details">
+                    <h3>Món 4</h3>
+                    <p>Giá: 250,000 VND</p>
+                    <input type="button" value="Đặt Ngay" class="Nutmua">
+
+                </div>
+            </a>
+
+            <a href="order.html" class="menu-item">
+                <img src="anh/nuoc5.jpg" alt="Món 5" class="menu-img">
+                <div class="menu-details">
+                    <h3>Món 5</h3>
+                    <p>Giá: 300,000 VND</p>
+                    <input type="button" value="Đặt Ngay" class="Nutmua">
+                </div>
+            </a>
+
+
+            <a href="order.html" class="menu-item">
+                <img src="anh/ngon1.jpg" alt="Món 1" class="menu-img">
+                <div class="menu-details">
+                    <h3>Món 1</h3>
+                    <p>Giá: 150,000 VND</p>
+                    <input type="button" value="Đặt Ngay" class="Nutmua">
+                </div>
+            </a>
+
+            <a href="order.html" class="menu-item">
+                <img src="anh/ngon2.jpg" alt="Món 2" class="menu-img">
+                <div class="menu-details">
+                    <h3>Món 2</h3>
+                    <p>Giá: 200,000 VND</p>
+                    <input type="button" value="Đặt Ngay" class="Nutmua">
+
+                </div>
+            </a>
+
+            <a href="order.html" class="menu-item">
+                <img src="anh/ngon3.jpg" alt="Món 3" class="menu-img">
+                <div class="menu-details">
+                    <h3>Món 3</h3>
+                    <p>Giá: 180,000 VND</p>
+                    <input type="button" value="Đặt Ngay" class="Nutmua">
+
+                </div>
+            </a>
+
+            <a href="order.html" class="menu-item">
+                <img src="anh/ngon4.jpg" alt="Món 4" class="menu-img">
+                <div class="menu-details">
+                    <h3>Món 4</h3>
+                    <p>Giá: 250,000 VND</p>
+                    <input type="button" value="Đặt Ngay" class="Nutmua">
+
+                </div>
+            </a>
+
+            <a href="order.html" class="menu-item">
+                <img src="anh/ngon5.jpg" alt="Món 5" class="menu-img">
+                <div class="menu-details">
+                    <h3>Món 5</h3>
+                    <p>Giá: 300,000 VND</p>
+                    <input type="button" value="Đặt Ngay" class="Nutmua">
+                </div>
+            </a>
+        </div>
+    </div>

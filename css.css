@@ -207,7 +207,7 @@ body {
 /* Phần logo */
 .logo {
     position: fixed; /* Đặt logo cố định */
-    top: 50px; /* Đặt khoảng cách từ trên */
+    top: 60px; /* Đặt khoảng cách từ trên */
     left: 20px; /* Đặt khoảng cách từ trái */
     z-index: 1000; /* Đảm bảo logo luôn hiển thị trên các phần khác */
 }
@@ -223,7 +223,7 @@ body {
 /* Responsive */
 @media screen and (max-width: 768px) {
     .logo {
-        top: 20px;
+        top: 50px;
         left: 10px;
     }
 
@@ -276,7 +276,7 @@ body {
 
 @media screen and (max-width: 480px) {
     .logo img {
-        width: 50px;
+        width: 60px;
         height: 50px;
     }
 
@@ -295,5 +295,364 @@ body {
 
     .footer {
         padding: 20px;
+    }
+}
+
+
+
+
+/* Phần khuyến mãi */
+.promotion {
+    background-color: #fff;
+    text-align: center;
+    padding: 40px 20px;
+    margin-top: 40px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.promotion h2 {
+    font-size: 1.8em;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.promotion p {
+    font-size: 1em;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.email-signup {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.email-signup input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 250px;
+}
+
+.email-signup button {
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.email-signup button:hover {
+    background-color: #c0392b;
+}
+
+/* Phần feedback */
+.feedback-section {
+    background-color: #f9f9f9;
+    text-align: center;
+    padding: 40px 20px;
+    margin-top: 40px;
+}
+
+.feedback-section h2 {
+    font-size: 1.8em;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.feedback-section p {
+    font-size: 1em;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.feedbacks {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.feedback {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    width: 300px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    transition: transform 0.3s;
+    
+}
+
+.feedback:hover {
+    transform: translateY(-5px);
+}
+
+.feedback img {
+    width: 80px; /* Điều chỉnh kích thước hình ảnh nhỏ lại, ở đây là 80px */
+    height: 80px; /* Đảm bảo giữ tỉ lệ khung hình bằng cách đặt chiều cao tương tự */
+    border-radius: 50%; /* Dùng 50% để làm hình ảnh có dạng hình tròn */
+    object-fit: cover; /* Đảm bảo hình ảnh phủ đều không gian, tránh bị méo */
+    margin-left: auto; /* Căn giữa hình ảnh theo chiều ngang */
+    margin-right: auto; /* Căn giữa hình ảnh theo chiều ngang */
+    display: block; /* Hiển thị kiểu khối để dễ căn giữa bằng margin */
+}
+
+
+.feedback h3 {
+    font-size: 1.1em;
+    color: #333;
+    margin-bottom: 5px;
+     display: flex;
+    justify-content: center; 
+}
+
+.feedback .dish-name {
+    font-size: 1em;
+    color: #e74c3c;
+   
+}
+
+.feedback .rating {
+    color: #ffcc00;
+    margin-bottom: 10px;
+}
+
+.feedback p {
+    font-size: 0.9em;
+    color: #555;
+}
+/* Reset các thuộc tính mặc định của trình duyệt */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Thiết lập phông chữ cơ bản */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    padding: 20px;
+    color: #333;
+}
+
+/* Container chính cho phần Góp Ý */
+.box-Feedback {
+    background-color: #fff;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto; /* Canh giữa */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 30px; /* Tạo khoảng cách từ phần tử phía trên */
+}
+
+/* Tiêu đề phần Góp Ý */
+.heading h2 {
+    text-align: center;
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Box chứa các input và textarea */
+.box-content {
+    padding: 10px;
+}
+
+/* Các hàng trong form */
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* Các cột (input và textarea) */
+.col {
+    flex: 1 1 48%; /* Đảm bảo các input chiếm 48% chiều rộng của container */
+}
+
+/* Cột full-width cho textarea và button */
+.full-width {
+    flex: 1 1 100%;
+}
+
+/* Input và textarea */
+.input, .textarea {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* Chỉnh sửa hiệu ứng khi focus vào input/textarea */
+.input:focus, .textarea:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Nút gửi */
+.btn-Feedback {
+    width: 100%;
+    padding: 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* Hiệu ứng hover cho nút gửi */
+.btn-Feedback:hover {
+    background-color: #0056b3;
+}
+/* Basic Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.news {
+    padding: 20px;
+}
+
+.news h2 {
+    text-align: center;
+    font-size: 2em;
+}
+
+.news-content {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.big-news, .small-news {
+    width: 48%;
+}
+
+.big-news img, .small-news img {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+}
+
+.info h3 {
+    font-size: 1.2em;
+    margin: 10px 0;
+}
+
+.info p {
+    color: #555;
+}
+
+.info a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.info a:hover {
+    text-decoration: underline;
+}
+
+.small-news .info {
+    font-size: 0.9em;
+}
+/* Box chứa các phần tử Utilities */
+.box-Utilities {
+    width: 100%;
+    padding: 30px 0;
+    background-color: #f4f4f4; /* Nền màu sáng */
+}
+
+/* Danh sách các item */
+.list {
+    display: flex; /* Sử dụng Flexbox để sắp xếp các item theo hàng */
+    justify-content: space-around; /* Căn đều các item, khoảng cách giữa các phần tử bằng nhau */
+    gap: 20px; /* Khoảng cách giữa các phần tử */
+    flex-wrap: wrap; /* Cho phép các phần tử gói lại khi không đủ không gian */
+}
+
+/* Mỗi item trong list */
+.item {
+    background-color: #fff; /* Nền trắng */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Đổ bóng nhẹ */
+    text-align: center; /* Căn giữa các nội dung */
+    flex: 1 1 30%; /* Các item chiếm 30% chiều rộng mỗi item, sẽ tự động điều chỉnh kích thước */
+    min-width: 250px; /* Đảm bảo mỗi item không nhỏ hơn 250px */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Thêm hiệu ứng khi hover */
+}
+
+/* Biểu tượng (hình ảnh) */
+.item img {
+    width: 60px; /* Kích thước nhỏ của hình ảnh */
+    height: 60px; /* Kích thước chiều cao của hình ảnh */
+    margin-bottom: 10px; /* Khoảng cách giữa hình ảnh và tiêu đề */
+    object-fit: contain; /* Đảm bảo hình ảnh không bị méo khi thay đổi kích thước */
+}
+
+/* Tiêu đề của mỗi item */
+.title {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 10px; /* Khoảng cách giữa tiêu đề và mô tả */
+}
+
+/* Mô tả phụ */
+.text-sub {
+    font-size: 14px;
+    color: #555; /* Màu chữ xám nhẹ */
+}
+
+/* Khi hover vào item, thay đổi màu nền và bóng đổ */
+.item:hover {
+    background-color: #007bff; /* Màu nền thay đổi khi hover */
+    color: #fff; /* Chữ trở nên màu trắng khi hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Đổ bóng đậm hơn khi hover */
+    transform: translateY(-5px); /* Tạo hiệu ứng nâng nhẹ lên khi hover */
+}
+/* Vị trí và kiểu dáng cho icon Facebook */
+.contact-fb {
+    position: fixed; /* Đặt icon ở vị trí cố định */
+    bottom: 20px; /* Cách đáy màn hình 20px */
+    right: 20px; /* Đặt icon ở góc dưới phải */
+    z-index: 1000; /* Đảm bảo icon ở trên tất cả các phần tử khác */
+    border-radius: 50%; /* Làm cho icon thành hình tròn */
+    padding: 10px; /* Khoảng cách bên trong để làm icon nổi bật */
+    background-color: #fff; /* Nền trắng cho icon */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Tạo bóng đổ nhẹ */
+    transition: all 0.3s ease; /* Thêm hiệu ứng khi hover */
+}
+
+/* Hiệu ứng khi di chuột vào icon */
+.contact-fb:hover {
+    transform: scale(1.1); /* Phóng to icon khi hover */
+}
+
+/* Kích thước của icon */
+.contact-fb img {
+    width: 40px; /* Kích thước của icon */
+    height: 40px; /* Kích thước của icon */
+    border-radius: 50%; /* Làm cho ảnh thành hình tròn */
+}
+
+/* Đảm bảo icon không bị dính vào góc màn hình khi nhỏ màn hình */
+@media screen and (max-width: 768px) {
+    .contact-fb {
+        bottom: 10px;
+        right: 10px;
     }
 }

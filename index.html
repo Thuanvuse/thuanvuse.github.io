@@ -50,170 +50,128 @@
         </ul>
     </div>
     <!-- Phần nội dung chính -->
-    <div class="main-content">
-        <h2>Giới Thiệu Các Món Ăn</h2>
-        <div class="menu-items">
-            <!-- Món ăn 1 -->
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh1.jpg" alt="Món 1" class="menu-img">
-                <div class="menu-details">
-                    <h3>Món 1</h3>
-                    <p>Giá: 150,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
+    
+    <!-- Phần đăng ký nhận ưu đãi -->
+        <div class="promotion">
+            <h2>ĐĂNG KÝ NHẬN ƯU ĐÃI</h2>
+            <p>Vui lòng nhập Email của bạn để nhận tin tức về những chương trình khuyến mại và ưu đãi mới nhất</p>
+            <form class="email-signup">
+                <input type="email" placeholder="Nhập địa chỉ Email" required>
+                <button type="submit">Đăng ký</button>
+            </form>
+        </div>
+         <!-- Phần Tin Tức - Ưu Đãi -->
+         <div class="news">
+            <h2>Tin Tức</h2>
+            <div class="news-content">
+                <!-- Tin chính lớn -->
+                <div class="big-news">
+                    <img src="./anh/tintuc.jpg" alt="Top 3 thực đơn tiệc khai trương">
+                    <div class="info">
+                        <h3>Top 3 thực đơn tiệc khai trương được yêu thích nhất tại Quán</h3>
+                        <p>Nguyễn Tiến Thuận -  Vừa Xong</p>
+                    </div>
                 </div>
-            </a>
-            <!-- Món ăn 2 -->
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh2.jpg" alt="Món 2" class="menu-img">
-                <div class="menu-details">
-                    <h3>Món 2</h3>
-                    <p>Giá: 200,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
+    
+                <!-- Tin nhỏ 1 -->
+                <div class="small-news">
+                    <img src="./anh/tintuc1.jpg" alt="">
+                    <div class="info">
+                        <h3>Tổng hợp 15 trò chơi tiệc tất niên văn minh, hấp dẫn, </h3>
+                        <p>Nguyễn Tiến Thuận -  Vừa Xong</p>
+                    </div>
+                </div>
+    
+                <!-- Tin nhỏ 2 -->
+         
+                 <div class="small-news">
+                    <img src="./anh/tintuc2.jpg" alt="">
+                    <div class="info">
+                        <h3>5 kiểu thực đơn tiệc tất niên công ty hiện đại (Báo giá), </h3>
+                        <p>Nguyễn Tiến Thuận -  Vừa Xong</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Phần feedback -->
+        
+        <div class="box-Feedback">
+            <div class="heading">
+                <h2>Góp Ý</h2>
+            </div>
+            <div class="box-content">
+                <form id="contact-form" class="frm-contact">
+                    <div class="form-row">
+                        <div class="col">
+                            <input name="name_contact" class="input inp" placeholder="Tên" type="text">
+                        </div>
+                        <div class="col">
+                            <input name="phone_contact" class="input inp" placeholder="Số điện thoại" type="text">
+                        </div>
+                        <div class="col">
+                            <input name="address_contact" class="input inp" placeholder="Địa chỉ" type="text">
+                        </div>
+                        <div class="col">
+                            <input name="email_contact" class="input inp" placeholder="Email" type="text">
+                        </div>
+                        <div class="col full-width">
+                            <textarea name="content_contact" class="textarea inp" placeholder="Nội dung"></textarea>
+                        </div>
+                        <div class="col full-width">
+                            <button type="submit" class="btn-Feedback">GỬI CHO CHÚNG TÔI</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
 
-                </div>
-            </a>
-            <!-- Món ăn 3 -->
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh3.jpg" alt="Món 3" class="menu-img">
-                <div class="menu-details">
-                    <h3>Món 3</h3>
-                    <p>Giá: 180,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
+        
 
+        <div class="feedback-section">
+            <h2>#FEEDBACK</h2>
+            <p>TỪ KHÁCH HÀNG</p>
+            <div class="feedbacks">
+                <div class="feedback">
+                    <img src="anh/thuan.jpg" alt="Cơm Chiên Hải Sản">
+                    <h3>Nguyễn Tiến Thuận</h3>
+                    <p class="dish-name">CƠM CHIÊN HẢI SẢN</p>
+                    <p class="rating">★★★★★</p>
+                    <p>Món cơm chiên hải sản được gói trong lớp trứng vàng đẹp mắt, cát ra thì thanh cua và trứng cua, tôm khá nhiều, cơm chiên từ gạo Basmati, hạt rời, ngon và dinh dưỡng.</p>
                 </div>
-            </a>
-            <!-- Món ăn 4 -->
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh4.jpg" alt="Món 4" class="menu-img">
-                <div class="menu-details">
-                    <h3>Món 4</h3>
-                    <p>Giá: 250,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
+                <div class="feedback">
+                    <img src="anh/linh.jpg" alt="Gỏi Bưởi Tôm Hoa Xuân">
+                    <h3>Trương Quốc Linh </h3>
+                    <p class="dish-name">GỎI BƯỞI TÔM HOA XUÂN</p>
+                    <p class="rating">★★★★★</p>
+                    <p>Món gỏi bưởi mang lại trải nghiệm rất ấn tượng bởi vị chua, ngọt của nhiều loại trái cây thêm chút thanh mát của thanh long đỏ. Nổi bật cùng vị ngọt tự nhiên của tôm tươi hoàn hảo khi ăn kèm bánh đa nướng.</p>
+                </div>
+            </div>
+        </div>
 
-                </div>
-            </a>
-            <!-- Món ăn 5 -->
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" alt="Món 5" class="menu-img">
-                <div class="menu-details">
-                    <h3>Món 5</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
+       
+        <div class="box-Utilities">
+    <div class="list">
+        <div class="item">
+            <img src="./anh/suport.png" alt="">
+            <h3 class="title">Hỗ trợ 12/7</h3>
+            <p class="text-sub">Đội ngũ TASTY Kitchen luôn có mặt<br> để hỗ trợ bất cứ khi nào bạn cần.</p>
+        </div>
+        <div class="item">
+            <img src="./anh/mobile-banking.png" alt="">
+            <h3 class="title">Thanh toán tiện dụng</h3>
+            <p class="text-sub">Chúng tôi hỗ trợ thanh toán online <br> qua Ví điện tử tiện dụng.</p>
+        </div>
+        <div class="item">
+            <img src="./anh/fast.png" alt="">
+            <h3 class="title">Giao hàng nhanh chóng</h3>
+            <p class="text-sub">Bạn sẽ vẫn cảm nhận được sự nóng<br> hổi của món ăn khi nhận hàng.</p>
         </div>
     </div>
+</div>
 
-
-
-
-
-    <div class="main-content">
-        <h2>Giới Thiệu Các Đồ Uống</h2>
-        <div class="menu-items">
-            
-            <a href="order.html" class="menu-item">
-                <img src="anh/nuoc1.jpg" alt="Món 1" class="menu-img">
-                <div class="menu-details">
-                    <h3>Món 1</h3>
-                    <p>Giá: 150,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-
-            <a href="order.html" class="menu-item">
-                <img src="anh/nuoc2.jpg" alt="Món 2" class="menu-img">
-                <div class="menu-details">
-                    <h3>Món 2</h3>
-                    <p>Giá: 200,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-
-                </div>
-            </a>
-
-            <a href="order.html" class="menu-item">
-                <img src="anh/nuoc3.jpg" alt="Món 3" class="menu-img">
-                <div class="menu-details">
-                    <h3>Món 3</h3>
-                    <p>Giá: 180,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-
-                </div>
-            </a>
-
-            <a href="order.html" class="menu-item">
-                <img src="anh/nuoc4.jpg" alt="Món 4" class="menu-img">
-                <div class="menu-details">
-                    <h3>Món 4</h3>
-                    <p>Giá: 250,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-
-                </div>
-            </a>
-
-            <a href="order.html" class="menu-item">
-                <img src="anh/nuoc5.jpg" alt="Món 5" class="menu-img">
-                <div class="menu-details">
-                    <h3>Món 5</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-
-
-            <a href="order.html" class="menu-item">
-                <img src="anh/ngon1.jpg" alt="Món 1" class="menu-img">
-                <div class="menu-details">
-                    <h3>Món 1</h3>
-                    <p>Giá: 150,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-
-            <a href="order.html" class="menu-item">
-                <img src="anh/ngon2.jpg" alt="Món 2" class="menu-img">
-                <div class="menu-details">
-                    <h3>Món 2</h3>
-                    <p>Giá: 200,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-
-                </div>
-            </a>
-
-            <a href="order.html" class="menu-item">
-                <img src="anh/ngon3.jpg" alt="Món 3" class="menu-img">
-                <div class="menu-details">
-                    <h3>Món 3</h3>
-                    <p>Giá: 180,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-
-                </div>
-            </a>
-
-            <a href="order.html" class="menu-item">
-                <img src="anh/ngon4.jpg" alt="Món 4" class="menu-img">
-                <div class="menu-details">
-                    <h3>Món 4</h3>
-                    <p>Giá: 250,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-
-                </div>
-            </a>
-
-            <a href="order.html" class="menu-item">
-                <img src="anh/ngon5.jpg" alt="Món 5" class="menu-img">
-                <div class="menu-details">
-                    <h3>Món 5</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-        </div>
-    </div>
-
-
-
-
+        <a href="https://facebook.com/uysotin" target="_blank" id="contact-fb" class="contact-fb">
+            <img src="./anh/fb.png" alt="Liên hệ Facebook" />
+        </a>
     <!-- Phần footer -->
     <div class="footer">
         <p>&copy; 2024 Nhà Hàng Ngon Thuận Linh. All rights reserved.</p>
