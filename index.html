@@ -1,488 +1,302 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nhà Hàng Ngon Thuận Linh</title>
-    <link rel="stylesheet" href="css.css">
-</head>
-<body>
-    <!-- Phần header -->
-    <div class="header">
-        <div class="top-info">
-            <p>ĐẠI NAM | 📞 0999999999</p>
-            <div class="social-icons">
-                <a href="https://www.facebook.com/uysotin" target="_blank"><img src="./anh/fb.png" alt="Facebook"></a>
-                <a href="https://zalo.me" target="_blank"><img src="./anh/zalo.png" alt="Zalo"></a>
-                <a href="https://www.youtube.com" target="_blank"><img src="./anh/ytb.png" alt="YouTube"></a>
-            </div>
-        </div>
-    </div>
+<!DOCTYPE HTML>
+<HTML>
+  <HEAD>
+    <TITLE>Love Animation</TITLE>
+    <META NAME="Author" CONTENT="">
+    <META NAME="Keywords" CONTENT="">
+    <META NAME="Description" CONTENT="">
+    <style>
+      html, body {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        background: #000;
+        overflow: hidden;
+      }
 
-    <!-- Phần ảnh giới thiệu nhà hàng -->
-    <div class="intro-img">
-        <img src="anh/anhnhahang1.jpg" alt="Giới Thiệu Nhà Hàng Ngon Thuận Linh">
-    </div>
-    <div class="logo">
-        <img src="anh/logo.jpg" alt="Logo Nhà Hàng Ngon Thuận Linh">
-    </div>
-    <!-- Phần giới thiệu cửa hàng -->
-    <div class="store-info">
-        <h2>Chào Mừng Đến Với Nhà Hàng Ngon Thuận Linh</h2>
-        <p>Chúng tôi chuyên cung cấp các Tên Món Ănn ngon, hấp dẫn, mang đậm hương vị đặc trưng. Với không gian ấm cúng, sang trọng, Nhà Hàng Ngon Thuận Linh là lựa chọn lý tưởng cho các buổi tiệc gia đình, gặp gỡ bạn bè hay tổ chức sự kiện đặc biệt.</p>
-        
-        <div class="store-images">
-            <img src="anh/store1.jpg" alt="Không gian nhà hàng 1" class="store-img">
-            <img src="anh/store2.jpg" alt="Không gian nhà hàng 2" class="store-img">
-            <img src="anh/store3.jpg" alt="Không gian nhà hàng 3" class="store-img">
-            <img src="anh/store4.jpg" alt="Không gian nhà hàng 3" class="store-img">
-            <img src="anh/store5.jpg" alt="Không gian nhà hàng 3" class="store-img">
-        </div>
-    </div>
+      canvas {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+      }
 
-    <div class="nav">
-        <ul>
-            <li><a href="#about">Giới Thiệu</a></li>
-            <li><a href="#services">Dịch Vụ</a></li>
-            <li><a href="#gallery">Hình Ảnh</a></li>
-            <li><a href="#news">Tin Tức - Ưu Đãi</a></li>
-        </ul>
-    </div>
-    <!-- Phần nội dung chính -->
-    
+      #centeredText {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-family: 'Courier New', sans-serif;
+        font-size: 24px;
+        font-weight: bold;
+        color: #ff69b4;
+        z-index: 1;
+        text-align: center;
+        text-shadow: 0 0 10px rgba(255, 105, 180, 0.8), 0 0 20px rgba(255, 20, 147, 0.5);
+      }
 
+      .falling-heart {
+        position: absolute;
+        color: #ff69b4;
+        font-size: 20px;
+        animation: fall 5s linear infinite, sway 2s ease-in-out infinite;
+      }
 
+      @keyframes fall {
+        from {
+          top: -10%;
+        }
+        to {
+          top: 110%;
+        }
+      }
 
+      @keyframes sway {
+        0%, 100% {
+          transform: translateX(0);
+        }
+        50% {
+          transform: translateX(30px);
+        }
+      }
+    </style>
+  </HEAD>
+  <BODY>
+    <canvas id="pinkboard"></canvas>
+    <div id="centeredText">Hoàng Thị Thanh</div>
+    <script>
+      /*
+       * Settings for the particle heart animation
+       */
+      var settings = {
+        particles: {
+          length: 500, // maximum amount of particles
+          duration: 2, // particle duration in sec
+          velocity: 100, // particle velocity in pixels/sec
+          effect: -0.75, // play with this for a nice effect
+          size: 30, // particle size in pixels
+        },
+      };
 
+      /*
+       * Falling hearts
+       */
+      function createFallingHeart() {
+        const heart = document.createElement("div");
+        heart.classList.add("falling-heart");
+        heart.innerHTML = "❤";
+        heart.style.left = Math.random() * 100 + "vw";
+        heart.style.fontSize = Math.random() * 20 + 10 + "px";
+        document.body.appendChild(heart);
 
-    <div class="main-content">
-        <h2>Giới Thiệu Các Tên Món Ănn</h2>
-        <div class="menu-items">
-            <!-- Tên Món Ănn 1 -->
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh1.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 150,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <!-- Tên Món Ănn 2 -->
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh2.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 200,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
+        setTimeout(() => {
+          heart.remove();
+        }, 5000);
+      }
 
-                </div>
-            </a>
-            <!-- Tên Món Ănn 3 -->
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh3.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 180,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
+      setInterval(createFallingHeart, 300); // Add a new heart every 300ms
 
-                </div>
-            </a>
-            <!-- Tên Món Ănn 4 -->
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh4.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 250,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
+      /*
+       * Particle heart animation
+       */
+      (function () {
+        var Point = function (x, y) {
+          this.x = typeof x !== "undefined" ? x : 0;
+          this.y = typeof y !== "undefined" ? y : 0;
+        };
 
-                </div>
-            </a>
-            <!-- Tên Món Ănn 5 -->
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-            <a href="order.html" class="menu-item">
-                <img src="anh/anh5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-        
-        </div>
-    </div>
+        Point.prototype.clone = function () {
+          return new Point(this.x, this.y);
+        };
 
-    <div class="main-content">
-        <h2>Giới Thiệu Các Đồ Uống</h2>
-        <div class="menu-items">
-            
-            <a href="order.html" class="menu-item">
-                <img src="anh/nuoc1.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 150,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
+        Point.prototype.length = function (length) {
+          if (typeof length == "undefined")
+            return Math.sqrt(this.x * this.x + this.y * this.y);
+          this.normalize();
+          this.x *= length;
+          this.y *= length;
+          return this;
+        };
 
-            <a href="order.html" class="menu-item">
-                <img src="anh/nuoc2.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 200,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
+        Point.prototype.normalize = function () {
+          var length = this.length();
+          this.x /= length;
+          this.y /= length;
+          return this;
+        };
 
-                </div>
-            </a>
+        var Particle = function () {
+          this.position = new Point();
+          this.velocity = new Point();
+          this.acceleration = new Point();
+          this.age = 0;
+        };
 
-            <a href="order.html" class="menu-item">
-                <img src="anh/nuoc3.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 180,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
+        Particle.prototype.initialize = function (x, y, dx, dy) {
+          this.position.x = x;
+          this.position.y = y;
+          this.velocity.x = dx;
+          this.velocity.y = dy;
+          this.acceleration.x = dx * settings.particles.effect;
+          this.acceleration.y = dy * settings.particles.effect;
+          this.age = 0;
+        };
 
-                </div>
-            </a>
+        Particle.prototype.update = function (deltaTime) {
+          this.position.x += this.velocity.x * deltaTime;
+          this.position.y += this.velocity.y * deltaTime;
+          this.velocity.x += this.acceleration.x * deltaTime;
+          this.velocity.y += this.acceleration.y * deltaTime;
+          this.age += deltaTime;
+        };
 
-            <a href="order.html" class="menu-item">
-                <img src="anh/nuoc4.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 250,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
+        Particle.prototype.draw = function (context, image) {
+          function ease(t) {
+            return --t * t * t + 1;
+          }
 
-                </div>
-            </a>
+          var size = image.width * ease(this.age / settings.particles.duration);
+          context.globalAlpha = 1 - this.age / settings.particles.duration;
+          context.drawImage(
+            image,
+            this.position.x - size / 2,
+            this.position.y - size / 2,
+            size,
+            size
+          );
+        };
 
-            <a href="order.html" class="menu-item">
-                <img src="anh/nuoc5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
+        var ParticlePool = function (length) {
+          var particles = new Array(length);
+          for (var i = 0; i < particles.length; i++) {
+            particles[i] = new Particle();
+          }
 
+          this.add = function (x, y, dx, dy) {
+            particles[firstFree].initialize(x, y, dx, dy);
 
-            <a href="order.html" class="menu-item">
-                <img src="anh/ngon1.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 150,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
+            firstFree++;
+            if (firstFree == particles.length) firstFree = 0;
+            if (firstActive == firstFree) firstActive++;
+            if (firstActive == particles.length) firstActive = 0;
+          };
 
-            <a href="order.html" class="menu-item">
-                <img src="anh/ngon2.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 200,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
+          this.update = function (deltaTime) {
+            var i;
+            if (firstActive < firstFree) {
+              for (i = firstActive; i < firstFree; i++)
+                particles[i].update(deltaTime);
+            }
+            if (firstFree < firstActive) {
+              for (i = firstActive; i < particles.length; i++)
+                particles[i].update(deltaTime);
+              for (i = 0; i < firstFree; i++) particles[i].update(deltaTime);
+            }
+          };
 
-                </div>
-            </a>
+          this.draw = function (context, image) {
+            if (firstActive < firstFree) {
+              for (i = firstActive; i < firstFree; i++)
+                particles[i].draw(context, image);
+            }
+            if (firstFree < firstActive) {
+              for (i = firstActive; i < particles.length; i++)
+                particles[i].draw(context, image);
+              for (i = 0; i < firstFree; i++) particles[i].draw(context, image);
+            }
+          };
 
-            <a href="order.html" class="menu-item">
-                <img src="anh/ngon3.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 180,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
+          var firstActive = 0,
+            firstFree = 0;
+        };
 
-                </div>
-            </a>
+        var canvas = document.getElementById("pinkboard");
+        var context = canvas.getContext("2d");
+        var particles = new ParticlePool(settings.particles.length);
+        var particleRate =
+          settings.particles.length / settings.particles.duration;
+        var time;
 
-            <a href="order.html" class="menu-item">
-                <img src="anh/ngon4.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 250,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
+        function pointOnHeart(t) {
+          return new Point(
+            160 * Math.pow(Math.sin(t), 3),
+            130 * Math.cos(t) -
+              50 * Math.cos(2 * t) -
+              20 * Math.cos(3 * t) -
+              10 * Math.cos(4 * t) +
+              25
+          );
+        }
 
-                </div>
-            </a>
+        var image = (function () {
+          var canvas = document.createElement("canvas");
+          var context = canvas.getContext("2d");
+          canvas.width = settings.particles.size;
+          canvas.height = settings.particles.size;
 
-            <a href="order.html" class="menu-item">
-                <img src="anh/ngon5.jpg" class="menu-img">
-                <div class="menu-details">
-                    <h3>Tên Món Ăn</h3>
-                    <p>Giá: 300,000 VND</p>
-                    <input type="button" value="Đặt Ngay" class="Nutmua">
-                </div>
-            </a>
-        </div>
-    </div>
+          function to(t) {
+            var point = pointOnHeart(t);
+            point.x =
+              settings.particles.size / 2 +
+              (point.x * settings.particles.size) / 350;
+            point.y =
+              settings.particles.size / 2 -
+              (point.y * settings.particles.size) / 350;
+            return point;
+          }
 
+          context.beginPath();
+          var t = -Math.PI;
+          var point = to(t);
+          context.moveTo(point.x, point.y);
+          while (t < Math.PI) {
+            t += 0.01;
+            point = to(t);
+            context.lineTo(point.x, point.y);
+          }
+          context.closePath();
+          context.fillStyle = "#ea80b0";
+          context.fill();
 
+          var image = new Image();
+          image.src = canvas.toDataURL();
+          return image;
+        })();
 
+        function render() {
+          requestAnimationFrame(render);
+          var newTime = new Date().getTime() / 1000;
+          var deltaTime = newTime - (time || newTime);
+          time = newTime;
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          var amount = particleRate * deltaTime;
+          for (var i = 0; i < amount; i++) {
+            var pos = pointOnHeart(
+              Math.PI - 2 * Math.PI * Math.random()
+            );
+            var dir = pos.clone().length(settings.particles.velocity);
+            particles.add(
+              canvas.width / 2 + pos.x,
+              canvas.height / 2 - pos.y,
+              dir.x,
+              -dir.y
+            );
+          }
+          particles.update(deltaTime);
+          particles.draw(context, image);
+        }
 
+        function onResize() {
+          canvas.width = canvas.clientWidth;
+          canvas.height = canvas.clientHeight;
+        }
+        window.onresize = onResize;
 
-
-
-
-
-
-
-
-
-
-
-
-    <!-- Phần đăng ký nhận ưu đãi -->
-        <div class="promotion">
-            <h2>ĐĂNG KÝ NHẬN ƯU ĐÃI</h2>
-            <p>Vui lòng nhập Email của bạn để nhận tin tức về những chương trình khuyến mại và ưu đãi mới nhất</p>
-            <form class="email-signup">
-                <input type="email" placeholder="Nhập địa chỉ Email" required class="email">
-                <input type="button" onclick="alert('Tính năng này chưa được cập nhật!')" value="Đăng Ký" class="Nutdangky">
-            </form>
-        </div>
-         <!-- Phần Tin Tức - Ưu Đãi -->
-         <div class="news">
-            <h2>Tin Tức</h2>
-            <div class="news-content">
-                <!-- Tin chính lớn -->
-                <div class="big-news">
-                    <img src="./anh/tintuc.jpg" alt="Top 3 thực đơn tiệc khai trương">
-                    <div class="info">
-                        <h3>Top 3 thực đơn tiệc khai trương được yêu thích nhất tại Quán</h3>
-                        <p>Nguyễn Tiến Thuận -  Vừa Xong</p>
-                    </div>
-                </div>
-    
-                <!-- Tin nhỏ 1 -->
-                <div class="small-news">
-                    <img src="./anh/tintuc1.jpg" alt="">
-                    <div class="info">
-                        <h3>Tổng hợp 15 trò chơi tiệc tất niên văn minh, hấp dẫn, </h3>
-                        <p>Nguyễn Tiến Thuận -  Vừa Xong</p>
-                    </div>
-                </div>
-    
-                <!-- Tin nhỏ 2 -->
-         
-                 <div class="small-news">
-                    <img src="./anh/tintuc2.jpg" alt="">
-                    <div class="info">
-                        <h3>5 kiểu thực đơn tiệc tất niên công ty hiện đại (Báo giá), </h3>
-                        <p>Nguyễn Tiến Thuận -  Vừa Xong</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Phần feedback -->
-        
-        <div class="box-Feedback">
-            <div class="heading">
-                <h2>Góp Ý</h2>
-            </div>
-            <div class="box-content">
-                <form id="contact-form" class="frm-contact">
-                    <div class="form-row">
-                        <div class="col">
-                            <input name="name_contact" class="input inp" placeholder="Tên" type="text">
-                        </div>
-                        <div class="col">
-                            <input name="phone_contact" class="input inp" placeholder="Số điện thoại" type="text">
-                        </div>
-                        <div class="col">
-                            <input name="address_contact" class="input inp" placeholder="Địa chỉ" type="text">
-                        </div>
-                        <div class="col">
-                            <input name="email_contact" class="input inp" placeholder="Email" type="text">
-                        </div>
-                        <div class="col full-width">
-                            <textarea name="content_contact" class="textarea inp" placeholder="Nội dung"></textarea>
-                        </div>
-                        <div class="col full-width">
-                            <button type="submit" class="btn-Feedback">GỬI CHO CHÚNG TÔI</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        
-
-        <div class="feedback-section">
-            <h2>#FEEDBACK</h2>
-            <p>TỪ KHÁCH HÀNG</p>
-            <div class="feedbacks">
-                <div class="feedback">
-                    <img src="anh/thuan.jpg" alt="Cơm Chiên Hải Sản">
-                    <h3>Nguyễn Tiến Thuận</h3>
-                    <p class="dish-name">CƠM CHIÊN HẢI SẢN</p>
-                    <p class="rating">★★★★★</p>
-                    <p>Tên Món Ănơm chiên hải sản được gói trong lớp trứng vàng đẹp mắt, cát ra thì thanh cua và trứng cua, tôm khá nhiều, cơm chiên từ gạo Basmati, hạt rời, ngon và dinh dưỡng.</p>
-                </div>
-                <div class="feedback">
-                    <img src="anh/linh.jpg" alt="Gỏi Bưởi Tôm Hoa Xuân">
-                    <h3>Trương Quốc Linh </h3>
-                    <p class="dish-name">GỎI BƯỞI TÔM HOA XUÂN</p>
-                    <p class="rating">★★★★★</p>
-                    <p>Tên Món Ănỏi bưởi mang lại trải nghiệm rất ấn tượng bởi vị chua, ngọt của nhiều loại trái cây thêm chút thanh mát của thanh long đỏ. Nổi bật cùng vị ngọt tự nhiên của tôm tươi hoàn hảo khi ăn kèm bánh đa nướng.</p>
-                </div>
-            </div>
-        </div>
-
-       
-        <div class="box-Utilities">
-    <div class="list">
-        <div class="item">
-            <img src="./anh/suport.png" alt="">
-            <h3 class="title">Hỗ trợ 12/7</h3>
-            <p class="text-sub">Đội ngũ TASTY Kitchen luôn có mặt<br> để hỗ trợ bất cứ khi nào bạn cần.</p>
-        </div>
-        <div class="item">
-            <img src="./anh/mobile-banking.png" alt="">
-            <h3 class="title">Thanh toán tiện dụng</h3>
-            <p class="text-sub">Chúng tôi hỗ trợ thanh toán online <br> qua Ví điện tử tiện dụng.</p>
-        </div>
-        <div class="item">
-            <img src="./anh/fast.png" alt="">
-            <h3 class="title">Giao hàng nhanh chóng</h3>
-            <p class="text-sub">Bạn sẽ vẫn cảm nhận được sự nóng<br> hổi của Tên Món Ănn khi nhận hàng.</p>
-        </div>
-    </div>
-</div>
-
-        <a href="https://facebook.com/uysotin" target="_blank" id="contact-fb" class="contact-fb">
-            <img src="./anh/fb.png" alt="Liên hệ Facebook" />
-        </a>
-    <!-- Phần footer -->
-    <div class="footer">
-        <p>&copy; 2024 Nhà Hàng Ngon Thuận Linh. All rights reserved.</p>
-    </div>
-</body>
-</html>
-
-
+        setTimeout(function () {
+          onResize();
+          render();
+        }, 10);
+      })();
+    </script>
+  </BODY>
+</HTML>
