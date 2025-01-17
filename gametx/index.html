@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Slideshow</title>
+    <style>
+        .slideshow-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10%;
+            z-index: 3;
+        }
+        
+        #caibat {
+            position: absolute;
+            width: 450px;
+            height: 450px;
+            top: 350px;
+            left: 850px;
+            object-fit: cover;
+            border-radius: 50%;
+            z-index: 5;
+            transition: transform 1s ease-in-out;
+        }
+
+        #caidia {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            top: 42%;
+            left: 43%;
+            object-fit: cover;
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        #background-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: 1;
+            display: none;
+        }
+
+        #main-content {
+            display: none;
+            position: relative;
+            z-index: 3;
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 30px;
+        }
+
+        #control-button {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            font-size: 18px;
+            border-radius: 25px;
+            border: none;
+            background: #333;
+            color: white;
+            cursor: pointer;
+            z-index: 4;
+        }
+
+        #control-button:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <img id="intro-image" src="sanhcho.webp">
+    <img id="background-image" src="anhnen.jpg">
+    <div id="main-content">
+        <img id="thuan" class="slideshow-image">
+        <img id="thuan2" class="slideshow-image">
+        <img id="thuan3" class="slideshow-image">
+    </div>
+
+    <img id="caidia" src="caidia.png" alt="Cái đĩa">
+    <img id="caibat" src="caibat.png" alt="Cái bát">
+
+    <button id="control-button">Dừng</button>
+
+    <script>
+        let intervals = [];
+        let isPlaying = true;
+        let dragging = false;
+        const controlButton = document.getElementById('control-button');
+        const caibat = document.getElementById('caibat');
+        let offsetX, offsetY;
+
+        controlButton.addEventListener('click', () => {
+            if (isPlaying) {
+                intervals.forEach(interval => clearInterval(interval));
+                intervals = [];
+                controlButton.textContent = 'Bắt đầu';
+            } else {
+                startSlideshows();
+                controlButton.textContent = 'Dừng';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        function slideshow(elementId, images) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            let currentIndex = 0;
+            function updateImage() {
+                if (currentIndex >= images.length) {
+                    currentIndex = 0;
+                }
+                element.src = images[currentIndex];
+                currentIndex++;
+            }
+            const interval = setInterval(updateImage, 10);
+            intervals.push(interval);
+        }
+
+        function startSlideshows() {
+            const images = {
+                slideshow1: ['xx1.png','xx3.png','xx2.png','xx4.png','xx5.png','xx6.png'],
+                slideshow2: ['xx3.png','xx5.png','xx2.png','xx6.png','xx1.png','xx4.png'],
+                slideshow3: ['xx2.png','xx5.png','xx6.png','xx3.png','xx4.png','xx1.png']
+            };
+
+            slideshow('thuan', images.slideshow1);
+            slideshow('thuan2', images.slideshow2); 
+            slideshow('thuan3', images.slideshow3);
+        }
+
+        caibat.addEventListener('mousedown', (e) => {
+            dragging = true;
+            offsetX = e.clientX - caibat.offsetLeft;
+            offsetY = e.clientY - caibat.offsetTop;
+            caibat.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (dragging) {
+                caibat.style.left = `${e.clientX - offsetX}px`;
+                caibat.style.top = `${e.clientY - offsetY}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            dragging = false;
+            caibat.style.cursor = 'grab';
+        });
+
+        setTimeout(() => {
+            document.getElementById('intro-image').style.display = 'none';
+            document.getElementById('background-image').style.display = 'block';
+            document.getElementById('main-content').style.display = 'flex';
+            startSlideshows();
+        }, 3000);
+    </script>
+</body>
+</html>
