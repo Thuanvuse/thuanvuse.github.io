@@ -395,71 +395,96 @@ class MainWindow(QWidget):
     def init_ui(self):
         self.setWindowTitle("Quản lý tài khoản")
         self.setGeometry(100, 100, 1000, 600)
-        layout = QVBoxLayout()
+
+        layout = QVBoxLayout(self)
+
+        # TABLE
         self.table = QTableWidget(self)
         self.table.setColumnCount(8)
         self.table.setHorizontalHeaderLabels(["Token", "Proxy", "User", "Pass", "F_ID", "Điểm", "Status", "Note"])
         self.table.setStyleSheet("QTableWidget {font-size: 14px;}")
         layout.addWidget(self.table)
+
+        # Spinbox số luồng
         self.spinbox = QSpinBox(self)
         self.spinbox.setRange(1, 10)
         self.spinbox.setValue(1)
         self.spinbox.setStyleSheet("QSpinBox {font-size: 14px;}")
         layout.addWidget(self.spinbox)
+
+        # Status
         status_layout = QHBoxLayout()
         self.log_label = QLabel(self)
         self.log_label.setStyleSheet("QLabel {font-size: 12px; color: green;}")
         status_layout.addWidget(self.log_label)
+
         self.status_label = QLabel(self)
         self.status_label.setStyleSheet("QLabel {font-size: 12px; color: blue;}")
         status_layout.addWidget(self.status_label)
         layout.addLayout(status_layout)
-        from PyQt6.QtWidgets import QHeaderView  # nhớ import nếu chưa có
 
-        self.table.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)
-
-        self.table.setColumnWidth(7, 80)
-        self.theme = "dark"  # Biến lưu trạng thái theme hiện tại
-
+        # Label tổng điểm
         self.total_points_label = QLabel("Tổng điểm: 0 | Tổng tài khoản: 0 | Điểm cao nhất: 0", self)
         self.total_points_label.setStyleSheet("QLabel {font-size: 14px; color: red;}")
         self.total_points_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         layout.addWidget(self.total_points_label)
+
+        # ============ NÚT MENU ============ 
+        self.menu_button = QPushButton("☰ Menu", self)
+        self.menu_button.setStyleSheet("QPushButton {font-size: 16px; padding: 8px;}")
+        self.menu_button.clicked.connect(self.toggle_menu)
+        layout.addWidget(self.menu_button)
+
+        # Các nút chức năng (Ẩn ban đầu)
         self.theme_button = QPushButton("🌙 Chế độ Tối")
-        self.theme_button.setStyleSheet("QPushButton {font-size: 14px; padding: 6px; border-radius: 8px;}")
-        self.theme_button.clicked.connect(self.toggle_theme)
-        layout.addWidget(self.theme_button)  # ✅ Nút chuyển chế độ
-        # Nút lọc điểm tăng dần
         self.sort_asc_button = QPushButton("🔼 Lọc điểm: Thấp → Cao")
-        self.sort_asc_button.clicked.connect(self.sort_by_points_asc)
-        layout.addWidget(self.sort_asc_button)
-
-        # Nút lọc điểm giảm dần
         self.sort_desc_button = QPushButton("🔽 Lọc điểm: Cao → Thấp")
-        self.sort_desc_button.clicked.connect(self.sort_by_points_desc)
-        layout.addWidget(self.sort_desc_button)
-
-        # Nút reset lại vị trí gốc
         self.reset_button = QPushButton("🔁 Reset vị trí ban đầu")
-        self.reset_button.clicked.connect(self.reset_table)
-        layout.addWidget(self.reset_button)
-        self.status_filter_combo = QComboBox(self)
-        self.status_filter_combo.addItem("ALL")  # Lựa chọn đầu tiên để hiện tất cả
-        self.status_filter_combo.currentTextChanged.connect(self.filter_by_status)
-        layout.addWidget(self.status_filter_combo)
-        # Cập nhật danh sách status vào ComboBox liên tục mỗi 2 giây
-        self.status_combo_timer = QTimer(self)
-        self.status_combo_timer.timeout.connect(self.update_status_filter)
-        self.status_combo_timer.start(2000)  # mỗi 2 giây
         self.proxy_check_button = QPushButton("🧪 Kiểm Tra Proxy")
-        self.proxy_check_button.clicked.connect(self.open_proxy_checker1)
-        layout.addWidget(self.proxy_check_button)
         self.backup_button = QPushButton("🛡️ Backup Tài Khoản")
-        self.backup_button.setStyleSheet("QPushButton {font-size: 14px; padding: 6px; border-radius: 8px;}")
+        self.status_filter_combo = QComboBox()
+
+        for widget in [self.theme_button, self.sort_asc_button, self.sort_desc_button,
+                       self.reset_button, self.proxy_check_button, self.backup_button, self.status_filter_combo]:
+            widget.hide()  # Ẩn ban đầu
+            layout.addWidget(widget)
+
+        # Kết nối các nút với hành động
+        self.theme_button.clicked.connect(self.toggle_theme)
+        self.sort_asc_button.clicked.connect(self.sort_by_points_asc)
+        self.sort_desc_button.clicked.connect(self.sort_by_points_desc)
+        self.reset_button.clicked.connect(self.reset_table)
+        self.proxy_check_button.clicked.connect(self.open_proxy_checker1)
         self.backup_button.clicked.connect(self.backup_accounts)
-        layout.addWidget(self.backup_button)
+        self.status_filter_combo.currentTextChanged.connect(self.filter_by_status)
+
+        # Bộ đếm trạng thái menu
+        self.menu_open = False
 
         self.setLayout(layout)
+    def toggle_menu(self):
+        # Khi bấm nút MENU
+        if self.menu_open:
+            # Ẩn các nút chức năng
+            self.theme_button.hide()
+            self.sort_asc_button.hide()
+            self.sort_desc_button.hide()
+            self.reset_button.hide()
+            self.proxy_check_button.hide()
+            self.backup_button.hide()
+            self.status_filter_combo.hide()
+            self.menu_button.setText("☰ Menu")
+        else:
+            # Hiện các nút chức năng
+            self.theme_button.show()
+            self.sort_asc_button.show()
+            self.sort_desc_button.show()
+            self.reset_button.show()
+            self.proxy_check_button.show()
+            self.backup_button.show()
+            self.status_filter_combo.show()
+            self.menu_button.setText("✖ Đóng Menu")
+        self.menu_open = not self.menu_open
 
     def backup_accounts(self):
         try:
