@@ -310,58 +310,213 @@ class LienKetWorker(QThread):
                 self.result_signal.emit(self.row, "✅ Đã Có Liên Kết", "green")
             else:
                 self.result_signal.emit(self.row, "❌ Chưa Liên Kết", "red")
+                fake = Faker('vi_VN')
+                lock = threading.Lock()
 
-                # Đọc file OK9.txt
-                with open('OK9.txt', 'r') as file:
-                    lines = file.readlines()
+                # Proxy settings
+                proxy="180.214.239.215:20211:nhjv2q6b:nHjV2q6B"
+                host, port, userss, pwd = proxy.split(":")
+                proxy_url = f"http://{userss}:{pwd}@{host}:{port}"
+                proxies = {"http": proxy_url, "https": proxy_url}
 
-                if not lines:
-                    print("File rỗng, không còn tài khoản.")
-                else:
-                    while lines:  # Lặp đến khi hết tài khoản
-                        # Lấy tài khoản đầu tiên
-                        first_line = lines.pop(0).strip()
-                        parts = first_line.split('|')
+                # Global session
+                session = requests.Session()
+                session.headers = {
+                    "Content-Type": "application/json",
+                    "accept-language": "en-US,en;q=0.9,vi;q=0.8",
+                    "origin": "https://www.010070.com",
+                    "priority": "u=1, i",
+                    "referer": "https://www.010070.com/vit/home/index/in-play",
+                    "sec-ch-ua": '"Google Chrome";v="135", "Not-A.Brand";v="8", "Chromium";v="135"',
+                    "sec-ch-ua-mobile": "?0",
+                    "sec-ch-ua-platform": '"Windows"',
+                    "sec-fetch-dest": "empty",
+                    "sec-fetch-mode": "cors",
+                    "sec-fetch-site": "same-origin",
+                    "x-kzapi-domain": "www.010070.com",
+                    "x-kzapi-language": "vit",
+                    "x-kzapi-platform": "web",
+                    "x-kzapi-timezone": "+07:00",
+                    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
+                }
 
-                        if len(parts) != 3:
-                            print("Dòng không hợp lệ, cần đúng 3 phần: Account|pass|phone")
-                            continue
+                # --- Functions ---
 
-                        gameAccount, password, fullPhone = parts
-                        gamePhone = fullPhone[-4:]
+                def encrypt_data(data: str, public_key: str):
+                    rsa_key = RSA.import_key(public_key)
+                    cipher = PKCS1_v1_5.new(rsa_key)
+                    encrypted_bytes = cipher.encrypt(data.encode())
+                    return base64.b64encode(encrypted_bytes).decode()
 
-                        # Ghi lại file (bỏ dòng đã dùng)
-                        with open('OK9.txt', 'w') as file:
-                            file.writelines(lines)
+                def get_encryption_key():
+                    url = "https://www.010070.com/api/encryption-key"
+                    payload = "{}"
+                    response = session.post(url, data=payload)
+                    if response.status_code == 200:
+                        return response.json()['data']['publicKey']
+                    else:
+                        return None
 
-                        # Tạo data gửi
-                        data = {
-                            "gameAccount": gameAccount,
-                            "gamePhone": gamePhone,
-                            "websiteId": "1798608608416931842",
-                            "memberCode": "OK9"
+                def random_string(length=10):
+                    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+                def random_number(length=8):
+                    return '9' + ''.join(random.choices(string.digits, k=length))
+
+                def random_STK():
+                    return ''.join(random.choices(string.digits, k=random.randint(9,12)))
+
+                def get_random_name():
+                    try:
+                        url = 'https://story-shack-cdn-v2.glitch.me/generators/vietnamese-name-generator/'
+                        response = requests.get(url)
+                        random_sex = random.choice(['male', 'female'])
+                        return response.json()['data'][random_sex]
+                    except:
+                        return 'Nguyen Van Thinh'
+
+                def remove_accents(text: str):
+                    if text:
+                        return unidecode(text)
+                    else:
+                        return ''
+
+                def add_card(bankCode: str, account: str, stk: str):
+                    try:
+                        url = "https://www.010070.com/api/add-bankcard"
+                        payload = {
+                            "bankCode": bankCode,
+                            "account": account,
+                            "card": stk,
+                            "bankNode": "HA NOI",
+                            "note": "",
+                            "needSms": False,
+                            "smsCode": "",
+                            "smsPhoneNo": "",
+                            "smsPhoneNoCountry": "vn",
+                            "bankpassbook": "",
+                            "addrA": "",
+                            "addrB": "",
+                            "ifsccode": ""
+                        }
+                        response = session.post(url, json=payload, proxies=proxies)
+                        if response.status_code == 200 and response.json()['status'] == 0:
+                            print(f"✅ Thêm bank thành công: {stk}")
+                            return True
+                        else:
+                            print(f"❌ Thêm bank thất bại: {stk} | {response.json().get('message')}")
+                            return False
+                    except Exception:
+                        traceback.print_exc()
+                        return False
+
+                def do_register():
+                    try:
+                        url = "https://www.010070.com/api/register-account-v2"
+                        user = random_string(9)
+                        fullname = get_random_name()
+                        fullname = remove_accents(fullname).upper()
+                        password = random_string(12) + '0a'
+                        phone = random_number()
+                        print(f"Đăng ký với: {user}, {password}, {fullname}")
+
+                        payload = {
+                            "verifycode": "",
+                            "email": "",
+                            "joinpwd": encrypt_data(password, get_encryption_key()),
+                            "joiname": user,
+                            "birthmonth": random.randint(1, 12),
+                            "birthyear": random.randint(1980, 2005),
+                            "jsessionid": random_string(32).upper(),
+                            "birthday": None,
+                            "fullname": fullname,
+                            "nickname": "",
+                            "agc": "12531",
+                            "wdpassword": "",
+                            "weixin": "",
+                            "line": "",
+                            "whatsapp": "",
+                            "telegram": "",
+                            "facebook": "",
+                            "tiktok": "",
+                            "x": "",
+                            "zalo": "",
+                            "google": "",
+                            "skype": "",
+                            "qq": "",
+                            "regpath": "/vit/home/index/in-play",
+                            "emailcode": "",
+                            "smscode": "",
+                            "autologin": "1",
+                            "redirectedFromDomain": "www.010070.com",
+                            "gpn": "",
+                            "rfc": "",
+                            "adminreferal": None,
+                            "utm_code": None,
+                            "visitor_id": None,
+                            "captchaValidate": "",
+                            "wtdCardBankCode": "",
+                            "wtdCardBankName": "Tên ngân hàng",
+                            "wtdCardNumber": "",
+                            "uphonecountry": "vn",
+                            "uphone": phone
                         }
 
-                        # Gửi request
-                        try:
-                            response = requests.post(
-                                "https://m.okvip7.live/api/wallet/bindGameAccount",
-                                headers=headers,
-                                proxies=proxies,
-                                json=data,
-                                timeout=20
-                            )
-                            message = response.json().get('message', '')
-                            print(message)
-                            self.result_signal.emit(self.row, f"{message}", "red")
+                        response = session.post(url, json=payload, proxies=proxies)
+                        if response.status_code == 200 and response.json()['status'] == 0:
+                            user_token = response.json()['data']['_userToken']
+                            session.headers['x-kzapi-User'] = user_token
 
-                            # Nếu thành công hoặc message không phải "TÀI KHOẢN THÀNH VIÊN NÀY ĐÃ ĐƯỢC LIÊN KẾT", thì dừng
-                            if message != "TÀI KHOẢN THÀNH VIÊN NÀY ĐÃ ĐƯỢC LIÊN KẾT":
-                                break  # Thành công hoặc lỗi khác => dừng lại
-                        except Exception as e:
-                            print(f"Lỗi gửi request: {e}")
-                            self.result_signal.emit(self.row, f"Lỗi gửi request: {e}", "red")
-                            break  # Nếu lỗi mạng thì dừng luôn
+                            # Thêm bank sau khi đăng ký
+                            for _ in range(3):
+                                stk = random_STK()
+                                if add_card("VNVCB", fullname, stk):
+                                    break
+
+                            return user, password, fullname, phone
+                        else:
+                            print(f"❌ Đăng ký thất bại: {response.text}")
+                            return False
+                    except Exception:
+                        traceback.print_exc()
+                        return False
+
+                def create_account_and_save():
+                    status = do_register()
+                    if status:
+                        user, password, fullname, phone = status
+                        print(f"✅ Tạo thành công: {user}")
+                        return user,phone
+                    else:
+                        print("❌ Đăng ký thất bại.")
+
+                gameAccount,fullPhone=create_account_and_save()
+                gamePhone = fullPhone[-4:]
+
+              
+                # Tạo data gửi
+                data = {
+                    "gameAccount": gameAccount,
+                    "gamePhone": gamePhone,
+                    "websiteId": "1798608608416931842",
+                    "memberCode": "OK9"
+                }
+
+                try:
+                    response = requests.post(
+                        "https://m.okvip7.live/api/wallet/bindGameAccount",
+                        headers=headers,
+                        proxies=proxies,
+                        json=data,
+                        timeout=20
+                    )
+                    message = response.json().get('message', '')
+                    print(message)
+                    self.result_signal.emit(self.row, f"{message}", "red")
+                  
+                except Exception as e:
+                    print(f"Lỗi gửi request: {e}")
+                    self.result_signal.emit(self.row, f"Lỗi gửi request: {e}", "red")
                 response = requests.get("https://m.okvip7.live/api/website/listForWallet", headers=headers, proxies=proxies, timeout=500).json()
                 is_linked = any(site.get("isBind", False) for site in response.get("data", []))
 
@@ -663,6 +818,7 @@ class MainWindow(QWidget):
         ChAyAll= menu.addAction("Chạy ALL")
         Bu9diem=menu.addAction("Điểm Danh")
         lienkettaikhoan=menu.addAction("Login+Liên Kết + Lấy Điểm + Lấy Token")
+        CheckCacLienKet=menu.addAction("Check Liên Kết")
 
         action = menu.exec(self.table.viewport().mapToGlobal(pos))
         if action == load:self.load_accounts_from_file()
@@ -703,6 +859,9 @@ class MainWindow(QWidget):
             luong.start()
         if action == lienkettaikhoan:
             luong = threading.Thread(target=self.lienkettaikhoan)
+            luong.start()
+        if action == CheckCacLienKet:
+            luong = threading.Thread(target=self.CheckCacLienKet)
             luong.start()
        
     def open_proxy_checker1(self):
@@ -865,7 +1024,68 @@ class MainWindow(QWidget):
                 response = requests.get("https://m.okvip7.live/api/accountLogin/updateOnline", headers=headers, proxies=proxies ,timeout=500)
                 self.table.setItem(row, 6, QTableWidgetItem(f"Điểm Danh Thành CÔng Ngày : {aaaaaaaaaaaa}"))
 
-            with ThreadPoolExecutor(max_workers=20) as executor:
+            with ThreadPoolExecutor(max_workers=50) as executor:
+                futures = [executor.submit(xu_ly_row, row) for row in range(self.table.rowCount())]
+                for future in as_completed(futures):
+                    pass  # bạn có thể xử lý kết quả hoặc log tại đây nếu cần
+        chay_20_mot_luot() 
+    def CheckCacLienKet(self):
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        def chay_20_mot_luot():
+            def xu_ly_row(row):
+                token = self.table.item(row, 0).text()
+                proxy=self.table.item(row, 1).text()
+                Fidd=self.table.item(row, 4).text()
+                headers = {
+                    "authority": "m.okvip7.live",
+                    "accept": "application/json, text/plain, */*",
+                    "accept-language": "vi-VN,vi;q=0.9",
+                    "content-type": "application/json",
+                    "locale": "vi_vn",
+                    "origin": "https://m.okvip7.live",
+                    "priority": "u=1, i",
+                    "referer": "https://m.okvip7.live/login",
+                    "sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+                    "sec-ch-ua-mobile": "?0",
+                    "sec-ch-ua-platform": "Windows",
+                    "sec-fetch-dest": "empty",
+                    "sec-fetch-mode": "cors",
+                    "sec-fetch-site": "same-origin",
+                    "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+                    "f-id": Fidd,
+                    "token": token
+                }
+                proxy_url, port, username, password = proxy.split(':')
+                proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
+                proxies = {
+                    "http": proxy_address,
+                    "https": proxy_address
+                }
+                response = requests.get("https://m.okvip7.live/api/website/listForWallet", headers=headers, proxies=proxies, timeout=500).json()
+               # Lấy các giá trị isBind từ response
+                MB66 = response['data'][0]["isBind"]
+                OK9 = response['data'][1]["isBind"]
+                s78win = response['data'][2]["isBind"]
+                QQ88 = response['data'][3]["isBind"]
+                F168 = response['data'][4]["isBind"]
+
+                # Tạo danh sách tên ứng với giá trị True
+                bindings = []
+                if MB66: bindings.append("MB66")
+                if OK9: bindings.append("OK9")
+                if s78win: bindings.append("78win")
+                if QQ88: bindings.append("QQ88")
+                if F168: bindings.append("F168")
+
+                # Hiển thị chuỗi kết quả, ngăn cách bằng " | "
+                result_text = " | ".join(bindings)
+
+                # Hiển thị trong bảng
+                self.table.setItem(row, 7, QTableWidgetItem(result_text))
+
+                self.table.setItem(row, 6, QTableWidgetItem(f"Hoàn Thành Lấy Liên Kết"))
+
+            with ThreadPoolExecutor(max_workers=50) as executor:
                 futures = [executor.submit(xu_ly_row, row) for row in range(self.table.rowCount())]
                 for future in as_completed(futures):
                     pass  # bạn có thể xử lý kết quả hoặc log tại đây nếu cần
