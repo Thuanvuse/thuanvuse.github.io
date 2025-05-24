@@ -10,6 +10,10 @@ import time
 import threading
 import random
 import string
+
+# Nhập token ViOTP
+viotp_token = input("Nhập ViOTP token: ").strip()
+
 # Danh sách key có thể dùng
 danh_sach_key = []
 
@@ -144,12 +148,11 @@ def dang_ky_tai_khoan(vitri):
         WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//input[@placeholder="Nhập tài khoản"]'))).send_keys(TAK)
         WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//input[@placeholder="Nhập mật khẩu"]'))).send_keys(TAK + "123")
         WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//input[@placeholder="Nhập lại mật khẩu"]'))).send_keys(TAK + "123")
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//input[@placeholder="Nhập email"]'))).send_keys(TAK + "123@gmail.conmommm")
+        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//input[@placeholder="Nhập email"]'))).send_keys(TAK + "123@gmail.com")
 
-        
         WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//input[@placeholder="Nhập mã xác nhận"]'))).send_keys(get_captcha_text(driver))
 
-        buom = requests.get("https://api.viotp.com/request/getv2?token=f8170592069c473fb293f1edb970cff7&serviceId=733&network=VINAPHONE").json()
+        buom = requests.get(f"https://api.viotp.com/request/getv2?token={viotp_token}&serviceId=733&network=VINAPHONE").json()
         sodienthoai = buom['data']['phone_number']
         WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//input[@placeholder="Nhập số điện thoại"]'))).send_keys(sodienthoai)
 
@@ -162,7 +165,7 @@ def dang_ky_tai_khoan(vitri):
             IDdd = buom['data']['request_id']
             sothime = 0
             while True:
-                get = requests.get(f"https://api.viotp.com/session/getv2?requestId={IDdd}&token=f8170592069c473fb293f1edb970cff7").json()['data']['Code']
+                get = requests.get(f"https://api.viotp.com/session/getv2?requestId={IDdd}&token={viotp_token}").json()['data']['Code']
                 print(get)
                 if get is None:
                     time.sleep(3)
@@ -183,18 +186,17 @@ def dang_ky_tai_khoan(vitri):
             requests.get(f"http://127.0.0.1:19995/api/v3/profiles/close/{ID}")
             requests.get(f"http://127.0.0.1:19995/api/v3/profiles/delete/{ID}")
         tra_lai_key(key, timestamp_lay)
-    except:
+    except Exception as e:
         print(f"❌ Lỗi selenium: {e}")
         time.sleep(3)
         requests.get(f"http://127.0.0.1:19995/api/v3/profiles/close/{ID}")
         requests.get(f"http://127.0.0.1:19995/api/v3/profiles/delete/{ID}")
-    tra_lai_key(key, timestamp_lay)
+        tra_lai_key(key, timestamp_lay)
 
-
-NhapSoAccMuoonTao=int(input("Nhận Số Acc Muốn Tạo (Nhập Số Là Bội Của 10): "))
-for _ in range(NhapSoAccMuoonTao):
-    positions = ["0,0", "400,0", "700,0", "1000,0", "1300,0", "1600,0", "1900,0", "2100,0", "0,100", "400,100", "700,100",]
+# Nhập số acc muốn tạo
+NhapSoAccMuoonTao = int(input("Nhập số Acc muốn tạo (bội của 10): "))
+for _ in range(NhapSoAccMuoonTao // 10):
+    positions = ["0,0", "400,0", "700,0", "1000,0", "1300,0", "1600,0", "1900,0", "2100,0", "0,100", "400,100"]
     with ThreadPoolExecutor(max_workers=10) as executor:
         for pos in positions:
             executor.submit(dang_ky_tai_khoan, pos)
-
