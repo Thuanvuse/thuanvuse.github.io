@@ -135,7 +135,7 @@ def dang_ky_tai_khoan(vitri):
         return
 
     try:
-        url = f"http://127.0.0.1:19995/api/v3/profiles/start/{ID}?win_pos={vitri}&win_scale=0.8&win_size=290,1200"
+        url = f"http://127.0.0.1:19995/api/v3/profiles/start/{ID}?win_pos={vitri}&win_scale=0.25&win_size=290,1200"
         json_data = requests.get(url).json()
         remote_debugging_address = json_data["data"]["remote_debugging_address"]
         driver_path = json_data["data"]["driver_path"]
