@@ -176,7 +176,10 @@ def dang_ky_tai_khoan(vitri):
                 else:
                     WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//input[@placeholder="Nhập mã xác nhận"]'))).send_keys(get)
                     WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Đăng ký'] and not(contains(@class, 'disabled'))]"))).click()
-                    break
+                    with open("acc.txt", "w") as f:
+                        f.write(TAK+"  " TAK + "123" + "\n")
+                        requests.get(f"http://127.0.0.1:19995/api/v3/profiles/close/{ID}")
+                        requests.get(f"http://127.0.0.1:19995/api/v3/profiles/delete/{ID}")
         else:
             print("❌ Không phải link cần kiểm tra.")
             time.sleep(3)
@@ -193,7 +196,19 @@ def dang_ky_tai_khoan(vitri):
 # Nhập số acc muốn tạo
 NhapSoAccMuoonTao = int(input("Nhập số Acc muốn tạo (bội của 10): "))
 for _ in range(NhapSoAccMuoonTao // 10):
-    positions = ["0,0", "400,0", "700,0", "1000,0", "1300,0", "1600,0", "1900,0", "2100,0", "0,100", "400,100"]
+    positions = [
+    "0,0",
+    "550,0",
+    "1100,0",
+    "1650,0",
+    "2200,0",
+    "2750,0",
+    "3300,0",
+    "3850,0",
+    "4400,0",
+    "4950,0"
+    ]
+
     with ThreadPoolExecutor(max_workers=10) as executor:
         for pos in positions:
             executor.submit(dang_ky_tai_khoan, pos)
