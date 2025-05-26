@@ -20,14 +20,11 @@ danh_sach_key = []
 while True:
     key = input("Nhập key (Enter để bỏ qua): ").strip()
     if key == "":
-        print("Bỏ qua, không thêm gì cả.")
+        break
     else:
         danh_sach_key.append(key)
         print(f"Đã thêm key: {key}")
     
-    tiep_tuc = input("Tiếp tục? (y/n): ").strip().lower()
-    if tiep_tuc != "y":
-        break
 
 print("\nDanh sách key đã nhập:")
 for k in danh_sach_key:
@@ -200,3 +197,6 @@ for _ in range(NhapSoAccMuoonTao // 10):
     with ThreadPoolExecutor(max_workers=10) as executor:
         for pos in positions:
             executor.submit(dang_ky_tai_khoan, pos)
+
+
+
