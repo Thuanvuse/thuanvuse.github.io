@@ -177,7 +177,7 @@ def dang_ky_tai_khoan(vitri):
                     WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//input[@placeholder="Nhập mã xác nhận"]'))).send_keys(get)
                     WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Đăng ký'] and not(contains(@class, 'disabled'))]"))).click()
                     with open("acc.txt", "a+") as f:
-                        f.write(TAK+"  " TAK + "123" + "\n")
+                        f.write(f"{TAK}"+ "\n")
                         requests.get(f"http://127.0.0.1:19995/api/v3/profiles/close/{ID}")
                         requests.get(f"http://127.0.0.1:19995/api/v3/profiles/delete/{ID}")
         else:
