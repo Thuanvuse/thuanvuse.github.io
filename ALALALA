@@ -26,6 +26,19 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 import subprocess
+import os
+import requests
+
+# Xóa file cũ nếu tồn tại
+if os.path.exists("OKVIP_MuaKey_v1.exe"):
+    os.remove("OKVIP_MuaKey_v1.exe")
+
+# Nếu chưa có file mới thì tải về
+if not os.path.exists("OKVIP_MuaKey_v2.exe"):
+    url = "https://drive.google.com/uc?export=download&id=1VVGU4B6_dcetg_TTSL4ElDJC7ZXDY9x9"
+    response = requests.get(url)
+    with open("OKVIP_MuaKey_v2.exe", "wb") as f:
+        f.write(response.content)
 
 # ===================== TIỆN ÍCH DÙNG CHUNG =====================
 def create_proxy(proxy_string):
