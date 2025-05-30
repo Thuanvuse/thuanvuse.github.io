@@ -2053,10 +2053,19 @@ class MainWindow(QWidget):
 				except:
 					self.table.setItem(row, 6, QTableWidgetItem(f"[💩💩💩]> Lỗi Cái Chó Gì Á Tự Check !"))
 
-			with ThreadPoolExecutor(max_workers=99) as executor:
+			# Đọc file tool_key.json và lấy giá trị threads
+			with open("tool_key.json", "r", encoding="utf-8") as f:
+				data = json.load(f)
+
+			if "threads" not in data:
+				raise ValueError("Không tìm thấy 'threads' trong file tool_key.json")
+
+			so_luong_luong = data["threads"]
+
+			with ThreadPoolExecutor(max_workers=so_luong_luong) as executor:
 				futures = [executor.submit(xu_ly_row, row) for row in range(self.table.rowCount())]
 				for future in as_completed(futures):
-					pass  # bạn có thể xử lý kết quả hoặc log tại đây nếu cần
+					pass  # xử lý kết quả nếu cần
 		chay_20_mot_luot()
 	
 	def TokenGetsl(self):
