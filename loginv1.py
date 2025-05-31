@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 thuandeptraivip2=10
 thuandeptraivip3=1
 print("Kiem Tra Phien Ban......\nBan Dang La Phien ban Moi Nhat")
-time.sleep(99999)
+
 def get_captcha_text(driver,tokenanticapcha):
     solan = 0
     text = ""
