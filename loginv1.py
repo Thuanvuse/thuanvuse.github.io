@@ -8,9 +8,22 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from concurrent.futures import ThreadPoolExecutor
 
-thuandeptraivip2=10
-thuandeptraivip3=1
-print("Kiem Tra Phien Ban......\nBan Dang La Phien ban Moi Nhat")
+# In màu nếu terminal hỗ trợ ANSI
+def in_mau(text, color_code):
+    return f"\033[{color_code}m{text}\033[0m"
+
+print(in_mau("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "36"))
+print(in_mau("🌀 TOOL AUTO BY THUẬN ĐẸP TRAI VIP PRO 🌀", "35"))
+print(in_mau("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n", "36"))
+
+thuandeptraivip2 = int(input(in_mau("👉 Nhập Số Luồng Đi Em Gái: ", "33")))
+thuandeptraivip3 = int(input(in_mau("🔁 Nhập Số Lần Chạy Lại Luôn Nè Cưng Ơiiii: ", "33")))
+
+print(in_mau("\n🚀 Đang Kiểm Tra Phiên Bản...", "34"))
+time.sleep(1)
+print(in_mau("✅ Bạn Đang Sử Dụng Phiên Bản Mới Nhất!", "32"))
+print(in_mau("🥳 Chúc Bạn Đít Sướng Và Săn Acc Thành Công!\n", "35"))
+print(in_mau("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "36"))
 def get_captcha_text(driver, tokenanticapcha):
     solan = 0
     text = ""
@@ -81,112 +94,138 @@ def get_position():
     return position_queue.get()
 
 def open_chrome(ID, TEN,tokenanticapcha):
-    global active_sessions
-    ToaDO_X, ToaDO_Y = get_position()
-    active_sessions[ID] = (ToaDO_X, ToaDO_Y)
-    print(f"🟢 Mở trình duyệt cho {TEN} tại tọa độ ({ToaDO_X}, {ToaDO_Y})")
-    url = f"http://127.0.0.1:19995/api/v3/profiles/start/{ID}?win_scale=0.25&win_size=290,1300"
-    json_data = requests.get(url).json()
-    remote_debugging_address = json_data["data"]["remote_debugging_address"]
-    driver_path = json_data["data"]["driver_path"]
-    options = webdriver.ChromeOptions()
-    options.debugger_address = remote_debugging_address
-    service = Service(driver_path)
-    driver = webdriver.Chrome(service=service, options=options)
-    driver.get("https://m.okvip19.live/login")
-    time.sleep(5)
-    Solanlam = 0
-    TrangThai = False
-    while Solanlam <= 6:
-        try:
-            try:
-                driver.find_element(By.XPATH, '//div[@class="user_name"]')
-                TrangThai = True
-            except:
-                driver.find_element(By.XPATH, '//input[@placeholder="Nhập mã xác nhận"]')
-            Solanlam = 100
-        except:
-            driver.refresh()
-            Solanlam += 1
-            driver.refresh()
-            time.sleep(3)
-    if Solanlam == 100 and TrangThai == False:
-          
-        try:
-            input_field = WebDriverWait(driver, 20).until(
-                EC.visibility_of_element_located((By.XPATH, '//input[@placeholder="Nhập mã xác nhận"]'))
-            )
-            input_field.send_keys(get_captcha_text(driver,tokenanticapcha))
-        except Exception as e:
-            luu_loi(TEN, f"Lỗi khi nhập mã xác nhận: {e}")
-        time.sleep(2)
-
-        button = driver.find_element(By.XPATH, '//button[@type="submit"]')
-        button.click()
-        
+    try:
+        global active_sessions
+        ToaDO_X, ToaDO_Y = get_position()
+        active_sessions[ID] = (ToaDO_X, ToaDO_Y)
+        print(f"🟢 Mở trình duyệt cho {TEN} tại tọa độ ({ToaDO_X}, {ToaDO_Y})")
+        url = f"http://127.0.0.1:19995/api/v3/profiles/start/{ID}?win_scale=0.25&win_size=290,1300"
+        json_data = requests.get(url).json()
+        remote_debugging_address = json_data["data"]["remote_debugging_address"]
+        driver_path = json_data["data"]["driver_path"]
+        options = webdriver.ChromeOptions()
+        options.debugger_address = remote_debugging_address
+        service = Service(driver_path)
+        driver = webdriver.Chrome(service=service, options=options)
+        driver.get("https://m.okvip19.live/login")
         time.sleep(5)
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//div[@class="user_name"]')))
-        print(f"{TEN} Xong!")
-       
-        time.sleep(1)
-        requests.get(f"http://127.0.0.1:19995/api/v3/profiles/close/{ID}")
+        Solanlam = 0
+        TrangThai = False
+        while Solanlam <= 6:
+            try:
+                try:
+                    driver.find_element(By.XPATH, '//div[@class="user_name"]')
+                    TrangThai = True
+                except:
+                    driver.find_element(By.XPATH, '//input[@placeholder="Nhập mã xác nhận"]')
+                Solanlam = 100
+            except:
+                driver.refresh()
+                Solanlam += 1
+                driver.refresh()
+                time.sleep(3)
+        if Solanlam == 100 and TrangThai == False:
+              
+            try:
+                input_field = WebDriverWait(driver, 20).until(
+                    EC.visibility_of_element_located((By.XPATH, '//input[@placeholder="Nhập mã xác nhận"]'))
+                )
+                input_field.send_keys(get_captcha_text(driver,tokenanticapcha))
+            except Exception as e:
+                luu_loi(TEN, f"Lỗi khi nhập mã xác nhận: {e}")
+            time.sleep(2)
 
-    else:
-        if TrangThai == False:
-            print(f"{TEN} Đéo Load Được Trang")
-            luu_loi(TEN, "Không load được trang")
-        else:
-            driver.find_element(By.XPATH, '//div[@class="user_name"]')
-            TrangThai = True
+            button = driver.find_element(By.XPATH, '//button[@type="submit"]')
+            button.click()
+            
+            time.sleep(5)
+            WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//div[@class="user_name"]')))
             print(f"{TEN} Xong!")
+           
             time.sleep(1)
             requests.get(f"http://127.0.0.1:19995/api/v3/profiles/close/{ID}")
-    time.sleep(2)
-    requests.get(f"http://127.0.0.1:19995/api/v3/profiles/close/{ID}")
+
+        else:
+            if TrangThai == False:
+                print(f"{TEN} Đéo Load Được Trang")
+                luu_loi(TEN, "Không load được trang")
+            else:
+                driver.find_element(By.XPATH, '//div[@class="user_name"]')
+                TrangThai = True
+                print(f"{TEN} Xong!")
+                time.sleep(1)
+                requests.get(f"http://127.0.0.1:19995/api/v3/profiles/close/{ID}")
+        time.sleep(2)
+        requests.get(f"http://127.0.0.1:19995/api/v3/profiles/close/{ID}")
+    except:
+        requests.get(f"http://127.0.0.1:19995/api/v3/profiles/close/{ID}")
+
+import requests
+
+def in_mau(text, color_code):
+    return f"\033[{color_code}m{text}\033[0m"
+
+# ────────── TOKEN XỬ LÝ ────────── #
 file_token = "token.txt"
 
 try:
     with open(file_token, "r") as f:
         old_token = f.read().strip()
-    chon = input("Bạn có muốn sử dụng lại token cũ không? (c/k): ").strip().lower()
+    chon = input(in_mau("🔁 Bạn có muốn sử dụng lại token cũ không? (c/k): ", "33")).strip().lower()
     if chon == "c":
         tokenanticapcha = old_token
     else:
-        tokenanticapcha = input("Vui Lòng Nhập API Token Captcha (https://anticaptcha.top/): ").strip()
+        tokenanticapcha = input(in_mau("🔐 Vui Lòng Nhập API Token Captcha (https://anticaptcha.top/): ", "33")).strip()
         with open(file_token, "w") as f:
             f.write(tokenanticapcha)
 except FileNotFoundError:
-    tokenanticapcha = input("Vui Lòng Nhập API Token Captcha (https://anticaptcha.top/): ").strip()
+    tokenanticapcha = input(in_mau("🔐 Vui Lòng Nhập API Token Captcha (https://anticaptcha.top/): ", "33")).strip()
     with open(file_token, "w") as f:
         f.write(tokenanticapcha)
 
-# Gọi API kiểm tra số dư
+# ────────── KIỂM TRA SỐ DƯ ────────── #
 try:
     response = requests.get(f"https://anticaptcha.top/api/getbalance?apikey={tokenanticapcha}")
-    print("Số Tiền Của Bạn Còn: ", response.text)
+    balance = response.json().get("balance", "Không xác định")
+    print(in_mau(f"💰 Số Tiền Của Bạn Còn: {balance}", "32"))
 except Exception as e:
-    print("Đã xảy ra lỗi khi kiểm tra số dư:", e)
-a = requests.get("http://127.0.0.1:19995/api/v3/profiles?per_page=99999&sort=0").json()
+    print(in_mau(f"❌ Đã xảy ra lỗi khi kiểm tra số dư: {e}", "31"))
 
+# ────────── LẤY DANH SÁCH PROFILE ────────── #
+try:
+    a = requests.get("http://127.0.0.1:19995/api/v3/profiles?per_page=99999&sort=0").json()
+except Exception as e:
+    print(in_mau(f"⚠️ Không thể lấy danh sách profiles: {e}", "31"))
+    a = {}
+
+# ────────── NHẬP DANH SÁCH PROFILE MUỐN CHẠY ────────── #
 stt = 0
 ChayBiLoi = []
-checkcu=int(input("Nhập Thủ Công [1] | Nhập Dây [2] : "))
+
+print(in_mau("\n🔧 CHỌN CÁCH NHẬP PROFILE:", "36"))
+print(in_mau(" [1] Nhập thủ công", "36"))
+print(in_mau(" [2] Nhập theo dãy số", "36"))
+
+checkcu = int(input(in_mau("👉 Nhập lựa chọn của bạn (1 hoặc 2): ", "33")))
+
 if checkcu == 1:
     while True:
         stt += 1
-        them = input(f"Nhập Trình Duyệt Muốn Chạy [ALL] <{stt}>: ").strip()
-
-        if them.lower() != "all" and them:  
+        them = input(in_mau(f"➕ Nhập Tên Trình Duyệt Muốn Chạy [hoặc gõ 'ALL' để dừng] <{stt}>: ", "35")).strip()
+        if them.lower() != "all" and them:
             ChayBiLoi.append(them)
         else:
             break
 else:
-    st1=int(input("Nhập Điểm Bắt Đầu: "))
-    st2=int(input("Nhập Điểm Kết Thúc: "))
-    for x in range(st1,st2+1,1):
+    st1 = int(input(in_mau("🔢 Nhập Điểm Bắt Đầu: ", "33")))
+    st2 = int(input(in_mau("🔢 Nhập Điểm Kết Thúc: ", "33")))
+    for x in range(st1, st2 + 1):
         ChayBiLoi.append(x)
-        print(x)
+        print(in_mau(f"✅ Đã thêm profile số: {x}", "32"))
 
+# ────────── TỔNG KẾT ────────── #
+print(in_mau("\n📋 Danh sách profile đã chọn:", "36"))
+print(in_mau(str(ChayBiLoi), "36"))
 
 
 
