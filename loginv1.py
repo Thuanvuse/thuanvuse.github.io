@@ -11,7 +11,6 @@ from concurrent.futures import ThreadPoolExecutor
 thuandeptraivip2=10
 thuandeptraivip3=1
 print("Kiem Tra Phien Ban......\nBan Dang La Phien ban Moi Nhat")
-
 def get_captcha_text(driver,tokenanticapcha):
     solan = 0
     text = ""
@@ -139,7 +138,8 @@ def open_chrome(ID, TEN,tokenanticapcha):
             requests.get(f"http://127.0.0.1:19995/api/v3/profiles/close/{ID}")
     time.sleep(2)
     requests.get(f"http://127.0.0.1:19995/api/v3/profiles/close/{ID}")
-# Lấy danh sách profile từ API
+tokenanticapcha=input("Vui Lòng Nhập API Token Captcha (https://anticaptcha.top/): ")
+print(f"Số Tiền Của Bạn Còn:  " + requests.get(f"https://anticaptcha.top/api/getbalance?apikey={tokenanticapcha}").text)
 a = requests.get("http://127.0.0.1:19995/api/v3/profiles?per_page=99999&sort=0").json()
 
 stt = 0
@@ -164,8 +164,7 @@ else:
 
 
 
-tokenanticapcha=input("Vui Lòng Nhập API Token Captcha (https://anticaptcha.top/): ")
-print(f"Số Tiền Của Bạn Còn:  " + requests.get(f"https://anticaptcha.top/api/getbalance?apikey={tokenanticapcha}").text)
+
 for x in range(int(thuandeptraivip3)):
     with ThreadPoolExecutor(max_workers=int(thuandeptraivip2)) as executor:
         for profile in a["data"]:
