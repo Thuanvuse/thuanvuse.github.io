@@ -143,8 +143,29 @@ def open_chrome(ID, TEN,tokenanticapcha):
             requests.get(f"http://127.0.0.1:19995/api/v3/profiles/close/{ID}")
     time.sleep(2)
     requests.get(f"http://127.0.0.1:19995/api/v3/profiles/close/{ID}")
-tokenanticapcha=input("Vui Lòng Nhập API Token Captcha (https://anticaptcha.top/): ")
-print(f"Số Tiền Của Bạn Còn:  " + requests.get(f"https://anticaptcha.top/api/getbalance?apikey={tokenanticapcha}").text)
+file_token = "token.txt"
+
+try:
+    with open(file_token, "r") as f:
+        old_token = f.read().strip()
+    chon = input("Bạn có muốn sử dụng lại token cũ không? (c/k): ").strip().lower()
+    if chon == "c":
+        tokenanticapcha = old_token
+    else:
+        tokenanticapcha = input("Vui Lòng Nhập API Token Captcha (https://anticaptcha.top/): ").strip()
+        with open(file_token, "w") as f:
+            f.write(tokenanticapcha)
+except FileNotFoundError:
+    tokenanticapcha = input("Vui Lòng Nhập API Token Captcha (https://anticaptcha.top/): ").strip()
+    with open(file_token, "w") as f:
+        f.write(tokenanticapcha)
+
+# Gọi API kiểm tra số dư
+try:
+    response = requests.get(f"https://anticaptcha.top/api/getbalance?apikey={tokenanticapcha}")
+    print("Số Tiền Của Bạn Còn: ", response.text)
+except Exception as e:
+    print("Đã xảy ra lỗi khi kiểm tra số dư:", e)
 a = requests.get("http://127.0.0.1:19995/api/v3/profiles?per_page=99999&sort=0").json()
 
 stt = 0
