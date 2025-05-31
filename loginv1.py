@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 thuandeptraivip2=10
 thuandeptraivip3=1
 print("Kiem Tra Phien Ban......\nBan Dang La Phien ban Moi Nhat")
-def get_captcha_text(driver,tokenanticapcha):
+def get_captcha_text(driver, tokenanticapcha):
     solan = 0
     text = ""
 
@@ -20,20 +20,26 @@ def get_captcha_text(driver,tokenanticapcha):
         if solan >= 5:
             try:
                 driver.find_element(By.CLASS_NAME, "codeImage").click()
-                print("click Đổi Captcha") # Nếu click thất bại thì bỏ qua
+                print("click Đổi Captcha")
                 time.sleep(2)
             except:
-                print("click captchaThất bại") # Nếu click thất bại thì bỏ qua
+                print("click captcha Thất bại")
             solan = 0
 
         try:
-            img_element = driver.find_element(By.CLASS_NAME, "codeImage")
-            base64_data = img_element.get_attribute("src").replace(" ", "").replace("\n", "").replace("\t", "")
+            img_element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "codeImage"))
+            )
+            src = img_element.get_attribute("src")
+            if "base64," not in src:
+                print("Không phải ảnh base64")
+                continue
+            base64_data = src.split("base64,", 1)[1]
 
             payload = {
-                "apikey": tokenanticapcha,  # Thay bằng API key thực tế
+                "apikey": tokenanticapcha,
                 "img": base64_data,
-                "type": 14  # Loại captcha cần giải
+                "type": 14
             }
 
             response = requests.post("https://anticaptcha.top/api/captcha", json=payload)
@@ -42,7 +48,7 @@ def get_captcha_text(driver,tokenanticapcha):
                 data = response.json()
                 if data.get("success"):
                     print("Captcha giải được:", data["captcha"])
-                    text=data["captcha"]
+                    text = data["captcha"]
                 else:
                     print("Lỗi:", data.get("message"))
             else:
@@ -50,10 +56,10 @@ def get_captcha_text(driver,tokenanticapcha):
 
         except Exception as e:
             print("Error:", e)
-            time.sleep(1)
+
+        time.sleep(1)
 
     return text
-
     
 def create_position_queue():
 
