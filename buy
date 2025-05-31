@@ -1,0 +1,603 @@
+# import sys
+# from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout
+# from PyQt6.QtCore import Qt
+# from PyQt6.QtGui import QFont
+
+# class MaintenanceWindow(QWidget):
+#     def __init__(self):
+#         super().__init__()
+#         self.setWindowTitle("⚠️ BẢO TRÌ HỆ THỐNG ⚠️")
+#         self.resize(500, 400)
+#         self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+#         self.setup_ui()
+
+#     def setup_ui(self):
+#         layout = QVBoxLayout()
+        
+#         # Thiết lập màu nền và font
+#         self.setStyleSheet("""
+#             QWidget {
+#                 background-color: #1a1a1a;
+#                 color: #ffffff;
+#             }
+#             QLabel {
+#                 color: #ffffff;
+#             }
+#         """)
+        
+#         # Logo hoặc icon bảo trì
+#         maintenance_icon = QLabel("🔧")
+#         maintenance_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+#         maintenance_icon.setStyleSheet("""
+#             font-size: 100px;
+#             margin: 20px;
+#             color: #ff6b6b;
+#         """)
+#         layout.addWidget(maintenance_icon)
+        
+#         # Tiêu đề
+#         title = QLabel("⚠️ HỆ THỐNG ĐANG BẢO TRÌ ⚠️")
+#         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+#         title.setStyleSheet("""
+#             font-size: 28px;
+#             font-weight: bold;
+#             color: #ff6b6b;
+#             margin: 10px;
+#             padding: 10px;
+#             background-color: #2d2d2d;
+#             border-radius: 10px;
+#         """)
+#         layout.addWidget(title)
+        
+#         # Thông báo
+#         message = QLabel(
+#             "Chúng tôi đang nâng cấp hệ thống để mang đến trải nghiệm tốt hơn cho bạn.\n"
+#             "Xin lỗi vì sự bất tiện này. Vui lòng quay lại sau!"
+#         )
+#         message.setAlignment(Qt.AlignmentFlag.AlignCenter)
+#         message.setStyleSheet("""
+#             font-size: 16px;
+#             margin: 20px;
+#             padding: 15px;
+#             background-color: #2d2d2d;
+#             border-radius: 10px;
+#         """)
+#         message.setWordWrap(True)
+#         layout.addWidget(message)
+        
+#         # Nút đóng
+#         close_button = QPushButton("ĐÓNG")
+#         close_button.setStyleSheet("""
+#             QPushButton {
+#                 background-color: #ff6b6b;
+#                 color: white;
+#                 border: none;
+#                 padding: 15px 30px;
+#                 border-radius: 10px;
+#                 font-size: 18px;
+#                 font-weight: bold;
+#                 margin: 20px;
+#             }
+#             QPushButton:hover {
+#                 background-color: #ff5252;
+#             }
+#         """)
+#         close_button.clicked.connect(self.close)
+#         layout.addWidget(close_button)
+        
+#         self.setLayout(layout)
+
+# if __name__ == "__main__":
+#     app = QApplication(sys.argv)
+#     window = MaintenanceWindow()
+#     window.show()
+#     sys.exit(app.exec())
+import sys
+import random
+import string
+import requests
+import subprocess
+from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QMessageBox, QLineEdit, QDialog, QComboBox, QHBoxLayout, QTextEdit
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtCore import QTimer, Qt
+from io import BytesIO
+import json
+import os
+import time
+import subprocess
+import base64
+TOKEN = "BQMWETT6BAEN4DTECLYEZKCGL3YQPDUGH5ZG1VKORNRUKRF4IB5SYNCQFAOZTDK9"
+ACCOUNT = "8829032006"
+BANK = "MBBank"
+
+BALANCE_FILE = "balance.json"
+KEY_HISTORY_FILE = "key_history.json"
+
+KEY_PACKAGES = [
+    {"label": "Key FREE / 0 luồng (1k)","hours": 24,"threads": 1,"price": 0},
+    {"label": "Key 12 phút / 3 luồng (5k)","hours": 0.2,"threads": 3,"price": 5000},
+    {"label": "Key 1 giờ / 20 luồng (50k)", "hours": 1, "threads": 20, "price": 50000},
+    {"label": "Key 2 giờ / 20 luồng (90k)", "hours": 2, "threads": 20, "price": 90000},
+    {"label": "Key 1 giờ / 30 luồng (70k)", "hours": 1, "threads": 30, "price": 70000},
+    {"label": "Key 2 giờ / 30 luồng (130k)", "hours": 2, "threads": 30, "price": 130000},
+    {"label": "Key 1 giờ / 50 luồng (100k)", "hours": 1, "threads": 50, "price": 100000},
+    {"label": "Key 2 giờ / 50 luồng (190k)", "hours": 2, "threads": 50, "price": 190000},
+    {"label": "Key 1 giờ / 100 luồng (200k)", "hours": 1, "threads": 100, "price": 200000},
+    {"label": "Key 2 giờ / 100 luồng (390k)", "hours": 2, "threads": 100, "price": 390000},
+]
+KEY_FILE = "tool_key.json"
+
+def encode_balance(balance):
+    data = json.dumps({"balance": balance})
+    return base64.b64encode(data.encode()).decode()
+
+def decode_balance(encoded_data):
+    try:
+        decoded = base64.b64decode(encoded_data.encode()).decode()
+        data = json.loads(decoded)
+        return data.get("balance", 0)
+    except Exception:
+        return 0
+
+def load_balance():
+    if os.path.exists(BALANCE_FILE):
+        with open(BALANCE_FILE, "r", encoding="utf-8") as f:
+            try:
+                encoded_data = f.read().strip()
+                return decode_balance(encoded_data)
+            except Exception:
+                return 0
+    return 0
+
+def save_balance(balance):
+    encoded_data = encode_balance(balance)
+    with open(BALANCE_FILE, "w", encoding="utf-8") as f:
+        f.write(encoded_data)
+
+def generate_fake_data():
+    fake_fields = {
+        "timestamp": int(time.time()),
+        "checksum": ''.join(random.choices(string.ascii_letters + string.digits, k=32)),
+        "version": f"v{random.randint(1, 9)}.{random.randint(0, 9)}.{random.randint(0, 9)}",
+        "metadata": {
+            "platform": random.choice(["windows", "linux", "macos"]),
+            "build": ''.join(random.choices(string.ascii_uppercase + string.digits, k=8)),
+            "environment": random.choice(["production", "development", "testing"]),
+            "flags": [random.choice(["enabled", "disabled"]) for _ in range(3)]
+        },
+        "stats": {
+            "requests": random.randint(1000, 9999),
+            "uptime": random.randint(100, 999),
+            "performance": random.uniform(0.8, 1.0)
+        }
+    }
+    return fake_fields
+
+def save_key_info(key_info):
+    with open(KEY_FILE, "w", encoding="utf-8") as f:
+        json.dump(key_info, f)
+
+def load_key_info():
+    if os.path.exists(KEY_FILE):
+        with open(KEY_FILE, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except Exception:
+                return None
+    return None
+
+def is_key_valid(key_info):
+    if not key_info:
+        return False
+    now = int(time.time())
+    return now < key_info.get("expire_time", 0)
+
+def load_key_history():
+    if os.path.exists(KEY_HISTORY_FILE):
+        with open(KEY_HISTORY_FILE, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except Exception:
+                return []
+    return []
+
+def save_key_history(history):
+    with open(KEY_HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+
+class MainWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Nạp Tiền & Mua Key")
+        self.resize(500, 600)
+        self.setup_ui()
+        self.balance = load_balance()
+        self.update_balance_display()
+
+    def setup_ui(self):
+        layout = QVBoxLayout()
+
+        # Phần hiển thị số dư
+        self.balance_label = QLabel()
+        self.balance_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.balance_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #2ecc71;")
+        layout.addWidget(self.balance_label)
+
+        # Thêm phần hiển thị key hiện tại
+        current_key_group = QWidget()
+        current_key_layout = QVBoxLayout()
+        
+        current_key_title = QLabel("Key Hiện Tại")
+        current_key_title.setStyleSheet("font-size: 14px; font-weight: bold;")
+        current_key_layout.addWidget(current_key_title)
+
+        self.current_key_label = QLabel()
+        self.current_key_label.setStyleSheet("""
+            QLabel {
+                background-color: #f8f9fa;
+                padding: 10px;
+                border-radius: 5px;
+                border: 1px solid #dee2e6;
+            }
+        """)
+        current_key_layout.addWidget(self.current_key_label)
+
+        # Thêm nút xóa key
+        self.btn_delete_key = QPushButton("Xóa Key")
+        self.btn_delete_key.setStyleSheet("""
+            QPushButton {
+                background-color: #dc3545;
+                color: white;
+                padding: 5px;
+                border-radius: 3px;
+            }
+            QPushButton:hover {
+                background-color: #c82333;
+            }
+        """)
+        self.btn_delete_key.clicked.connect(self.delete_key)
+        current_key_layout.addWidget(self.btn_delete_key)
+
+        current_key_group.setLayout(current_key_layout)
+        layout.addWidget(current_key_group)
+
+        # Phần nạp tiền
+        deposit_group = QWidget()
+        deposit_layout = QVBoxLayout()
+        
+        deposit_title = QLabel("Nạp Tiền")
+        deposit_title.setStyleSheet("font-size: 14px; font-weight: bold;")
+        deposit_layout.addWidget(deposit_title)
+
+        self.amount_input = QLineEdit()
+        self.amount_input.setPlaceholderText("Nhập số tiền (VND)")
+        self.amount_input.setText("10000")
+        deposit_layout.addWidget(self.amount_input)
+
+        self.btn_create_qr = QPushButton("Tạo QR Nạp Tiền")
+        self.btn_create_qr.clicked.connect(self.start_payment)
+        deposit_layout.addWidget(self.btn_create_qr)
+
+        self.label_qr = QLabel("")
+        self.label_qr.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        deposit_layout.addWidget(self.label_qr)
+
+        self.label_timer = QLabel("")
+        self.label_timer.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        deposit_layout.addWidget(self.label_timer)
+
+        self.btn_retry = QPushButton("Tạo mã mới")
+        self.btn_retry.clicked.connect(self.start_payment)
+        self.btn_retry.setVisible(False)
+        deposit_layout.addWidget(self.btn_retry)
+
+        deposit_group.setLayout(deposit_layout)
+        layout.addWidget(deposit_group)
+
+        # Phần mua key
+        key_group = QWidget()
+        key_layout = QVBoxLayout()
+        
+        key_title = QLabel("Mua Key")
+        key_title.setStyleSheet("font-size: 14px; font-weight: bold;")
+        key_layout.addWidget(key_title)
+
+        self.key_combo = QComboBox()
+        for pkg in KEY_PACKAGES:
+            self.key_combo.addItem(pkg["label"], pkg)
+        key_layout.addWidget(self.key_combo)
+
+        self.btn_buy_key = QPushButton("Mua Key")
+        self.btn_buy_key.clicked.connect(self.buy_key)
+        key_layout.addWidget(self.btn_buy_key)
+
+        key_group.setLayout(key_layout)
+        layout.addWidget(key_group)
+
+        # Thêm phần hiển thị lịch sử key
+        history_group = QWidget()
+        history_layout = QVBoxLayout()
+        
+        history_title = QLabel("Lịch sử Key")
+        history_title.setStyleSheet("font-size: 14px; font-weight: bold;")
+        history_layout.addWidget(history_title)
+
+        self.key_history_text = QTextEdit()
+        self.key_history_text.setReadOnly(True)
+        self.key_history_text.setMaximumHeight(150)
+        history_layout.addWidget(self.key_history_text)
+
+        history_group.setLayout(history_layout)
+        layout.addWidget(history_group)
+
+        # Thêm nút vào App
+        app_group = QWidget()
+        app_layout = QVBoxLayout()
+        
+        app_title = QLabel("Khởi Chạy Tool")
+        app_title.setStyleSheet("font-size: 14px; font-weight: bold;")
+        app_layout.addWidget(app_title)
+
+        self.btn_open_app = QPushButton("Vào App")
+        self.btn_open_app.setStyleSheet("""
+            QPushButton {
+                background-color: #2ecc71;
+                color: white;
+                font-size: 16px;
+                padding: 10px;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #27ae60;
+            }
+        """)
+        self.btn_open_app.clicked.connect(self.open_app)
+        app_layout.addWidget(self.btn_open_app)
+
+        app_group.setLayout(app_layout)
+        layout.addWidget(app_group)
+
+        self.setLayout(layout)
+        
+        # Load và hiển thị lịch sử key
+        self.load_key_history()
+        
+        # Cập nhật hiển thị key hiện tại
+        self.update_current_key_display()
+
+        # Timer cho việc kiểm tra giao dịch
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_timer)
+        self.time_left = 60
+        self.random_des = ""
+
+        # Timer cho việc cập nhật thời gian còn lại của key
+        self.key_timer = QTimer()
+        self.key_timer.timeout.connect(self.update_current_key_display)
+        self.key_timer.start(60000)  # Cập nhật mỗi phút
+
+    def update_balance_display(self):
+        self.balance_label.setText(f"Số dư hiện tại: {self.balance:,} VND")
+
+    def start_payment(self):
+        self.btn_retry.setVisible(False)
+        self.time_left = 180
+        self.label_timer.setText("⏳ Thời gian còn lại: 180s")
+        self.random_des = f"pay{''.join(random.choices(string.digits, k=6))}"
+
+        try:
+            amount = int(self.amount_input.text())
+            if amount <= 0:
+                raise ValueError
+        except Exception:
+            QMessageBox.warning(self, "Lỗi", "Vui lòng nhập số tiền hợp lệ!")
+            return
+
+        self.amount = amount
+
+        qr_url = f"https://qr.sepay.vn/img?acc={ACCOUNT}&bank={BANK}&amount={amount}&des={self.random_des}"
+        try:
+            response = requests.get(qr_url)
+            pixmap = QPixmap()
+            pixmap.loadFromData(response.content)
+            self.label_qr.setPixmap(pixmap.scaled(250, 250, Qt.AspectRatioMode.KeepAspectRatio))
+        except Exception as e:
+            self.label_qr.setText(f"Lỗi tải QR: {e}")
+            return
+
+        self.timer.start(1000)
+        self.check_transaction()
+
+    def update_timer(self):
+        self.time_left -= 1
+        self.label_timer.setText(f"⏳ Thời gian còn lại: {self.time_left}s")
+        if self.time_left <= 0:
+            self.timer.stop()
+            self.btn_retry.setVisible(True)
+            QMessageBox.warning(self, "Hết thời gian", "Không thấy giao dịch. Vui lòng thử lại!")
+
+    def check_transaction(self):
+        def check():
+            if self.time_left <= 0:
+                return
+            try:
+                url = f"https://my.sepay.vn/userapi/transactions/list?account_number={ACCOUNT}&limit=20"
+                headers = {"Authorization": f"Bearer {TOKEN}"}
+                res = requests.get(url, headers=headers).json()
+                for tx in res.get("transactions", []):
+                    if self.random_des in (tx.get("transaction_content") or "") and float(tx["amount_in"]) == self.amount:
+                        self.timer.stop()
+                        self.balance += self.amount
+                        save_balance(self.balance)
+                        self.update_balance_display()
+                        QMessageBox.information(self, "✅ Thành công", f"Đã nhận: {self.amount:,} VND\nNội dung: {self.random_des}")
+                        return
+            except Exception as e:
+                print("Lỗi kiểm tra:", e)
+            QTimer.singleShot(3000, self.check_transaction)
+
+        QTimer.singleShot(1000, check)
+
+    def load_key_history(self):
+        history = load_key_history()
+        if history:
+            text = ""
+            for key_info in history:
+                expire_time = time.strftime('%d/%m/%Y %H:%M:%S', time.localtime(key_info["expire_time"]))
+                text += f"Key: {key_info['key']}\n"
+                text += f"Hạn dùng: {expire_time}\n"
+                text += f"Số luồng: {key_info['threads']}\n"
+                text += "-" * 30 + "\n"
+            self.key_history_text.setText(text)
+
+    def open_app(self):
+        key_info = load_key_info()
+        if not is_key_valid(key_info):
+            QMessageBox.critical(self, "Lỗi", "Tool đã hết hạn! Vui lòng mua key mới.")
+            return
+        
+        # Kiểm tra thời gian còn lại
+        now = int(time.time())
+        time_left = key_info["expire_time"] - now
+        hours_left = time_left // 3600
+        minutes_left = (time_left % 3600) // 60
+        
+        # Hiển thị thông báo xác nhận
+        reply = QMessageBox.question(
+            self, 
+            "Xác nhận", 
+            f"Key còn hạn: {hours_left} giờ {minutes_left} phút\n"
+            f"Số luồng: {key_info['threads']}\n\n"
+            "Bạn có muốn mở tool không?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            try:
+                exe_path = os.path.join(os.getcwd(), "ABCXYZ.exe")
+                subprocess.Popen([exe_path], shell=True)
+                self.close()  # Đóng cửa sổ nạp tiền
+            except Exception as e:
+                QMessageBox.critical(self, "Lỗi", f"Không thể mở tool: {str(e)}")
+
+    def update_current_key_display(self):
+        key_info = load_key_info()
+        if not key_info or not is_key_valid(key_info):
+            self.current_key_label.setText("Chưa có key hoặc key đã hết hạn")
+            self.current_key_label.setStyleSheet("""
+                QLabel {
+                    background-color: #f8d7da;
+                    color: #721c24;
+                    padding: 10px;
+                    border-radius: 5px;
+                    border: 1px solid #f5c6cb;
+                }
+            """)
+            self.btn_delete_key.setEnabled(False)  # Vô hiệu hóa nút xóa khi không có key
+            return
+
+        now = int(time.time())
+        time_left = key_info["expire_time"] - now
+        hours_left = time_left // 3600
+        minutes_left = (time_left % 3600) // 60
+
+        self.current_key_label.setText(
+            f"Key: {key_info['key']}\n"
+            f"Thời gian còn lại: {hours_left} giờ {minutes_left} phút\n"
+            f"Số luồng: {key_info['threads']}"
+        )
+        self.current_key_label.setStyleSheet("""
+            QLabel {
+                background-color: #d4edda;
+                color: #155724;
+                padding: 10px;
+                border-radius: 5px;
+                border: 1px solid #c3e6cb;
+            }
+        """)
+        self.btn_delete_key.setEnabled(True)  # Kích hoạt nút xóa khi có key
+
+    def buy_key(self):
+        pkg = self.key_combo.currentData()
+        if self.balance < pkg["price"]:
+            QMessageBox.warning(self, "Lỗi", f"Số dư không đủ! Cần {pkg['price']:,} VND")
+            return
+
+        # Tạo key
+        now = int(time.time())
+        expire_time = now + pkg["hours"] * 3600
+        key = f"DEMO-{pkg['threads']}T-{pkg['hours']}H-{now}"
+        
+        # Lưu key
+        key_info = {
+            "key": key,
+            "threads": pkg["threads"],
+            "expire_time": expire_time,
+            "purchase_time": now,
+            "package": pkg["label"]
+        }
+        save_key_info(key_info)
+        
+        # Lưu vào lịch sử
+        history = load_key_history()
+        history.append(key_info)
+        save_key_history(history)
+        
+        # Trừ tiền
+        self.balance -= pkg["price"]
+        save_balance(self.balance)
+        self.update_balance_display()
+        
+        # Cập nhật hiển thị lịch sử và key hiện tại
+        self.load_key_history()
+        self.update_current_key_display()
+        
+        # Hiển thị thông báo thành công và hỏi có muốn vào app không
+        reply = QMessageBox.question(
+            self, 
+            "Thành công", 
+            f"Đã mua key thành công!\n"
+            f"Key: {key}\n"
+            f"Hạn dùng đến: {time.strftime('%d/%m/%Y %H:%M:%S', time.localtime(expire_time))}\n"
+            f"Số luồng: {pkg['threads']}\n\n"
+            "Bạn có muốn mở tool ngay không?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            self.open_app()
+
+    def delete_key(self):
+        key_info = load_key_info()
+        if not key_info:
+            QMessageBox.warning(self, "Lỗi", "Không có key để xóa!")
+            return
+
+        # Hiển thị thông báo xác nhận
+        reply = QMessageBox.question(
+            self,
+            "Xác nhận xóa",
+            "Bạn có chắc chắn muốn xóa key hiện tại không?\n"
+            "Lưu ý: Key đã xóa không thể khôi phục!",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            try:
+                # Xóa file key
+                if os.path.exists(KEY_FILE):
+                    os.remove(KEY_FILE)
+                
+                # Cập nhật hiển thị
+                self.update_current_key_display()
+                
+                QMessageBox.information(self, "Thành công", "Đã xóa key thành công!")
+            except Exception as e:
+                QMessageBox.critical(self, "Lỗi", f"Không thể xóa key: {str(e)}")
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
