@@ -11,9 +11,8 @@ from concurrent.futures import ThreadPoolExecutor
 thuandeptraivip2=10
 thuandeptraivip3=1
 print("Kiem Tra Phien Ban......\nBan Dang La Phien ban Moi Nhat")
-print("Lỗi Kết Nối Máy Chủ Xác Minh Robot (Captcha)")
 time.sleep(99999)
-def get_captcha_text(driver):
+def get_captcha_text(driver,tokenanticapcha):
     solan = 0
     text = ""
 
@@ -32,16 +31,24 @@ def get_captcha_text(driver):
             img_element = driver.find_element(By.CLASS_NAME, "codeImage")
             base64_data = img_element.get_attribute("src").replace(" ", "").replace("\n", "").replace("\t", "")
 
-            url = "http://103.77.242.210:8000/ocr"
-            headers = {"accept": "application/json"}
-            data = {"image": base64_data}
+            payload = {
+                "apikey": tokenanticapcha,  # Thay bằng API key thực tế
+                "img": base64_data,
+                "type": 14  # Loại captcha cần giải
+            }
 
-            response = requests.post(url, headers=headers, data=data, timeout=5)
-            if response.status_code == 200:
-                text = response.json().get('data', '')
-                print("OCR:", text)
+            response = requests.post("https://anticaptcha.top/api/captcha", json=payload)
+
+            if response.ok:
+                data = response.json()
+                if data.get("success"):
+                    print("Captcha giải được:", data["captcha"])
+                    text=data["captcha"]
+                else:
+                    print("Lỗi:", data.get("message"))
             else:
-                print("OCR request failed:", response.status_code)
+                print("Lỗi HTTP:", response.status_code)
+
         except Exception as e:
             print("Error:", e)
             time.sleep(1)
@@ -69,7 +76,7 @@ def get_position():
         position_queue = create_position_queue()  # Reset lại hàng đợi nếu rỗng
     return position_queue.get()
 
-def open_chrome(ID, TEN):
+def open_chrome(ID, TEN,tokenanticapcha):
     global active_sessions
     ToaDO_X, ToaDO_Y = get_position()
     active_sessions[ID] = (ToaDO_X, ToaDO_Y)
@@ -105,7 +112,7 @@ def open_chrome(ID, TEN):
             input_field = WebDriverWait(driver, 20).until(
                 EC.visibility_of_element_located((By.XPATH, '//input[@placeholder="Nhập mã xác nhận"]'))
             )
-            input_field.send_keys(get_captcha_text(driver))
+            input_field.send_keys(get_captcha_text(driver,tokenanticapcha))
         except Exception as e:
             luu_loi(TEN, f"Lỗi khi nhập mã xác nhận: {e}")
         time.sleep(2)
@@ -157,19 +164,16 @@ else:
 
 
 
-
+tokenanticapcha=input("Vui Lòng Nhập API Token Captcha (https://anticaptcha.top/): ")
+print(f"Số Tiền Của Bạn Còn:  " + requests.get(f"https://anticaptcha.top/api/getbalance?apikey={tokenanticapcha}").text)
 for x in range(int(thuandeptraivip3)):
     with ThreadPoolExecutor(max_workers=int(thuandeptraivip2)) as executor:
         for profile in a["data"]:
             ID = profile["id"]
             TEN = profile["name"]
             if ChayBiLoi:
-
-              # Nếu có danh sách trình duyệt lỗi, kiểm tra trước khi chạy
                 for x in ChayBiLoi:
-                    
                     if int(TEN) == int(x):  # Ép kiểu để so sánh đúng
-                        
                         executor.submit(open_chrome, ID, TEN)
             else:  # Nếu chọn "all", chạy luôn
                 executor.submit(open_chrome, ID, TEN)
