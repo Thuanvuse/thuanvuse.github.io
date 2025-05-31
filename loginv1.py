@@ -14,7 +14,6 @@ print("Kiem Tra Phien Ban......\nBan Dang La Phien ban Moi Nhat")
 def get_captcha_text(driver, tokenanticapcha):
     solan = 0
     text = ""
-
     while len(text) < 4:
         solan += 1
         if solan >= 5:
@@ -179,6 +178,6 @@ for x in range(int(thuandeptraivip3)):
             if ChayBiLoi:
                 for x in ChayBiLoi:
                     if int(TEN) == int(x):  # Ép kiểu để so sánh đúng
-                        executor.submit(open_chrome, ID, TEN)
+                        executor.submit(open_chrome, ID, TEN,tokenanticapcha)
             else:  # Nếu chọn "all", chạy luôn
-                executor.submit(open_chrome, ID, TEN)
+                executor.submit(open_chrome, ID, TEN,tokenanticapcha)
