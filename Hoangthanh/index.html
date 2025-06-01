@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Test nền ảnh mờ dần</title>
+  <style>
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      overflow: hidden;
+      background: black;
+      font-family: Arial, sans-serif;
+    }
+    .background-image {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-size: cover;
+      background-position: center;
+      opacity: 0.2;
+      transition: opacity 1s ease-in-out, background-image 1s ease-in-out;
+      z-index: -1;
+    }
+  </style>
+</head>
+<body>
+  <div class="background-image"></div>
+
+  <script>
+    const backgroundImages = ['bg1.jpg', 'bg2.jpg', 'bg3.jpg'];
+    let currentIndex = 0;
+    const bgDiv = document.querySelector('.background-image');
+
+    function changeBackground() {
+      bgDiv.style.opacity = 0;
+      setTimeout(() => {
+        bgDiv.style.backgroundImage = `url('${backgroundImages[currentIndex]}')`;
+        bgDiv.style.opacity = 0.2;
+        currentIndex = (currentIndex + 1) % backgroundImages.length;
+      }, 1000);
+    }
+
+    // Hiển thị ảnh nền đầu tiên
+    bgDiv.style.backgroundImage = `url('${backgroundImages[0]}')`;
+
+    // Đổi ảnh nền mỗi 6 giây
+    setInterval(changeBackground, 6000);
+  </script>
+</body>
+</html>
