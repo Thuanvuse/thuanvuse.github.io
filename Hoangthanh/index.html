@@ -2,48 +2,94 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Test nền ảnh mờ dần</title>
-  <style>
-    body, html {
-      margin: 0; padding: 0; height: 100%;
-      overflow: hidden;
-      background: black;
-      font-family: Arial, sans-serif;
-    }
-    .background-image {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background-size: cover;
-      background-position: center;
-      opacity: 0.2;
-      transition: opacity 1s ease-in-out, background-image 1s ease-in-out;
-      z-index: -1;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tỏ tình Hoàng Thị Thanh</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
+  <!-- Nền galaxy -->
+  <div class="galaxy"></div>
+  <div class="stars"></div>
+  <div class="stars2"></div>
+  <div class="stars3"></div>
+
+  <!-- Ảnh nền đổi dần -->
   <div class="background-image"></div>
 
+  <!-- Các lớp chữ rơi -->
+  <div class="love-container">
+    <div class="layer layer1"></div>
+    <div class="layer layer2"></div>
+    <div class="layer layer3"></div>
+    <div class="layer layer4"></div>
+    <div class="layer layer5"></div>
+    <div class="layer layer6"></div>
+  </div>
+
   <script>
-    const backgroundImages = ['bg1.jpg', 'bg2.jpg', 'bg3.jpg'];
+    const messages = [
+      "HOÀNG THỊ THANH à...",
+      "Tớ thích cậu nhiều lắm!",
+      "Từ ánh mắt đầu tiên, tớ đã say mê.",
+      "Nụ cười của cậu làm tim tớ lỡ một nhịp.",
+      "Tớ muốn cùng cậu đi hết thanh xuân này.",
+      "Cậu là vì sao sáng nhất trong bầu trời tớ.",
+      "Chỉ cần cậu gật đầu, thế giới này sẽ rực rỡ.",
+      "Tớ hứa sẽ luôn bên cậu, dù nắng hay mưa.",
+      "Mỗi ngày trôi qua, tớ đều nghĩ đến cậu.",
+      "Có thể tớ không hoàn hảo, nhưng tớ thật lòng.",
+      "Tớ muốn nắm tay cậu đi qua mọi cung đường.",
+      "Cậu là giấc mơ đẹp nhất mà tớ từng mơ.",
+      "Chỉ cần cậu ở đây, mọi thứ đều tuyệt vời.",
+      "Cậu có thể làm người yêu tớ không?",
+      "Thanh ơi, làm bạn gái tớ nhé?"
+    ];
+
+    const layers = document.querySelectorAll('.layer');
+    let messageIndex = 0;
+
+    function createFallingText(layer, speed, size) {
+      const text = document.createElement('div');
+      text.className = 'falling-text';
+      text.innerText = messages[messageIndex % messages.length];
+      messageIndex++;
+
+      text.style.left = Math.random() * 100 + 'vw';
+      text.style.fontSize = size + 'px';
+      text.style.animationDuration = speed + 's';
+      layer.appendChild(text);
+
+      setTimeout(() => layer.removeChild(text), speed * 1000);
+    }
+
+    setInterval(() => {
+      layers.forEach((layer, i) => {
+        createFallingText(layer, 4 + i * 0.8, 16 + i * 3);
+      });
+    }, 800);
+
+    const backgroundImages = [
+      'bg1.jpg',
+      'bg2.jpg',
+      'bg3.jpg'
+    ];
     let currentIndex = 0;
     const bgDiv = document.querySelector('.background-image');
 
     function changeBackground() {
-      bgDiv.style.opacity = 0;
+      bgDiv.style.opacity = 0; // Mờ dần
+
       setTimeout(() => {
         bgDiv.style.backgroundImage = `url('${backgroundImages[currentIndex]}')`;
-        bgDiv.style.opacity = 0.2;
+        bgDiv.style.opacity = 0.2; // Hiện dần trở lại
         currentIndex = (currentIndex + 1) % backgroundImages.length;
       }, 1000);
     }
 
-    // Hiển thị ảnh nền đầu tiên
+    // Đặt ảnh nền đầu tiên khi load
     bgDiv.style.backgroundImage = `url('${backgroundImages[0]}')`;
 
-    // Đổi ảnh nền mỗi 6 giây
+    // Thay đổi ảnh nền mỗi 6 giây
     setInterval(changeBackground, 6000);
   </script>
 </body>
