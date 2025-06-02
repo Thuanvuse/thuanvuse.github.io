@@ -1543,7 +1543,7 @@ class MainWindow(QWidget):
 		menu.addSection("🔗 Token & Liên kết")
 		get_token = menu.addAction("🔐 Get Token")
 		refresh_token = menu.addAction("♻️ Lấy lại Token chết")
-		auto_link = menu.addAction("🚀 Tự động liên kết + lấy điểm")
+		auto_link = menu.addAction("[Hot] 🚀 Tự động liên kết + lấy điểm + Đăng Nhập")
 		custom_link = menu.addAction("🛠️ Liên kết tùy chọn")
 		manual_link = menu.addAction("✍️ Liên kết thủ công")
 		menu.addSeparator()
@@ -1552,7 +1552,7 @@ class MainWindow(QWidget):
 		menu.addSection("🎯 Nhiệm vụ")
 		get_points = menu.addAction("💰 Lấy điểm")
 		check_in = menu.addAction("📅 Điểm danh")
-		run_all = menu.addAction("⚙️ Chạy tất cả")
+		run_all = menu.addAction("[Hot] ⚙️ Chạy tất cả")
 		withdraw_points = menu.addAction("💸 Rút điểm")
 		menu.addSeparator()
 
@@ -1561,7 +1561,7 @@ class MainWindow(QWidget):
 		check_answers = menu.addAction("❓ Kiểm tra lượt trả lời")
 		check_words = menu.addAction("🧩 Kiểm tra ghép chữ")
 		check_links = menu.addAction("🔗 Kiểm tra liên kết")
-		check_proxy = menu.addAction("🌐 Kiểm tra proxy")
+		check_proxy = menu.addAction("[Hot] 🌐 Kiểm tra proxy")
 
 		# ──────────────── XỬ LÝ SỰ KIỆN ────────────────
 		action = menu.exec(self.table.viewport().mapToGlobal(pos))
