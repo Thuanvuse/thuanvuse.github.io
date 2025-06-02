@@ -23,6 +23,7 @@ KEY_HISTORY_FILE = "key_history.json"
 KEY_PACKAGES = [
     {"label": "Key FREE / 0 luồng (1k)","hours": 24,"threads": 1,"price": 0},
     {"label": "Key 12 phút / 3 luồng (5k)","hours": 0.2,"threads": 3,"price": 5000},
+    {"label": "Key 25 phút / 6 luồng (12k)","hours": 0.2,"threads": 6,"price": 12000},
     {"label": "Key 1 giờ / 20 luồng (50k)", "hours": 1, "threads": 20, "price": 50000},
     {"label": "Key 2 giờ / 20 luồng (90k)", "hours": 2, "threads": 20, "price": 90000},
     {"label": "Key 1 giờ / 30 luồng (70k)", "hours": 1, "threads": 30, "price": 70000},
