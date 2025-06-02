@@ -1,97 +1,3 @@
-# import sys
-# from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout
-# from PyQt6.QtCore import Qt
-# from PyQt6.QtGui import QFont
-
-# class MaintenanceWindow(QWidget):
-#     def __init__(self):
-#         super().__init__()
-#         self.setWindowTitle("⚠️ BẢO TRÌ HỆ THỐNG ⚠️")
-#         self.resize(500, 400)
-#         self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
-#         self.setup_ui()
-
-#     def setup_ui(self):
-#         layout = QVBoxLayout()
-        
-#         # Thiết lập màu nền và font
-#         self.setStyleSheet("""
-#             QWidget {
-#                 background-color: #1a1a1a;
-#                 color: #ffffff;
-#             }
-#             QLabel {
-#                 color: #ffffff;
-#             }
-#         """)
-        
-#         # Logo hoặc icon bảo trì
-#         maintenance_icon = QLabel("🔧")
-#         maintenance_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-#         maintenance_icon.setStyleSheet("""
-#             font-size: 100px;
-#             margin: 20px;
-#             color: #ff6b6b;
-#         """)
-#         layout.addWidget(maintenance_icon)
-        
-#         # Tiêu đề
-#         title = QLabel("⚠️ HỆ THỐNG ĐANG BẢO TRÌ ⚠️")
-#         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-#         title.setStyleSheet("""
-#             font-size: 28px;
-#             font-weight: bold;
-#             color: #ff6b6b;
-#             margin: 10px;
-#             padding: 10px;
-#             background-color: #2d2d2d;
-#             border-radius: 10px;
-#         """)
-#         layout.addWidget(title)
-        
-#         # Thông báo
-#         message = QLabel(
-#             "Chúng tôi đang nâng cấp hệ thống để mang đến trải nghiệm tốt hơn cho bạn.\n"
-#             "Xin lỗi vì sự bất tiện này. Vui lòng quay lại sau!"
-#         )
-#         message.setAlignment(Qt.AlignmentFlag.AlignCenter)
-#         message.setStyleSheet("""
-#             font-size: 16px;
-#             margin: 20px;
-#             padding: 15px;
-#             background-color: #2d2d2d;
-#             border-radius: 10px;
-#         """)
-#         message.setWordWrap(True)
-#         layout.addWidget(message)
-        
-#         # Nút đóng
-#         close_button = QPushButton("ĐÓNG")
-#         close_button.setStyleSheet("""
-#             QPushButton {
-#                 background-color: #ff6b6b;
-#                 color: white;
-#                 border: none;
-#                 padding: 15px 30px;
-#                 border-radius: 10px;
-#                 font-size: 18px;
-#                 font-weight: bold;
-#                 margin: 20px;
-#             }
-#             QPushButton:hover {
-#                 background-color: #ff5252;
-#             }
-#         """)
-#         close_button.clicked.connect(self.close)
-#         layout.addWidget(close_button)
-        
-#         self.setLayout(layout)
-
-# if __name__ == "__main__":
-#     app = QApplication(sys.argv)
-#     window = MaintenanceWindow()
-#     window.show()
-#     sys.exit(app.exec())
 import sys
 import random
 import string
@@ -106,6 +12,7 @@ import os
 import time
 import subprocess
 import base64
+
 TOKEN = "BQMWETT6BAEN4DTECLYEZKCGL3YQPDUGH5ZG1VKORNRUKRF4IB5SYNCQFAOZTDK9"
 ACCOUNT = "8829032006"
 BANK = "MBBank"
@@ -213,6 +120,10 @@ class MainWindow(QWidget):
         self.setup_ui()
         self.balance = load_balance()
         self.update_balance_display()
+        
+        # Thêm biến để theo dõi trạng thái QR
+        self.qr_active = False
+        self.payment_in_progress = False
 
     def setup_ui(self):
         layout = QVBoxLayout()
@@ -290,6 +201,23 @@ class MainWindow(QWidget):
         self.btn_retry.clicked.connect(self.start_payment)
         self.btn_retry.setVisible(False)
         deposit_layout.addWidget(self.btn_retry)
+
+        # Thêm nút hủy giao dịch
+        self.btn_cancel = QPushButton("Hủy giao dịch")
+        self.btn_cancel.setStyleSheet("""
+            QPushButton {
+                background-color: #dc3545;
+                color: white;
+                padding: 5px;
+                border-radius: 3px;
+            }
+            QPushButton:hover {
+                background-color: #c82333;
+            }
+        """)
+        self.btn_cancel.clicked.connect(self.cancel_payment)
+        self.btn_cancel.setVisible(False)
+        deposit_layout.addWidget(self.btn_cancel)
 
         deposit_group.setLayout(deposit_layout)
         layout.addWidget(deposit_group)
@@ -380,10 +308,16 @@ class MainWindow(QWidget):
         self.balance_label.setText(f"Số dư hiện tại: {self.balance:,} VND")
 
     def start_payment(self):
-        self.btn_retry.setVisible(False)
-        self.time_left = 180
-        self.label_timer.setText("⏳ Thời gian còn lại: 180s")
-        self.random_des = f"pay{''.join(random.choices(string.digits, k=6))}"
+        # Kiểm tra xem có QR nào đang hoạt động không
+        if self.qr_active and self.payment_in_progress:
+            QMessageBox.warning(
+                self, 
+                "Thông báo", 
+                f"Mã QR hiện tại vẫn còn hiệu lực!\n"
+                f"Thời gian còn lại: {self.time_left}s\n\n"
+                "Vui lòng chờ hết thời gian hoặc hủy giao dịch để tạo mã mới."
+            )
+            return
 
         try:
             amount = int(self.amount_input.text())
@@ -392,6 +326,20 @@ class MainWindow(QWidget):
         except Exception:
             QMessageBox.warning(self, "Lỗi", "Vui lòng nhập số tiền hợp lệ!")
             return
+
+        # Đặt trạng thái QR active
+        self.qr_active = True
+        self.payment_in_progress = True
+        self.btn_retry.setVisible(False)
+        self.btn_cancel.setVisible(True)
+        
+        # Vô hiệu hóa nút tạo QR và cho phép nhập số tiền
+        self.btn_create_qr.setEnabled(False)
+        self.amount_input.setEnabled(False)
+        
+        self.time_left = 180
+        self.label_timer.setText("⏳ Thời gian còn lại: 180s")
+        self.random_des = f"pay{''.join(random.choices(string.digits, k=6))}"
 
         self.amount = amount
 
@@ -403,22 +351,53 @@ class MainWindow(QWidget):
             self.label_qr.setPixmap(pixmap.scaled(250, 250, Qt.AspectRatioMode.KeepAspectRatio))
         except Exception as e:
             self.label_qr.setText(f"Lỗi tải QR: {e}")
+            self.reset_payment_state()
             return
 
         self.timer.start(1000)
         self.check_transaction()
+
+    def cancel_payment(self):
+        """Hủy giao dịch hiện tại"""
+        reply = QMessageBox.question(
+            self,
+            "Xác nhận",
+            "Bạn có chắc chắn muốn hủy giao dịch hiện tại không?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            self.timer.stop()
+            self.reset_payment_state()
+            QMessageBox.information(self, "Thông báo", "Đã hủy giao dịch!")
+
+    def reset_payment_state(self):
+        """Reset trạng thái thanh toán về ban đầu"""
+        self.qr_active = False
+        self.payment_in_progress = False
+        self.btn_create_qr.setEnabled(True)
+        self.amount_input.setEnabled(True)
+        self.btn_cancel.setVisible(False)
+        self.btn_retry.setVisible(False)
+        self.label_qr.clear()
+        self.label_timer.clear()
 
     def update_timer(self):
         self.time_left -= 1
         self.label_timer.setText(f"⏳ Thời gian còn lại: {self.time_left}s")
         if self.time_left <= 0:
             self.timer.stop()
+            self.qr_active = False
+            self.payment_in_progress = False
+            self.btn_create_qr.setEnabled(True)
+            self.amount_input.setEnabled(True)
+            self.btn_cancel.setVisible(False)
             self.btn_retry.setVisible(True)
             QMessageBox.warning(self, "Hết thời gian", "Không thấy giao dịch. Vui lòng thử lại!")
 
     def check_transaction(self):
         def check():
-            if self.time_left <= 0:
+            if self.time_left <= 0 or not self.payment_in_progress:
                 return
             try:
                 url = f"https://my.sepay.vn/userapi/transactions/list?account_number={ACCOUNT}&limit=20"
@@ -430,11 +409,15 @@ class MainWindow(QWidget):
                         self.balance += self.amount
                         save_balance(self.balance)
                         self.update_balance_display()
+                        self.reset_payment_state()
                         QMessageBox.information(self, "✅ Thành công", f"Đã nhận: {self.amount:,} VND\nNội dung: {self.random_des}")
                         return
             except Exception as e:
                 print("Lỗi kiểm tra:", e)
-            QTimer.singleShot(3000, self.check_transaction)
+            
+            # Chỉ tiếp tục check nếu payment vẫn đang progress
+            if self.payment_in_progress:
+                QTimer.singleShot(3000, self.check_transaction)
 
         QTimer.singleShot(1000, check)
 
