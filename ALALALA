@@ -533,221 +533,221 @@ class LienKetWorker(QThread):
 			if is_linked:
 				self.result_signal.emit(self.row, "✅ Token Còn Hoạt Động Tốt!!!!", "green")
 
-			else:self.result_signal.emit(self.row, "✅ Token Còn Hoạt Động Tốt!!!!", "green")
-				# self.result_signal.emit(self.row, "❌ Chưa Liên Kết tiến hành tạo OK9 Liên kết", "red")
-				# fake = Faker('vi_VN')
-				# lock = threading.Lock()
+			else:
+				self.result_signal.emit(self.row, "❌ Chưa Liên Kết tiến hành tạo OK9 Liên kết", "red")
+				fake = Faker('vi_VN')
+				lock = threading.Lock()
 
-				# proxy="103.151.124.208:20211:wvnn7p0z:wVNN7p0Z"
-				# host, port, userss, pwd = proxy.split(":")
-				# proxy_url = f"http://{userss}:{pwd}@{host}:{port}"
-				# proxies = {"http": proxy_url, "https": proxy_url}
+				proxy="103.74.106.155:38675:xunj3o6b:xUnJ3o6B"
+				host, port, userss, pwd = proxy.split(":")
+				proxy_url = f"http://{userss}:{pwd}@{host}:{port}"
+				proxies = {"http": proxy_url, "https": proxy_url}
 
-				# # Global session
-				# session = requests.Session()
-				# session.headers = {
-				# 	"Content-Type": "application/json",
-				# 	"accept-language": "en-US,en;q=0.9,vi;q=0.8",
-				# 	"origin": "https://www.010070.com",
-				# 	"priority": "u=1, i",
-				# 	"referer": "https://www.010070.com/vit/home/index/in-play",
-				# 	"sec-ch-ua": '"Google Chrome";v="135", "Not-A.Brand";v="8", "Chromium";v="135"',
-				# 	"sec-ch-ua-mobile": "?0",
-				# 	"sec-ch-ua-platform": '"Windows"',
-				# 	"sec-fetch-dest": "empty",
-				# 	"sec-fetch-mode": "cors",
-				# 	"sec-fetch-site": "same-origin",
-				# 	"x-kzapi-domain": "www.010070.com",
-				# 	"x-kzapi-language": "vit",
-				# 	"x-kzapi-platform": "web",
-				# 	"x-kzapi-timezone": "+07:00",
-				# 	"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
-				# }
+				# Global session
+				session = requests.Session()
+				session.headers = {
+					"Content-Type": "application/json",
+					"accept-language": "en-US,en;q=0.9,vi;q=0.8",
+					"origin": "https://www.010070.com",
+					"priority": "u=1, i",
+					"referer": "https://www.010070.com/vit/home/index/in-play",
+					"sec-ch-ua": '"Google Chrome";v="135", "Not-A.Brand";v="8", "Chromium";v="135"',
+					"sec-ch-ua-mobile": "?0",
+					"sec-ch-ua-platform": '"Windows"',
+					"sec-fetch-dest": "empty",
+					"sec-fetch-mode": "cors",
+					"sec-fetch-site": "same-origin",
+					"x-kzapi-domain": "www.010070.com",
+					"x-kzapi-language": "vit",
+					"x-kzapi-platform": "web",
+					"x-kzapi-timezone": "+07:00",
+					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
+				}
 
-				# # --- Functions ---
+				# --- Functions ---
 
-				# def encrypt_data(data: str, public_key: str):
-				# 	rsa_key = RSA.import_key(public_key)
-				# 	cipher = PKCS1_v1_5.new(rsa_key)
-				# 	encrypted_bytes = cipher.encrypt(data.encode())
-				# 	return base64.b64encode(encrypted_bytes).decode()
+				def encrypt_data(data: str, public_key: str):
+					rsa_key = RSA.import_key(public_key)
+					cipher = PKCS1_v1_5.new(rsa_key)
+					encrypted_bytes = cipher.encrypt(data.encode())
+					return base64.b64encode(encrypted_bytes).decode()
 
-				# def get_encryption_key():
-				# 	url = "https://www.010070.com/api/encryption-key"
-				# 	payload = "{}"
-				# 	response = session.post(url, data=payload)
-				# 	if response.status_code == 200:
-				# 		return response.json()['data']['publicKey']
-				# 	else:
-				# 		return None
+				def get_encryption_key():
+					url = "https://www.010070.com/api/encryption-key"
+					payload = "{}"
+					response = session.post(url, data=payload)
+					if response.status_code == 200:
+						return response.json()['data']['publicKey']
+					else:
+						return None
 
-				# def random_string(length=10):
-				# 	return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+				def random_string(length=10):
+					return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
-				# def random_number(length=8):
-				# 	return '9' + ''.join(random.choices(string.digits, k=length))
+				def random_number(length=8):
+					return '9' + ''.join(random.choices(string.digits, k=length))
 
-				# def random_STK():
-				# 	return ''.join(random.choices(string.digits, k=random.randint(9,12)))
+				def random_STK():
+					return ''.join(random.choices(string.digits, k=random.randint(9,12)))
 
-				# def get_random_name():
-				# 	try:
-				# 		url = 'https://story-shack-cdn-v2.glitch.me/generators/vietnamese-name-generator/'
-				# 		response = requests.get(url)
-				# 		random_sex = random.choice(['male', 'female'])
-				# 		return response.json()['data'][random_sex]
-				# 	except:
-				# 		return 'Nguyen Van Thinh'
+				def get_random_name():
+					try:
+						url = 'https://story-shack-cdn-v2.glitch.me/generators/vietnamese-name-generator/'
+						response = requests.get(url)
+						random_sex = random.choice(['male', 'female'])
+						return response.json()['data'][random_sex]
+					except:
+						return 'Nguyen Van Thinh'
 
-				# def remove_accents(text: str):
-				# 	if text:
-				# 		return unidecode(text)
-				# 	else:
-				# 		return ''
+				def remove_accents(text: str):
+					if text:
+						return unidecode(text)
+					else:
+						return ''
 
-				# def add_card(bankCode: str, account: str, stk: str):
-				# 	try:
-				# 		url = "https://www.010070.com/api/add-bankcard"
-				# 		payload = {
-				# 			"bankCode": bankCode,
-				# 			"account": account,
-				# 			"card": stk,
-				# 			"bankNode": "HA NOI",
-				# 			"note": "",
-				# 			"needSms": False,
-				# 			"smsCode": "",
-				# 			"smsPhoneNo": "",
-				# 			"smsPhoneNoCountry": "vn",
-				# 			"bankpassbook": "",
-				# 			"addrA": "",
-				# 			"addrB": "",
-				# 			"ifsccode": ""
-				# 		}
-				# 		response = session.post(url, json=payload, proxies=proxies)
-				# 		if response.status_code == 200 and response.json()['status'] == 0:
-				# 			print(f"✅ Thêm bank thành công: {stk}")
-				# 			return True
-				# 		else:
-				# 			print(f"❌ Thêm bank thất bại: {stk} | {response.json().get('message')}")
-				# 			return False
-				# 	except Exception:
-				# 		traceback.print_exc()
-				# 		return False
+				def add_card(bankCode: str, account: str, stk: str):
+					try:
+						url = "https://www.010070.com/api/add-bankcard"
+						payload = {
+							"bankCode": bankCode,
+							"account": account,
+							"card": stk,
+							"bankNode": "HA NOI",
+							"note": "",
+							"needSms": False,
+							"smsCode": "",
+							"smsPhoneNo": "",
+							"smsPhoneNoCountry": "vn",
+							"bankpassbook": "",
+							"addrA": "",
+							"addrB": "",
+							"ifsccode": ""
+						}
+						response = session.post(url, json=payload, proxies=proxies)
+						if response.status_code == 200 and response.json()['status'] == 0:
+							print(f"✅ Thêm bank thành công: {stk}")
+							return True
+						else:
+							print(f"❌ Thêm bank thất bại: {stk} | {response.json().get('message')}")
+							return False
+					except Exception:
+						traceback.print_exc()
+						return False
 
-				# def do_register():
-				# 	try:
-				# 		url = "https://www.010070.com/api/register-account-v2"
-				# 		user = random_string(9)
-				# 		fullname = get_random_name()
-				# 		fullname = remove_accents(fullname).upper()
-				# 		password = random_string(12) + '0a'
-				# 		phone = random_number()
-				# 		print(f"Đăng ký với: {user}, {password}, {fullname}")
+				def do_register():
+					try:
+						url = "https://www.010070.com/api/register-account-v2"
+						user = random_string(9)
+						fullname = get_random_name()
+						fullname = remove_accents(fullname).upper()
+						password = random_string(12) + '0a'
+						phone = random_number()
+						print(f"Đăng ký với: {user}, {password}, {fullname}")
 
-				# 		payload = {
-				# 			"verifycode": "",
-				# 			"email": "",
-				# 			"joinpwd": encrypt_data(password, get_encryption_key()),
-				# 			"joiname": user,
-				# 			"birthmonth": random.randint(1, 12),
-				# 			"birthyear": random.randint(1980, 2005),
-				# 			"jsessionid": random_string(32).upper(),
-				# 			"birthday": None,
-				# 			"fullname": fullname,
-				# 			"nickname": "",
-				# 			"agc": "12531",
-				# 			"wdpassword": "",
-				# 			"weixin": "",
-				# 			"line": "",
-				# 			"whatsapp": "",
-				# 			"telegram": "",
-				# 			"facebook": "",
-				# 			"tiktok": "",
-				# 			"x": "",
-				# 			"zalo": "",
-				# 			"google": "",
-				# 			"skype": "",
-				# 			"qq": "",
-				# 			"regpath": "/vit/home/index/in-play",
-				# 			"emailcode": "",
-				# 			"smscode": "",
-				# 			"autologin": "1",
-				# 			"redirectedFromDomain": "www.010070.com",
-				# 			"gpn": "",
-				# 			"rfc": "",
-				# 			"adminreferal": None,
-				# 			"utm_code": None,
-				# 			"visitor_id": None,
-				# 			"captchaValidate": "",
-				# 			"wtdCardBankCode": "",
-				# 			"wtdCardBankName": "Tên ngân hàng",
-				# 			"wtdCardNumber": "",
-				# 			"uphonecountry": "vn",
-				# 			"uphone": phone
-				# 		}
+						payload = {
+							"verifycode": "",
+							"email": "",
+							"joinpwd": encrypt_data(password, get_encryption_key()),
+							"joiname": user,
+							"birthmonth": random.randint(1, 12),
+							"birthyear": random.randint(1980, 2005),
+							"jsessionid": random_string(32).upper(),
+							"birthday": None,
+							"fullname": fullname,
+							"nickname": "",
+							"agc": "12531",
+							"wdpassword": "",
+							"weixin": "",
+							"line": "",
+							"whatsapp": "",
+							"telegram": "",
+							"facebook": "",
+							"tiktok": "",
+							"x": "",
+							"zalo": "",
+							"google": "",
+							"skype": "",
+							"qq": "",
+							"regpath": "/vit/home/index/in-play",
+							"emailcode": "",
+							"smscode": "",
+							"autologin": "1",
+							"redirectedFromDomain": "www.010070.com",
+							"gpn": "",
+							"rfc": "",
+							"adminreferal": None,
+							"utm_code": None,
+							"visitor_id": None,
+							"captchaValidate": "",
+							"wtdCardBankCode": "",
+							"wtdCardBankName": "Tên ngân hàng",
+							"wtdCardNumber": "",
+							"uphonecountry": "vn",
+							"uphone": phone
+						}
 
-				# 		response = session.post(url, json=payload, proxies=proxies)
-				# 		if response.status_code == 200 and response.json()['status'] == 0:
-				# 			user_token = response.json()['data']['_userToken']
-				# 			session.headers['x-kzapi-User'] = user_token
+						response = session.post(url, json=payload, proxies=proxies)
+						if response.status_code == 200 and response.json()['status'] == 0:
+							user_token = response.json()['data']['_userToken']
+							session.headers['x-kzapi-User'] = user_token
 
-				# 			# Thêm bank sau khi đăng ký
-				# 			for _ in range(3):
-				# 				stk = random_STK()
-				# 				if add_card("VNVCB", fullname, stk):
-				# 					break
+							# Thêm bank sau khi đăng ký
+							for _ in range(3):
+								stk = random_STK()
+								if add_card("VNVCB", fullname, stk):
+									break
 
-				# 			return user, password, fullname, phone
-				# 		else:
-				# 			print(f"❌ Đăng ký thất bại: {response.text}")
-				# 			return False
-				# 	except Exception:
-				# 		traceback.print_exc()
-				# 		return False
+							return user, password, fullname, phone
+						else:
+							print(f"❌ Đăng ký thất bại: {response.text}")
+							return False
+					except Exception:
+						traceback.print_exc()
+						return False
 
-				# def create_account_and_save():
-				# 	status = do_register()
-				# 	if status:
-				# 		user, password, fullname, phone = status
-				# 		print(f"✅ Tạo thành công: {user}")
-				# 		return user,phone
-				# 	else:
-				# 		print("❌ Đăng ký thất bại.")
+				def create_account_and_save():
+					status = do_register()
+					if status:
+						user, password, fullname, phone = status
+						print(f"✅ Tạo thành công: {user}")
+						return user,phone
+					else:
+						print("❌ Đăng ký thất bại.")
 
-				# gameAccount,fullPhone=create_account_and_save()
-				# gamePhone = fullPhone[-4:]
+				gameAccount,fullPhone=create_account_and_save()
+				gamePhone = fullPhone[-4:]
 
 			  
-				# # Tạo data gửi
-				# data = {
-				# 	"gameAccount": gameAccount,
-				# 	"gamePhone": gamePhone,
-				# 	"websiteId": "1798608608416931842",
-				# 	"memberCode": "OK9"
-				# }
+				# Tạo data gửi
+				data = {
+					"gameAccount": gameAccount,
+					"gamePhone": gamePhone,
+					"websiteId": "1798608608416931842",
+					"memberCode": "OK9"
+				}
 
-				# try:
-				# 	response = requests.post(
-				# 		"https://m.oklavip26.live/api/wallet/bindGameAccount",
-				# 		headers=headers,
-				# 		proxies=proxies,
-				# 		json=data,
-				# 		timeout=20
-				# 	)
-				# 	message = response.json().get('message', '')
-				# 	print(message)
-				# 	self.result_signal.emit(self.row, f"{message}", "red")
+				try:
+					response = requests.post(
+						"https://m.oklavip26.live/api/wallet/bindGameAccount",
+						headers=headers,
+						proxies=proxies,
+						json=data,
+						timeout=20
+					)
+					message = response.json().get('message', '')
+					print(message)
+					self.result_signal.emit(self.row, f"{message}", "red")
 				  
-				# except Exception as e:
-				# 	print(f"Lỗi gửi request: {e}")
-				# 	self.result_signal.emit(self.row, f"Lỗi gửi request: {e}", "red")
-				# response = requests.get("https://m.oklavip26.live/api/website/listForWallet", headers=headers, proxies=proxies, timeout=500).json()
-				# is_linked = any(site.get("isBind", False) for site in response.get("data", []))
+				except Exception as e:
+					print(f"Lỗi gửi request: {e}")
+					self.result_signal.emit(self.row, f"Lỗi gửi request: {e}", "red")
+				response = requests.get("https://m.oklavip26.live/api/website/listForWallet", headers=headers, proxies=proxies, timeout=500).json()
+				is_linked = any(site.get("isBind", False) for site in response.get("data", []))
 
-				# if is_linked:
-				# 	self.result_signal.emit(self.row, "✅ Đã Có Liên Kết", "green")
-				# else:
-				# 	self.result_signal.emit(self.row, "❌ Chưa Liên Kết", "red")
+				if is_linked:
+					self.result_signal.emit(self.row, "✅ Đã Có Liên Kết", "green")
+				else:
+					self.result_signal.emit(self.row, "❌ Chưa Liên Kết", "red")
 
 
 		except Exception as e:
