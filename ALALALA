@@ -1307,7 +1307,7 @@ class MainWindow(QWidget):
 					point = int(item.text())
 					total += point
 				   
-					if any(keyword in chuoi for keyword in ["MB66", "78win", "QQ88"]):
+					if any(keyword in chuoi for keyword in ["MB66", "78win", "QQ88","F168"]):
 						DiemCOthedung+=point
 						if point > max_point:
 							max_point = point
@@ -1322,7 +1322,7 @@ class MainWindow(QWidget):
 	def start_auto_save(self):
 		self.timer = QTimer(self)
 		self.timer.timeout.connect(self.save_accounts_to_file)
-		self.timer.start(3000)  # Lưu lại sau mỗi 5 giây
+		self.timer.start(1000)  # Lưu lại sau mỗi 5 giây
 	def LayLaiTokenChoTokenChetttt(self):
 		from PyQt6.QtWidgets import QTableWidgetItem
 		for row in range(self.table.rowCount()):
@@ -1345,56 +1345,52 @@ class MainWindow(QWidget):
 					self.table.setItem(row, 6, QTableWidgetItem("❌ Đăng Nhập Lại Thất Bại"))
 	def SetMaPinChoTaiKhoan(self, row):
 
-		def set_pin_for_account(row):
-			try:
-				account = self.accounts[row]
-				token = account[0]
-				proxy = account[1]
-				f_id = account[4]
+		try:
+			account = self.accounts[row]
+			token = account[0]
+			proxy = account[1]
+			f_id = account[4]
 
-				# Dữ liệu gửi: mã PIN là MD5 của "1234"
-				payload = {
-					"newWithdrawPassword": "4297f44b13955235245b2497399d7a93",
-					"confirmWithdrawPassword": "4297f44b13955235245b2497399d7a93"
-				}
+			# Dữ liệu gửi: mã PIN là MD5 của "1234"
+			payload = {
+				"newWithdrawPassword": "4297f44b13955235245b2497399d7a93",
+				"confirmWithdrawPassword": "4297f44b13955235245b2497399d7a93"
+			}
 
-				headers = {
-					"accept": "application/json, text/plain, */*",
-					"content-type": "application/json",
-					"locale": "vi_vn",
-					"referer": "https://m.okvip19.live/setWithDrawalpass",
-					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-					"f-id": f_id,
-					"token": token
-				}
+			headers = {
+				"accept": "application/json, text/plain, */*",
+				"content-type": "application/json",
+				"locale": "vi_vn",
+				"referer": "https://m.okvip19.live/setWithDrawalpass",
+				"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
+				"f-id": f_id,
+				"token": token
+			}
 
-				# Xử lý thông tin proxy
-				proxy_url, port, username, password = proxy.split(':')
-				proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-				proxies = {
-					"http": proxy_address,
-					"https": proxy_address
-				}
+			# Xử lý thông tin proxy
+			proxy_url, port, username, password = proxy.split(':')
+			proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
+			proxies = {
+				"http": proxy_address,
+				"https": proxy_address
+			}
 
-				# URL API
-				url = "https://m.okvip19.live/api/account/setWithdrawPassword"
-				response = requests.post(url, headers=headers, json=payload, proxies=proxies, timeout=15)
+			# URL API
+			url = "https://m.okvip19.live/api/account/setWithdrawPassword"
+			response = requests.post(url, headers=headers, json=payload, proxies=proxies, timeout=15)
 
-				# Kiểm tra kết quả phản hồi
-				if response.status_code == 200 and response.json().get("message") == "Thao tác thành công":
-					self.table.setItem(row, 6, QTableWidgetItem("✅ Đã Set Mã PIN"))
-				else:
-					error_message = response.json().get("message", "Không xác định")
-					self.table.setItem(row, 6, QTableWidgetItem(f"❌ Lỗi Set PIN {error_message}"))
-					print(response.json())
+			# Kiểm tra kết quả phản hồi
+			if response.status_code == 200 and response.json().get("message") == "Thao tác thành công":
+				self.table.setItem(row, 6, QTableWidgetItem("✅ Đã Set Mã PIN"))
+			else:
+				error_message = response.json().get("message", "Không xác định")
+				self.table.setItem(row, 6, QTableWidgetItem(f"❌ Lỗi Set PIN {error_message}"))
+				print(response.json())
 
-			except Exception as e:
-				self.table.setItem(row, 6, QTableWidgetItem(f"❌ Lỗi: {str(e)}"))
+		except Exception as e:
+			self.table.setItem(row, 6, QTableWidgetItem(f"❌ Lỗi: {str(e)}"))
 
-		with ThreadPoolExecutor(max_workers=99) as executor:
-			futures = [executor.submit(set_pin_for_account, row) for row in range(len(self.accounts))]
-			for future in as_completed(futures):
-				future.result()  # Chờ các luồng hoàn thành
+		
 	class ThuanLienKet(QThread):
 		result = pyqtSignal(int, str)  # row, message
 
