@@ -1520,110 +1520,67 @@ class MainWindow(QWidget):
 				self.result.emit(row, f"✅ Đã Thực Hiện Lệnh")
 	def show_context_menu(self, pos):
 		import threading
-
+		
 		index = self.table.indexAt(pos)
 		if not index.isValid():
 			return
 
 		menu = QMenu(self)
+		
+		# Define menu sections and actions
+		sections = {
+			"👤 Tài khoản": [
+				("📝 Thêm ghi chú", self._handle_add_note),
+				("📂 Load File ACC", self.load_accounts_from_file),
+				("🧑‍💻 Mở Profile", lambda: threading.Thread(target=lambda: self.MoProfileTheoTenUser(self.table.currentRow())).start()),
+				("🔐 Set mã PIN rút tiền", lambda: threading.Thread(target=lambda: self.SetMaPinChoTaiKhoan(self.table.currentRow())).start()),
+				("🗑️ Xóa tài khoản bị cấm", self.delete_banned_accounts)
+			],
+			"🔗 Token & Liên kết": [
+				("🔐 Get Token", lambda: threading.Thread(target=self.TokenGet).start()),
+				("♻️ Lấy lại Token Chết", lambda: threading.Thread(target=self.LayLaiTokenChoTokenChetttt).start()),
+				("[Hot] 🚀 Lấy Token", lambda: threading.Thread(target=self.lienkettaikhoan).start()),
+				("🛠️ Liên kết tùy chọn", self.LienKetTuyChon),
+				("✍️ Liên kết thủ công", lambda: threading.Thread(target=self.LienKetThuCong).start())
+			],
+			"🎯 Nhiệm vụ": [
+				("💰 Lấy điểm", lambda: threading.Thread(target=lambda: self.run_multiple_threads(list({index.row() for index in self.table.selectedIndexes()}), self.spinbox.value())).start() if self.table.selectedIndexes() else None),
+				("📅 Điểm danh", lambda: threading.Thread(target=self.Bu9diem).start()),
+				("[Hot] ⚙️ Chạy tất cả", lambda: threading.Thread(target=self.ChAyAll).start()),
+				("💸 Rút điểm", self.Thuanrutdiemday)
+			],
+			"🔎 Kiểm tra": [
+				("❓ Kiểm tra lượt trả lời", lambda: threading.Thread(target=self.CheckLuotTraLoi).start()),
+				("🧩 Kiểm tra ghép chữ", lambda: threading.Thread(target=self.CheckGhepChu).start()),
+				("🔗 Kiểm tra liên kết", lambda: threading.Thread(target=self.CheckCacLienKet).start()),
+				("[Hot] 🌐 Kiểm tra proxy", lambda: threading.Thread(target=self.CheckProxy).start()),
+				("📊 Xuất điểm tài khoản", self.export_points_to_file)
+			]
+		}
 
-		# ──────────────── TƯƠNG TÁC TÀI KHOẢN ────────────────
-		menu.addSection("👤 Tài khoản")
-		add_note = menu.addAction("📝 Thêm ghi chú")
-		load_accounts = menu.addAction("📂 Load File ACC")
-		open_profile = menu.addAction("🧑‍💻 Mở Profile")
-		set_pin = menu.addAction("🔐 Set mã PIN rút tiền")
-		delete_banned = menu.addAction("🗑️ Xóa tài khoản bị cấm")
-		menu.addSeparator()
+		# Build menu
+		for section_name, actions in sections.items():
+			menu.addSection(section_name)
+			for action_text, callback in actions:
+				menu.addAction(action_text)
+			menu.addSeparator()
 
-		# ──────────────── LIÊN KẾT & TOKEN ────────────────
-		menu.addSection("🔗 Token & Liên kết")
-		get_token = menu.addAction("🔐 Get Token")
-		refresh_token = menu.addAction("♻️ Lấy lại Token chết")
-		auto_link = menu.addAction("[Hot] 🚀 Tự động liên kết + lấy điểm + Đăng Nhập")
-		custom_link = menu.addAction("🛠️ Liên kết tùy chọn")
-		manual_link = menu.addAction("✍️ Liên kết thủ công")
-		menu.addSeparator()
-
-		# ──────────────── NHIỆM VỤ & ĐIỂM ────────────────
-		menu.addSection("🎯 Nhiệm vụ")
-		get_points = menu.addAction("💰 Lấy điểm")
-		check_in = menu.addAction("📅 Điểm danh")
-		run_all = menu.addAction("[Hot] ⚙️ Chạy tất cả")
-		withdraw_points = menu.addAction("💸 Rút điểm")
-		menu.addSeparator()
-
-		# ──────────────── KIỂM TRA ────────────────
-		menu.addSection("🔎 Kiểm tra")
-		check_answers = menu.addAction("❓ Kiểm tra lượt trả lời")
-		check_words = menu.addAction("🧩 Kiểm tra ghép chữ")
-		check_links = menu.addAction("🔗 Kiểm tra liên kết")
-		check_proxy = menu.addAction("[Hot] 🌐 Kiểm tra proxy")
-
-		# ──────────────── XỬ LÝ SỰ KIỆN ────────────────
+		# Handle action
 		action = menu.exec(self.table.viewport().mapToGlobal(pos))
+		if action:
+			# Find and execute the corresponding callback
+			for actions in sections.values():
+				for action_text, callback in actions:
+					if action.text() == action_text:
+						callback()
+						break
 
-		if action == add_note:
-			row = self.table.currentRow()
-			note, ok = QInputDialog.getText(self, "Thêm ghi chú", "Nhập ghi chú:")
-			if ok:
-				self.table.setItem(row, 7, QTableWidgetItem(note))
-				self.save_accounts_to_file()
-
-		elif action == load_accounts:
-			self.load_accounts_from_file()
-
-		elif action == open_profile:
-			row = self.table.currentRow()
-			threading.Thread(target=lambda: self.MoProfileTheoTenUser(row)).start()
-
-		elif action == set_pin:
-			row = self.table.currentRow()
-			threading.Thread(target=lambda: self.SetMaPinChoTaiKhoan(row)).start()
-
-		elif action == get_token:
-			threading.Thread(target=self.TokenGet).start()
-
-		elif action == refresh_token:
-			threading.Thread(target=self.LayLaiTokenChoTokenChetttt).start()
-
-		elif action == auto_link:
-			threading.Thread(target=self.lienkettaikhoan).start()
-
-		elif action == custom_link:
-			self.LienKetTuyChon()
-
-		elif action == manual_link:
-			threading.Thread(target=self.LienKetThuCong).start()
-
-		elif action == get_points:
-			selected_rows = list({index.row() for index in self.table.selectedIndexes()})
-			if selected_rows:
-				threading.Thread(target=lambda: self.run_multiple_threads(selected_rows, self.spinbox.value())).start()
-
-		elif action == check_in:
-			threading.Thread(target=self.Bu9diem).start()
-
-		elif action == run_all:
-			threading.Thread(target=self.ChAyAll).start()
-
-		elif action == withdraw_points:
-			self.Thuanrutdiemday()
-
-		elif action == check_answers:
-			threading.Thread(target=self.CheckLuotTraLoi).start()
-
-		elif action == check_words:
-			threading.Thread(target=self.CheckGhepChu).start()
-
-		elif action == check_links:
-			threading.Thread(target=self.CheckCacLienKet).start()
-
-		elif action == check_proxy:
-			threading.Thread(target=self.CheckProxy).start()
-
-		elif action == delete_banned:
-			self.delete_banned_accounts()
+	def _handle_add_note(self):
+		row = self.table.currentRow()
+		note, ok = QInputDialog.getText(self, "Thêm ghi chú", "Nhập ghi chú:")
+		if ok:
+			self.table.setItem(row, 7, QTableWidgetItem(note))
+			self.save_accounts_to_file()
 
 	def LienKetThuCong(sedf):
 		threading.Thread(target=self.LienKet).start()
@@ -2951,6 +2908,33 @@ class MainWindow(QWidget):
 		
 		self.save_accounts_to_file()
 		self.log_label.setText(f"✅ Đã xóa {len(rows_to_delete)} tài khoản bị cấm")
+
+	def export_points_to_file(self):
+		selected_rows = list(set([index.row() for index in self.table.selectedIndexes()]))
+		if not selected_rows:
+			self.update_log("Vui lòng chọn ít nhất một tài khoản để xuất điểm!")
+			return
+
+		timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+		filename = f"points_export_{timestamp}.txt"
+		
+		total_points = 0
+		with open(filename, "w", encoding="utf-8") as f:
+			for row in selected_rows:
+				username = self.table.item(row, 2).text()
+				points = self.table.item(row, 5).text()
+				try:
+					points_int = int(points)
+					total_points += points_int
+					f.write(f"{username}: {points} điểm\n")
+				except ValueError:
+					f.write(f"{username}: 0 điểm\n")
+
+			f.write("\n=== TỔNG KẾT ===\n")
+			f.write(f"Tổng số tài khoản: {len(selected_rows)}\n")
+			f.write(f"Tổng điểm: {total_points}")
+
+		self.update_log(f"Đã xuất điểm ra file {filename}")
 
 
 if __name__ == "__main__":
