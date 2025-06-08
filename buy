@@ -21,17 +21,22 @@ BALANCE_FILE = "balance.json"
 KEY_HISTORY_FILE = "key_history.json"
 
 KEY_PACKAGES = [
-    {"label": "Key FREE / 0 luồng (1k)","hours": 24,"threads": 1,"price": 0},
-    {"label": "Key 12 phút / 3 luồng (5k)","hours": 0.2,"threads": 3,"price": 5000},
-    {"label": "Key 25 phút / 6 luồng (12k)","hours": 0.2,"threads": 6,"price": 12000},
+
+    {"label": "Key FREE / 1 luồng (1k)","hours": 24,"threads": 1,"price": 0},
+    {"label": "Key 12 phút / 5 luồng (5k)","hours": 0.2,"threads": 5,"price": 5000},
+    {"label": "Key 25 phút / 10 luồng (12k)","hours": 0.2,"threads": 10,"price": 12000},
     {"label": "Key 1 giờ / 20 luồng (50k)", "hours": 1, "threads": 20, "price": 50000},
-    {"label": "Key 2 giờ / 20 luồng (90k)", "hours": 2, "threads": 20, "price": 90000},
+    {"label": "Key 2 giờ / 20 luồng (80k)", "hours": 2, "threads": 20, "price": 80000},
     {"label": "Key 1 giờ / 30 luồng (70k)", "hours": 1, "threads": 30, "price": 70000},
     {"label": "Key 2 giờ / 30 luồng (130k)", "hours": 2, "threads": 30, "price": 130000},
     {"label": "Key 1 giờ / 50 luồng (100k)", "hours": 1, "threads": 50, "price": 100000},
     {"label": "Key 2 giờ / 50 luồng (190k)", "hours": 2, "threads": 50, "price": 190000},
     {"label": "Key 1 giờ / 100 luồng (200k)", "hours": 1, "threads": 100, "price": 200000},
     {"label": "Key 2 giờ / 100 luồng (390k)", "hours": 2, "threads": 100, "price": 390000},
+    {"label": "Key 1 Tuần / 100 luồng (800k)", "hours": 168, "threads": 100, "price": 800000},
+    {"label": "Key 1 Tuần / 200 luồng (1570k)", "hours": 168, "threads": 200, "price": 1570000},
+    {"label": "Key 1 Tháng / 100 luồng (1389k)", "hours": 744, "threads": 100, "price": 1389000},
+    {"label": "Key 1 Tháng / 200 luồng (2056k)", "hours": 744, "threads": 200, "price": 2056000},
 ]
 KEY_FILE = "tool_key.json"
 
