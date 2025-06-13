@@ -538,7 +538,7 @@ class LienKetWorker(QThread):
 				fake = Faker('vi_VN')
 				lock = threading.Lock()
 
-				proxy="103.74.106.155:38675:xunj3o6b:xUnJ3o6B"
+				proxy="103.151.52.38:64993:2nf14h43:qbATDrltaIDW"
 				host, port, userss, pwd = proxy.split(":")
 				proxy_url = f"http://{userss}:{pwd}@{host}:{port}"
 				proxies = {"http": proxy_url, "https": proxy_url}
