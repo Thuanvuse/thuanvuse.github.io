@@ -116,12 +116,10 @@ c.addEventListener(
   false
 );
 
-
 function playAudio() {
   var audio = document.getElementById("myAudio");
   audio.play();
 }
-
 
 const yourDate = new Date("2024-12-30T00:00:00");
 
@@ -154,12 +152,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
 const developControl = document.querySelector(".js-develop-button");
 const resetControl = document.querySelector(".js-reset-button");
-const polaroidPhoto = document.querySelector(".js-photo");
+const polaroidPhotos = document.querySelectorAll(".js-photo");
 
 developControl.addEventListener("click", () => {
-  polaroidPhoto.classList.add("is-developed");
+  polaroidPhotos.forEach(photo => {
+    photo.classList.add("is-developed");
+  });
 });
 
 resetControl.addEventListener("click", () => {
-  polaroidPhoto.classList.remove("is-developed");
+  polaroidPhotos.forEach(photo => {
+    photo.classList.remove("is-developed");
+  });
+});
+
+// Add click event to individual photos
+document.querySelectorAll('.photo').forEach(photo => {
+  photo.addEventListener('click', function() {
+    this.classList.add('is-developed');
+  });
 });

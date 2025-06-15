@@ -3,124 +3,311 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Anh chung</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sedgwick+Ave&display=swap" rel="stylesheet">
 
     <style>
-        @import url("https://fonts.googleapis.com/css2?family=Sedgwick+Ave&display=swap");
-
         body {
             font-family: "Sedgwick Ave", cursive;
             font-size: 20px;
-            background-color: rgb(253, 251, 235);
-        }
-
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: -1;
-           
-        }
-
-        #c {
-            background-color: #ffffff;
+            background-image: url('./Anh/2dua.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         .container {
             display: flex;
+            flex-direction: column;
             align-items: center;
+            width: 100%;
             max-width: 800px;
             margin: 0 auto;
-            padding: 50px;
+            padding: 20px;
         }
 
-        .text {
-            width: 50%;
-            padding-right: 50px;
-            transform: rotate(-5deg);
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            width: 100%;
+            margin-top: 30px;
+            padding: 20px;
         }
 
         .polaroid {
             position: relative;
-            width: 500px;
-            height: 350px;
             background-color: white;
-            border-style: solid;
-            border-color: white;
-            border-width: 20px 15px 60px 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            padding: 20px 20px 60px 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transform: rotate(var(--rotation));
+            transition: all 0.3s ease;
+            border: 1px solid #f0f0f0;
+            margin: 10px;
+            cursor: pointer;
+        }
+
+        .polaroid:hover {
+            transform: rotate(0deg) scale(1.05);
+        }
+
+        .polaroid:hover .photo {
+            transform: scale(1.02);
         }
 
         .photo {
-            position: relative;
             width: 100%;
-            height: 100%;
-            background-image: url("./Anh/2dua.jpg");
+            height: 250px;
             background-size: cover;
-            filter: blur(5px) brightness(0%) saturate(0%);
+            background-position: center;
+            /* filter: blur(5px) brightness(0%) saturate(0%); */
+            transition: all 0.3s ease;
+            border: 1px solid #e0e0e0;
+            cursor: pointer;
+        }
+
+        .photo:hover {
+            transform: scale(1.02);
         }
 
         .photo.is-developed {
             animation: developPhoto 6s ease-in-out forwards;
+            cursor: default;
+        }
+
+        .sticker {
+            position: absolute;
+            font-size: 24px;
+            pointer-events: none;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .sticker:nth-child(1) { top: -10px; right: -10px; }
+        .sticker:nth-child(2) { bottom: -10px; left: -10px; }
+        .sticker:nth-child(3) { top: 50%; right: -15px; }
+        .sticker:nth-child(4) { bottom: 50%; left: -15px; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(10deg); }
         }
 
         .button {
-            padding: 10px 20px 20px 30px;
+            padding: 10px 20px;
             border: none;
-            background-color: transparent;
-            color: white;
-            font-size: 40px;
+            background-color: rgba(255, 255, 255, 0.9);
+            font-size: 24px;
             cursor: pointer;
             font-family: "Sedgwick Ave", cursive;
             color: #000000;
+            border-radius: 50px;
+            margin: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease;
+        }
+
+        .button:hover {
+            transform: scale(1.1);
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
         }
 
         @keyframes developPhoto {
-            0% {
-                filter: blur(5px) brightness(0%) saturate(0%);
-            }
+            0% { filter: blur(5px) brightness(0%) saturate(0%); }
+            35% { filter: blur(3px) brightness(40%) saturate(30%); }
+            70% { filter: blur(2px) brightness(80%) saturate(60%); }
+            100% { filter: blur(1px) brightness(80%) saturate(90%); }
+        }
 
-            35% {
-                filter: blur(3px) brightness(40%) saturate(30%);
-            }
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            width: 100%;
+            margin-top: 30px;
+            padding: 20px;
+        }
 
-            70% {
-                filter: blur(2px) brightness(80%) saturate(60%);
-            }
+        .photo-item {
+            position: relative;
+            aspect-ratio: 1;
+            background-size: cover;
+            background-position: center;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 10px solid white;
+            transition: transform 0.3s ease;
+        }
 
-            100% {
-                filter: blur(1px) brightness(80%) saturate(90%);
-            }
+        .photo-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 1px solid #e0e0e0;
+            margin: 5px;
+            pointer-events: none;
+        }
+
+        .photo-item:hover {
+            transform: scale(1.05);
         }
     </style>
-
 </head>
 
 <body translate="no" onclick="playAudio()">
-    <canvas id="c" width="948" height="586"></canvas>
     <div class="container">
-        <div class="text">
-            <p>Nhấn vào máy ảnh để xem ảnh chung ❤️😘💗</p>
-            <button class="button js-develop-button">📸</button>
-            <a href="./index.html"> <button class="button js-reset-button">↩️</button></a>
+        <div class="header">
+            <h1>Khoảnh khắc của chúng mình ❤️</h1>
+            <p>Nhấn vào ảnh để xem nè 😘</p>
         </div>
-        <div class="polaroid-container">
-            <div class="polaroid">
-                <div class="photo js-photo">
+
+        <div class="gallery">
+            <div class="polaroid" style="--rotation: -5deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183105075_9466691195dfbcc58b06527c1751b00a.jpg')">
+                    <span class="sticker">❤️</span>
+                    <span class="sticker">😘</span>
+                </div>
+            </div>
+            <div class="polaroid" style="--rotation: 3deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183107461_09cfe21a85a005b9be8890611487dddb.jpg')">
+                    <span class="sticker">💝</span>
+                    <span class="sticker">💓</span>
+                </div>
+            </div>
+            <div class="polaroid" style="--rotation: -2deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183116728_3d8b92d702fec000f8503cdf855acbe5.jpg')">
+                    <span class="sticker">💞</span>
+                    <span class="sticker">💞</span>
+                </div>
+            </div>
+            <div class="polaroid" style="--rotation: 4deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183116925_be8988a3ddcbf292f95bc88301f0c63e.jpg')">
+                    <span class="sticker">💘</span>
+                    <span class="sticker">💟</span>
+                </div>
+            </div>
+            <div class="polaroid" style="--rotation: -3deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183124502_22a894f7e0879913afe6e2cb45025973.jpg')">
+                    <span class="sticker">💌</span>
+                    <span class="sticker">💋</span>
+                </div>
+            </div>
+            <div class="polaroid" style="--rotation: 2deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183124953_328ad010df9d2e42c825db7296db6979.jpg')">
+                    <span class="sticker">💖</span>
+                    <span class="sticker">💕</span>
+                </div>
+            </div>
+            <div class="polaroid" style="--rotation: -4deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183127678_a2da215084724a3b7a7fd8ae101c222b.jpg')">
+                    <span class="sticker">❤️</span>
+                    <span class="sticker">😘</span>
+                </div>
+            </div>
+            <div class="polaroid" style="--rotation: 5deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183134241_910243d08a8ca994858a6f6c436aa201.jpg')">
+                    <span class="sticker">💝</span>
+                    <span class="sticker">💓</span>
+                </div>
+            </div>
+            <div class="polaroid" style="--rotation: -1deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183135366_d488416a56b26bdbe9648cbba1ba2ff2.jpg')">
+                    <span class="sticker">💞</span>
+                    <span class="sticker">💞</span>
+                </div>
+            </div>
+            <div class="polaroid" style="--rotation: 1deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183135556_5e836a5f1471962b01a8316042a67379.jpg')">
+                    <span class="sticker">💘</span>
+                    <span class="sticker">💟</span>
+                </div>
+            </div>
+            <div class="polaroid" style="--rotation: -5deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183144551_5db96f4b293cf6ba14cc7530b610678e.jpg')">
+                    <span class="sticker">💋</span>
+                    <span class="sticker">💋</span>
+                </div>
+            </div>
+            <div class="polaroid" style="--rotation: 3deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183146761_d8e381ecb538d988bab1f87b28ddb2b5.jpg')">
+                    <span class="sticker">💖</span>
+                    <span class="sticker">💕</span>
+                </div>
+            </div>
+            <div class="polaroid" style="--rotation: -2deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183149847_029d6443a06ce87abe102f74925c3144.jpg')">
+                    <span class="sticker">❤️</span>
+                    <span class="sticker">😘</span>
+                </div>
+            </div>
+            <div class="polaroid" style="--rotation: 4deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183155273_748a824efc747f081235a30724b4ce58.jpg')">
+                    <span class="sticker">💓</span>
+                    <span class="sticker">💓</span>
+                </div>
+            </div>
+            <div class="polaroid" style="--rotation: -3deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183156368_7481492bad61fe231a5b413e3a5ea497.jpg')">
+                    <span class="sticker">💗</span>
+                    <span class="sticker">💞</span>
+                </div>
+            </div>
+            <div class="polaroid" style="--rotation: 2deg">
+                <div class="photo js-photo" style="background-image: url('./AnhChung/z6707183159463_a6b02f5e5fbac511560029431a6eca27.jpg')">
+                    <span class="sticker">💘</span>
+                    <span class="sticker">💟</span>
                 </div>
             </div>
         </div>
+
+        <div class="photo-grid">
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183105075_9466691195dfbcc58b06527c1751b00a.jpg')"></div>
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183107461_09cfe21a85a005b9be8890611487dddb.jpg')"></div>
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183116728_3d8b92d702fec000f8503cdf855acbe5.jpg')"></div>
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183116925_be8988a3ddcbf292f95bc88301f0c63e.jpg')"></div>
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183124502_22a894f7e0879913afe6e2cb45025973.jpg')"></div>
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183124953_328ad010df9d2e42c825db7296db6979.jpg')"></div>
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183127678_a2da215084724a3b7a7fd8ae101c222b.jpg')"></div>
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183134241_910243d08a8ca994858a6f6c436aa201.jpg')"></div>
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183135366_d488416a56b26bdbe9648cbba1ba2ff2.jpg')"></div>
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183135556_5e836a5f1471962b01a8316042a67379.jpg')"></div>
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183144551_5db96f4b293cf6ba14cc7530b610678e.jpg')"></div>
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183146761_d8e381ecb538d988bab1f87b28ddb2b5.jpg')"></div>
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183149847_029d6443a06ce87abe102f74925c3144.jpg')"></div>
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183155273_748a824efc747f081235a30724b4ce58.jpg')"></div>
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183156368_7481492bad61fe231a5b413e3a5ea497.jpg')"></div>
+            <div class="photo-item" style="background-image: url('./AnhChung/z6707183159463_a6b02f5e5fbac511560029431a6eca27.jpg')"></div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button class="button js-develop-button">📸 Chụp ảnh</button>
+            <a href="./index.html"><button class="button">↩️ Quay lại</button></a>
+        </div>
+
         <audio id="myAudio">
             <source src="./ST.mp3" type="audio/mp3">
             Trình duyệt của bạn không hỗ trợ thẻ audio.
         </audio>
-    
     </div>
     <script src="./script.js"></script>
-
-
 </body>
 
 </html>
