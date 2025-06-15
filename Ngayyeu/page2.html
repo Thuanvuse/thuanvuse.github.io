@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anh chung</title>
+
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Sedgwick+Ave&display=swap");
+
+        body {
+            font-family: "Sedgwick Ave", cursive;
+            font-size: 20px;
+            background-color: rgb(253, 251, 235);
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+           
+        }
+
+        #c {
+            background-color: #ffffff;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 50px;
+        }
+
+        .text {
+            width: 50%;
+            padding-right: 50px;
+            transform: rotate(-5deg);
+        }
+
+        .polaroid {
+            position: relative;
+            width: 500px;
+            height: 350px;
+            background-color: white;
+            border-style: solid;
+            border-color: white;
+            border-width: 20px 15px 60px 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .photo {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-image: url("./Anh/2dua.jpg");
+            background-size: cover;
+            filter: blur(5px) brightness(0%) saturate(0%);
+        }
+
+        .photo.is-developed {
+            animation: developPhoto 6s ease-in-out forwards;
+        }
+
+        .button {
+            padding: 10px 20px 20px 30px;
+            border: none;
+            background-color: transparent;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            font-family: "Sedgwick Ave", cursive;
+            color: #000000;
+        }
+
+        @keyframes developPhoto {
+            0% {
+                filter: blur(5px) brightness(0%) saturate(0%);
+            }
+
+            35% {
+                filter: blur(3px) brightness(40%) saturate(30%);
+            }
+
+            70% {
+                filter: blur(2px) brightness(80%) saturate(60%);
+            }
+
+            100% {
+                filter: blur(1px) brightness(80%) saturate(90%);
+            }
+        }
+    </style>
+
+</head>
+
+<body translate="no" onclick="playAudio()">
+    <canvas id="c" width="948" height="586"></canvas>
+    <div class="container">
+        <div class="text">
+            <p>Nhấn vào máy ảnh để xem ảnh chung ❤️😘💗</p>
+            <button class="button js-develop-button">📸</button>
+            <a href="./index.html"> <button class="button js-reset-button">↩️</button></a>
+        </div>
+        <div class="polaroid-container">
+            <div class="polaroid">
+                <div class="photo js-photo">
+                </div>
+            </div>
+        </div>
+        <audio id="myAudio">
+            <source src="./ST.mp3" type="audio/mp3">
+            Trình duyệt của bạn không hỗ trợ thẻ audio.
+        </audio>
+    
+    </div>
+    <script src="./script.js"></script>
+
+
+</body>
+
+</html>
