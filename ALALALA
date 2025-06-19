@@ -1118,41 +1118,20 @@ class MainWindow(QWidget):
 			f"Nhập {len(failed_rows)} proxy mới (1 dòng 1 proxy):"
 		)
 
-		if ok:
-			proxies = [line.strip() for line in text.strip().splitlines() if line.strip()]
-			need_more = len(failed_rows) - len(proxies)
+		proxies = [line.strip() for line in text.strip().splitlines() if line.strip()]
+		
+		if len(proxies) < len(failed_rows):
+			self.log_label.setText(f"⚠️ Cần {len(failed_rows)} proxy nhưng chỉ nhập {len(proxies)}.")
+			return
 
-			# Nếu thiếu thì tự động mua thêm proxy
-			if need_more > 0:
-				try:
-					url = f"https://clonebysun.com/api/BResource.php?username=t29032006&password=t29032006&id=86&amount={need_more}"
-					response = requests.get(url)
-					data = response.json()
+		# Áp dụng proxy cho từng dòng lỗi
+		for i, row in enumerate(failed_rows):
+			new_proxy = proxies[i]
+			self.table.setItem(row, 1, QTableWidgetItem(new_proxy))
+			self.accounts[row][1] = new_proxy
 
-					if data["status"] != "success":
-						QMessageBox.warning(self, "Lỗi", "Không thể mua proxy: " + data.get("msg", ""))
-						return
-
-					bought_proxies = [entry["account"] for entry in data["data"]["lists"]]
-					if len(bought_proxies) < need_more:
-						QMessageBox.warning(self, "Thiếu proxy", f"API chỉ trả về {len(bought_proxies)} proxy.")
-						return
-
-					proxies.extend(bought_proxies)
-					QMessageBox.warning(self, "Thành Công", f"Thay Thành Công")
-
-				except Exception as e:
-					QMessageBox.critical(self, "Lỗi", f"Đã xảy ra lỗi khi mua proxy: {str(e)}")
-					return
-
-			# Áp dụng proxy cho từng dòng lỗi
-			for i, row in enumerate(failed_rows):
-				new_proxy = proxies[i]
-				self.table.setItem(row, 1, QTableWidgetItem(new_proxy))
-				self.accounts[row][1] = new_proxy
-
-			self.log_label.setText(f"✅ Đã thay {len(failed_rows)} proxy.")
-			self.save_accounts_to_file()
+		self.log_label.setText(f"✅ Đã thay {len(failed_rows)} proxy.")
+		self.save_accounts_to_file()
 
 
 	def backup_accounts(self):
@@ -1989,40 +1968,42 @@ class MainWindow(QWidget):
 					pass  # bạn có thể xử lý kết quả hoặc log tại đây nếu cần
 		chay_20_mot_luot()    
 	def ChAyAll(self):
-		from concurrent.futures import ThreadPoolExecutor, as_completed
-		def chay_20_mot_luot():
-			def xu_ly_row(row):
-				try:
-					self.table.setItem(row, 6, QTableWidgetItem(f"Bắt Đầu"))
-					self.table.setItem(row, 6, QTableWidgetItem(f"Check Token"))
+		try:
+			from concurrent.futures import ThreadPoolExecutor, as_completed
+			def chay_20_mot_luot():
+				def xu_ly_row(row):
+					try:
+						self.table.setItem(row, 6, QTableWidgetItem(f"Bắt Đầu"))
+						self.table.setItem(row, 6, QTableWidgetItem(f"Check Token"))
 
-					chechDangNhap=self.CheckLoginssssss(row)
-					print(chechDangNhap)
-					if chechDangNhap:
-						self.table.setItem(row, 6, QTableWidgetItem(f"Bắt Trả Lời Câu Hỏi"))
-						self.CheckLuotTraLoiall(row)
-						self.table.setItem(row, 6, QTableWidgetItem(f"Bắt Quay Chữ"))
-						self.CheckGhepChuall(row)
-						self.table.setItem(row, 6, QTableWidgetItem(f"☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️"))
-					else:
-						self.table.setItem(row, 6, QTableWidgetItem(f"[💩💩💩]> Token Chết MẸ Rồi em!"))
-				except:
-					self.table.setItem(row, 6, QTableWidgetItem(f"[💩💩💩]> Lỗi Cái Chó Gì Á Tự Check !"))
+						chechDangNhap=self.CheckLoginssssss(row)
+						print(chechDangNhap)
+						if chechDangNhap:
+							self.table.setItem(row, 6, QTableWidgetItem(f"Bắt Trả Lời Câu Hỏi"))
+							self.CheckLuotTraLoiall(row)
+							self.table.setItem(row, 6, QTableWidgetItem(f"Bắt Quay Chữ"))
+							self.CheckGhepChuall(row)
+							self.table.setItem(row, 6, QTableWidgetItem(f"☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️"))
+						else:
+							self.table.setItem(row, 6, QTableWidgetItem(f"[💩💩💩]> Token Chết MẸ Rồi em!"))
+					except:
+						self.table.setItem(row, 6, QTableWidgetItem(f"[💩💩💩]> Lỗi Cái Chó Gì Á Tự Check !"))
 
-			# Đọc file tool_key.json và lấy giá trị threads
-			with open("tool_key.json", "r", encoding="utf-8") as f:
-				data = json.load(f)
+				# Đọc file tool_key.json và lấy giá trị threads
+				with open("tool_key.json", "r", encoding="utf-8") as f:
+					data = json.load(f)
 
-			if "threads" not in data:
-				raise ValueError("Không tìm thấy 'threads' trong file tool_key.json")
+				if "threads" not in data:
+					raise ValueError("Không tìm thấy 'threads' trong file tool_key.json")
 
-			so_luong_luong = data["threads"]
+				so_luong_luong = data["threads"]
 
-			with ThreadPoolExecutor(max_workers=so_luong_luong) as executor:
-				futures = [executor.submit(xu_ly_row, row) for row in range(self.table.rowCount())]
-				for future in as_completed(futures):
-					pass  # xử lý kết quả nếu cần
-		chay_20_mot_luot()
+				with ThreadPoolExecutor(max_workers=so_luong_luong) as executor:
+					futures = [executor.submit(xu_ly_row, row) for row in range(self.table.rowCount())]
+					for future in as_completed(futures):
+						pass  # xử lý kết quả nếu cần
+			chay_20_mot_luot()
+		except:pass
 	
 	def TokenGetsl(self):
 		def login_to_account(account, passwordf, proxy,f_id):
@@ -2937,8 +2918,71 @@ class MainWindow(QWidget):
 		self.update_log(f"Đã xuất điểm ra file {filename}")
 
 
+class ThongBaoDialog(QDialog):
+    def __init__(self, message, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("🔔 THÔNG BÁO BẢO TRÌ 🔔")
+        self.setStyleSheet("""
+            QDialog {
+                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #23243a, stop:1 #2b2b3d);
+                color: white;
+                font-size: 17px;
+                border-radius: 18px;
+                border: 2px solid #ffaa00;
+                padding: 18px 18px 10px 18px;
+                box-shadow: 0 8px 32px 0 rgba(31,38,135,0.37);
+            }
+            QLabel {
+                color: #ffcc00;
+                font-weight: bold;
+                font-size: 18px;
+                padding: 10px 0 10px 0;
+                qproperty-alignment: AlignCenter;
+            }
+            QPushButton {
+                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #ffaa00, stop:1 #ff8800);
+                color: #23243a;
+                font-weight: bold;
+                font-size: 16px;
+                padding: 10px 0;
+                border-radius: 8px;
+                margin-top: 18px;
+                border: 2px solid #ffcc00;
+            }
+            QPushButton:hover {
+                background-color: #fff200;
+                color: #23243a;
+            }
+        """)
+        layout = QVBoxLayout(self)
+        # Thêm icon thông báo lớn ở trên cùng
+        icon_label = QLabel("<span style='font-size:48px;'>⚠️</span>")
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(icon_label)
+        # Nội dung thông báo
+        label = QLabel(message)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        label.setWordWrap(True)
+        layout.addWidget(label)
+        btn = QPushButton("Đã hiểu")
+        btn.clicked.connect(self.accept)
+        layout.addWidget(btn)
+        self.setFixedWidth(440)
+        self.setFixedHeight(320)
+        self.setModal(True)
+
+
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
+	# Hiện thông báo trước khi vào giao diện chính
+	message = (
+			"🔔 THÔNG BÁO BẢO TRÌ 🔔\n\n"
+			"Tool sẽ bảo trì từ 00 giờ ngày mai tới 21h ngày hôm đó.\n"
+			"Trong thời gian này, mọi chức năng sẽ tạm ngưng hoạt động.\n"
+			"Mong anh em thông cảm và quay lại sau thời gian bảo trì!"
+		)
+	thongbao = ThongBaoDialog(message)
+	thongbao.exec()  # Đợi người dùng bấm "Đã hiểu"
 	window = MainWindow()
 	window.show()
 	sys.exit(app.exec())
