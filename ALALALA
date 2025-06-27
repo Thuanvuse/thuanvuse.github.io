@@ -1,10 +1,10 @@
 from qtpy.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QGraphicsDropShadowEffect, QHeaderView, QCheckBox, QLabel, QPushButton, QAbstractItemView,
-    QHBoxLayout, QFrame, QMenu, QMessageBox
+    QHBoxLayout, QFrame, QMenu, QMessageBox, QDialog, QTabWidget, QFormLayout, QLineEdit
 )
-from qtpy.QtGui import QColor, QFont, QCursor, QAction, QIcon
-from qtpy.QtCore import Qt, QPropertyAnimation, QRect, QTimer, QPoint, QRunnable, QThreadPool, Signal, QObject
+from qtpy.QtGui import QColor, QFont, QCursor, QAction, QIcon, QPixmap
+from qtpy.QtCore import Qt, QPropertyAnimation, QRect, QTimer, QPoint, QRunnable, QThreadPool, Signal, QObject, QDate, QThread, QVariantAnimation
 import sys
 import os
 import requests
@@ -231,14 +231,15 @@ class LoginWorker(QRunnable):
 class Table3D(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Bảng 3D - ACC Loader")
-        self.resize(1200, 600)
+        self.setWindowTitle("OKVIP TOOL")
+        self.resize(1200, 700)
         self.is_dark = False
         self.password_map = {}
         self.password_shown = set()
         self.threadpool = QThreadPool()
         self.threadpool.setMaxThreadCount(200)
         self.is_login_all = False
+        self.sidebar_visible = True
         self.init_ui()
 
     def toggle_theme(self, state):
@@ -262,6 +263,7 @@ class Table3D(QWidget):
                 color: #333;
             }
         """)
+        # self.total_label.setStyleSheet("color: #333;")  # Đã bỏ total_label
 
     def apply_dark_theme(self):
         self.setStyleSheet("""
@@ -277,101 +279,181 @@ class Table3D(QWidget):
                 color: #fff;
             }
         """)
+        # self.total_label.setStyleSheet("color: #fff;")  # Đã bỏ total_label
+
+    def toggle_sidebar(self):
+        self.sidebar.setVisible(not self.sidebar.isVisible())
+        self.sidebar_visible = self.sidebar.isVisible()
+        if self.sidebar_visible:
+            self.menu_btn.setText("❮")
+            self.floating_menu_btn.hide()
+        else:
+            self.floating_menu_btn.show()
+
+    def show_sidebar(self):
+        self.sidebar.setVisible(True)
+        self.sidebar_visible = True
+        self.menu_btn.setText("❮")
+        self.floating_menu_btn.hide()
 
     def init_ui(self):
-        layout = QVBoxLayout(self)
-        top_bar = QHBoxLayout()
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
 
-        self.toggle = AnimatedToggle()
-        self.toggle.stateChanged(self.toggle_theme)
-
-        self.total_label = QLabel("Tổng điểm: 0 | Tổng ACC: 0")
-        self.total_label.setFont(QFont("Arial", 12))
-        self.total_label.setStyleSheet("color: #333;")
-
-        self.login_all_btn = QPushButton("Đăng nhập tất cả")
-        self.login_all_btn.clicked.connect(self.login_all_accounts)
-        self.login_all_btn.setStyleSheet('''
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4f8cff, stop:1 #2353ff);
-                color: white;
-                border-radius: 15px;
-                padding: 8px 24px;
-                font-size: 15px;
-                font-weight: bold;
-                border: none;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #6faaff, stop:1 #3a6cff);
-                color: #fff;
-            }
-            QPushButton:pressed {
-                background: #2353ff;
+        # --- SIDEBAR ---
+        self.sidebar = QFrame()
+        self.sidebar.setObjectName("sidebar")
+        self.sidebar.setFixedWidth(320)
+        self.sidebar.setStyleSheet('''
+            QFrame#sidebar {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #fff9f1, stop:1 #ffe0b2);
+                border-top-right-radius: 32px;
+                border-bottom-right-radius: 32px;
+                border: 1.5px solid #ffe0b2;
             }
         ''')
+        sidebar_layout = QVBoxLayout(self.sidebar)
+        sidebar_layout.setContentsMargins(24, 24, 24, 24)
+        sidebar_layout.setSpacing(18)
 
-        self.run_all_btn = QPushButton("Làm Nhiệm Vụ Tất Cả")
-        self.run_all_btn.clicked.connect(self.run_all_tasks)
-        self.run_all_btn.setStyleSheet(self.login_all_btn.styleSheet())
+        # Menu button (collapse/expand)
+        self.menu_btn = QPushButton("❮")
+        self.menu_btn.setFixedSize(32, 32)
+        self.menu_btn.setStyleSheet("QPushButton{background:#fff3e0;border-radius:16px;font-size:20px;color:#ff9800;font-weight:bold;border:1.5px solid #ffe0b2;} QPushButton:hover{background:#ffe0b2;}")
+        self.menu_btn.clicked.connect(self.toggle_sidebar)
+        sidebar_layout.addWidget(self.menu_btn, alignment=Qt.AlignLeft)
 
-        self.check_proxy_btn = QPushButton("Kiểm Tra Proxy")
-        self.check_proxy_btn.clicked.connect(self.check_proxy_all)
-        self.check_proxy_btn.setStyleSheet(self.login_all_btn.styleSheet())
+        # Toggle theme (sáng/tối) chuyển vào sidebar
+        self.toggle = AnimatedToggle()
+        self.toggle.stateChanged(self.toggle_theme)
+        sidebar_layout.addWidget(self.toggle, alignment=Qt.AlignLeft)
 
-        self.replace_proxy_btn = QPushButton("Thay Proxy Không Hoạt Động")
-        self.replace_proxy_btn.clicked.connect(self.replace_dead_proxies)
-        self.replace_proxy_btn.setStyleSheet(self.login_all_btn.styleSheet())
+        # Avatar + tên + ID
+        avatar_label = QLabel()
+        avatar_pixmap = QPixmap()
+        avatar_pixmap.loadFromData(requests.get("https://d2kiqw8o04hzvt.cloudfront.net/okvip-live/1750948711277.png").content)
+        avatar_label.setPixmap(avatar_pixmap.scaled(80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        avatar_label.setFixedSize(80, 80)
+        avatar_label.setStyleSheet("border-radius: 40px; background: #fff; border: 3px solid #ffe0b2;")
+        avatar_label.setAlignment(Qt.AlignCenter)
+        sidebar_layout.addWidget(avatar_label, alignment=Qt.AlignHCenter)
+        name_label = QLabel("<b>Menu Tool</b>")
+        name_label.setStyleSheet("font-size: 22px; color: #ff9800; font-weight: bold;")
+        name_label.setAlignment(Qt.AlignHCenter)
+        sidebar_layout.addWidget(name_label)
+        id_label = QLabel('<span style="color:#ff9800;">🆔</span> <b> 0000000001</b>')
+        id_label.setStyleSheet("font-size: 15px; color: #ff9800; background:#ede7e3; border-radius:8px; padding:2px 8px; margin-bottom:8px;")
+        id_label.setAlignment(Qt.AlignHCenter)
+        sidebar_layout.addWidget(id_label)
 
-        self.get_point_all_btn = QPushButton("Lấy điểm tất cả")
-        self.get_point_all_btn.clicked.connect(self.get_point_all)
-        self.get_point_all_btn.setStyleSheet(self.login_all_btn.styleSheet())
+        # Block tổng acc/tổng điểm
+        stats_frame = QFrame()
+        stats_layout = QHBoxLayout(stats_frame)
+        stats_layout.setSpacing(12)
+        stats_layout.setContentsMargins(0, 0, 0, 0)
+        # Tổng acc
+        acc_box = QFrame()
+        acc_box.setStyleSheet("background:#fff; border-radius:12px; border:2px solid #ffe0b2;")
+        acc_box.setFixedSize(120, 60)
+        acc_v = QVBoxLayout(acc_box)
+        acc_v.setContentsMargins(6, 4, 6, 4)
+        acc_v.setSpacing(0)
+        acc_icon = QLabel("🧾 Tổng Số Acc")
+        acc_icon.setStyleSheet("font-size:13px;color:#ff9800;font-weight:bold;")
+        acc_icon.setAlignment(Qt.AlignCenter)
+        acc_v.addWidget(acc_icon)
+        self.acc_value = QLabel('0')
+        self.acc_value.setStyleSheet("font-size:22px;font-weight:bold;color:#ff9800;")
+        self.acc_value.setAlignment(Qt.AlignCenter)
+        acc_v.addWidget(self.acc_value)
+        stats_layout.addWidget(acc_box)
+        # Tổng điểm
+        diem_box = QFrame()
+        diem_box.setStyleSheet("background:#fff; border-radius:12px; border:2px solid #ffe0b2;")
+        diem_box.setFixedSize(120, 60)
+        diem_v = QVBoxLayout(diem_box)
+        diem_v.setContentsMargins(6, 4, 6, 4)
+        diem_v.setSpacing(0)
+        diem_icon = QLabel("💰 Tổng Số Điểm")
+        diem_icon.setStyleSheet("font-size:13px;color:#ff9800;font-weight:bold;")
+        diem_icon.setAlignment(Qt.AlignCenter)
+        diem_v.addWidget(diem_icon)
+        self.diem_value = QLabel('69')
+        self.diem_value.setStyleSheet("font-size:22px;font-weight:bold;color:#ff9800;")
+        self.diem_value.setAlignment(Qt.AlignCenter)
+        diem_v.addWidget(self.diem_value)
+        stats_layout.addWidget(diem_box)
+        sidebar_layout.addWidget(stats_frame)
 
-        top_bar.addWidget(self.toggle)
-        top_bar.addWidget(self.login_all_btn)
-        top_bar.addWidget(self.run_all_btn)
-        top_bar.addWidget(self.check_proxy_btn)
-        top_bar.addWidget(self.replace_proxy_btn)
-        top_bar.addWidget(self.get_point_all_btn)
-        top_bar.addStretch()
-        top_bar.addWidget(self.total_label)
+        # Block tool buttons (chỉ đúng 6 nút như ảnh, chỉ dùng emoji + text)
+        tool_items = [
+            ("🧾 Đăng Nhập Tất Cả", self.login_all_accounts),
+            ("🎁 Làm Nhiệm Vụ Tất Cả", self.run_all_tasks),
+            ("🎮 Kiểm Tra Proxy", self.check_proxy_all),
+            ("🔄 Thay Proxy Không Hoạt Động", self.replace_dead_proxies),
+            ("🪙 Lấy Điểm Tất Cả", self.get_point_all),
+            ("📢 Điểm Danh Tất Cả", self.diem_danh_all),
+        ]
+        for text, func in tool_items:
+            btn = QPushButton(text)
+            btn.setStyleSheet("QPushButton{background:#fff3e0;border-radius:14px;padding:10px 12px;font-size:15px;text-align:left;margin-bottom:8px;font-weight:bold;color:#ff9800;} QPushButton:hover{background:#ffe0b2;}")
+            btn.setCursor(Qt.PointingHandCursor)
+            btn.clicked.connect(func)
+            sidebar_layout.addWidget(btn)
+        sidebar_layout.addStretch(1)
 
+        # --- MAIN CONTENT ---
+        content_widget = QWidget()
+        content_layout = QVBoxLayout(content_widget)
+        content_layout.setContentsMargins(24, 24, 24, 24)
+        content_layout.setSpacing(18)
+        # Table
         self.table = QTableWidget()
-        self.table.setColumnCount(8)
+        self.table.setColumnCount(9)
         self.table.setHorizontalHeaderLabels([
             "Token", "Proxy", "Tài khoản", "Mật khẩu", "F-ID",
-            "Điểm", "Trạng thái", "Ghi chú"
+            "Điểm", "Trạng thái", "Ghi chú","Điểm Danh"
         ])
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setAlternatingRowColors(True)
         self.table.setStyleSheet("QTableWidget::item:selected { background-color: #ADD8E6; }")
-
         shadow = QGraphicsDropShadowEffect(self)
         shadow.setBlurRadius(10)
         shadow.setColor(QColor(0, 0, 0, 160))
         shadow.setOffset(3, 3)
         self.table.setGraphicsEffect(shadow)
-
         self.table.setContextMenuPolicy(Qt.CustomContextMenu)
         self.table.customContextMenuRequested.connect(self.show_context_menu)
-
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
         self.table.setColumnWidth(0, 50)   # Token
         self.table.setColumnWidth(1, 50)   # Proxy
-        self.table.setColumnWidth(2, 120)  # Tài khoản
-        self.table.setColumnWidth(3, 70)  # Mật khẩu
-        self.table.setColumnWidth(4, 80)   # F-ID
+        self.table.setColumnWidth(2, 60)  # Tài khoản
+        self.table.setColumnWidth(3, 60)  # Mật khẩu
+        self.table.setColumnWidth(4, 60)   # F-ID
         self.table.setColumnWidth(5, 80)   # Điểm
-        self.table.setColumnWidth(6, 470)  # Trạng thái (to nhất)
-        self.table.setColumnWidth(7, 250)  # Ghi chú (bình thường)
+        # Cột 6 (Trạng thái) kéo dãn hết phần còn lại
+        self.table.horizontalHeader().setSectionResizeMode(6, QHeaderView.Stretch)
+        self.table.setColumnWidth(7, 120)  # Ghi chú
+        self.table.setColumnWidth(8, 90)   # Điểm Danh
+        content_layout.addWidget(self.table)
 
-        layout.addLayout(top_bar)
-        layout.addWidget(self.table)
+        # Add to main layout
+        main_layout.addWidget(self.sidebar)
+        main_layout.addWidget(content_widget)
+
+        # Floating menu button (☰) to show sidebar when hidden
+        self.floating_menu_btn = QPushButton("☰", self)
+        self.floating_menu_btn.setFixedSize(36, 36)
+        self.floating_menu_btn.setStyleSheet("QPushButton{background:#fff3e0;border-radius:18px;font-size:22px;color:#ff9800;font-weight:bold;border:2px solid #ffe0b2;position: absolute; left: 8px; top: 16px;} QPushButton:hover{background:#ffe0b2;}")
+        self.floating_menu_btn.move(8, 16)
+        self.floating_menu_btn.hide()
+        self.floating_menu_btn.clicked.connect(self.show_sidebar)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_totals)
         self.timer.start(1000)
-
         self.load_data()
         self.apply_light_theme()
 
@@ -380,7 +462,8 @@ class Table3D(QWidget):
         login_action = menu.addAction("Đăng Nhập")
         get_point_action = menu.addAction("Lấy điểm")
         run_action = menu.addAction("Làm Nhiệm Vụ")
-        # withdraw_action = menu.addAction("Rút Điểm")
+        lienket_action = menu.addAction("Liên Kết Tài Khoản Game")
+        withdraw_action = menu.addAction("Rút Điểm")
         action = menu.exec_(self.table.mapToGlobal(pos))
         if action == login_action:
             self.login_selected_account()
@@ -388,6 +471,10 @@ class Table3D(QWidget):
             self.get_point_selected()
         elif action == run_action:
             self.run_selected_task()
+        elif action == lienket_action:
+            self.LienKetTuyChon()
+        elif action == withdraw_action:
+            self.Thuanrutdiemday()
 
     def login_selected_account(self):
         row = self.table.currentRow()
@@ -492,7 +579,9 @@ class Table3D(QWidget):
                 total_diem += int(self.table.item(row, 5).text())
             except:
                 continue
-        self.total_label.setText(f"Tổng điểm: {total_diem} | Tổng ACC: {self.table.rowCount()}")
+        # Cập nhật label ở sidebar
+        self.diem_value.setText(str(total_diem))
+        self.acc_value.setText(str(self.table.rowCount()))
 
     def load_data(self):
         if not os.path.exists(FILE_PATH): return
@@ -895,6 +984,165 @@ class Table3D(QWidget):
         btn.clicked.connect(on_replace)
         dialog.exec_()
 
+    def diem_danh_all(self):
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        import requests
+        from qtpy.QtWidgets import QTableWidgetItem
+        from qtpy.QtCore import QDate
+        def chay_20_mot_luot():
+            def xu_ly_row(row):
+                token = self.table.item(row, 0).text()
+                proxy = self.table.item(row, 1).text()
+                Fidd = self.table.item(row, 4).text()
+                url = "https://m.oklavip26.live/api/activitySignIn/singIn"
+                headers = {
+                    "authority": "m.oklavip26.live",
+                    "accept": "application/json, text/plain, */*",
+                    "accept-language": "vi-VN,vi;q=0.9",
+                    "content-type": "application/json",
+                    "locale": "vi_vn",
+                    "origin": "https://m.oklavip26.live",
+                    "priority": "u=1, i",
+                    "referer": "https://m.oklavip26.live/login",
+                    "sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+                    "sec-ch-ua-mobile": "?0",
+                    "sec-ch-ua-platform": "Windows",
+                    "sec-fetch-dest": "empty",
+                    "sec-fetch-mode": "cors",
+                    "sec-fetch-site": "same-origin",
+                    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
+                    "f-id": Fidd,
+                    "token": token
+                }
+                self.table.setItem(row, 6, QTableWidgetItem(f"Điểm Danhhhhhhhhhhhhhhh"))
+                try:
+                    proxy_url, port, username, password = proxy.split(':')
+                    proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
+                    proxies = {
+                        "http": proxy_address,
+                        "https": proxy_address
+                    }
+                except Exception as e:
+                    self.table.setItem(row, 6, QTableWidgetItem(f"Proxy lỗi: {e}"))
+                    return
+                chechDangNhap = self.CheckLoginssssss(row)
+                print(chechDangNhap)
+                if chechDangNhap:
+                    try:
+                        response = requests.post(url, headers=headers, proxies=proxies, timeout=500)
+                        print(response.text)
+                        if response.status_code == 200 and response.json().get("code") == 200:
+                            data = response.json().get("data", {})
+                            status = data.get("status")
+                            continue_days = data.get("continueDays")
+                            if status == 2 or continue_days is None:
+                                self.table.setItem(row, 6, QTableWidgetItem(f"Đã điểm danh hôm nay hoặc không thể điểm danh!"))
+                            else:
+                                aaaaaaaaaaaa = continue_days
+                                requests.get("https://m.oklavip26.live/api/accountLogin/updateOnline", headers=headers, proxies=proxies, timeout=500)
+                                self.table.setItem(row, 6, QTableWidgetItem(f"✅ Đã Điểm Danh Thành Công: {aaaaaaaaaaaa}"))
+                                try:
+                                    aaaaaaaaaaaa = int(aaaaaaaaaaaa)
+                                    from qtpy.QtCore import QDate
+                                    current_date = QDate.currentDate()
+                                    formatted_date = current_date.toString("dd/MM")
+                                    self.table.setItem(row, 8, QTableWidgetItem(formatted_date+f"[{aaaaaaaaaaaa}]"))
+                                except Exception as e:
+                                    print(f"Lỗi cập nhật cột điểm danh: {e}")
+                                # Lưu lại dòng acc này vào file ACC.txt
+                                try:
+                                    acc_file = FILE_PATH
+                                    with open(acc_file, "r", encoding="utf-8") as f:
+                                        lines = f.readlines()
+                                    if 0 <= row < len(lines):
+                                        new_cells = []
+                                        for col in range(self.table.columnCount()):
+                                            item = self.table.item(row, col)
+                                            new_cells.append(item.text() if item else "")
+                                        if len(new_cells) < 8:
+                                            new_cells += [""] * (8 - len(new_cells))
+                                        lines[row] = "|".join(new_cells) + "\n"
+                                        with open(acc_file, "w", encoding="utf-8") as f:
+                                            f.writelines(lines)
+                                        print(f"[LOG] Đã lưu dòng vào file ACC.txt sau khi điểm danh cho dòng {row}")
+                                except Exception as e:
+                                    print(f"[LOG] Lỗi lưu dòng vào file ACC.txt sau khi điểm danh: {e}")
+                        else:
+                            msg = response.json().get("message", "Lỗi không rõ")
+                            self.table.setItem(row, 6, QTableWidgetItem(f"Lỗi điểm danh: {msg}"))
+                    except Exception as e:
+                        self.table.setItem(row, 6, QTableWidgetItem(f"Lỗi điểm danh: {e}"))
+                else:
+                    self.table.setItem(row, 6, QTableWidgetItem(f"[💩]> Token Chết MẸ Rồi em! <[💩]"))
+            with ThreadPoolExecutor(max_workers=50) as executor:
+                futures = [executor.submit(xu_ly_row, row) for row in range(self.table.rowCount())]
+                for future in as_completed(futures):
+                    pass
+        chay_20_mot_luot()
+
+    def LienKetTuyChon(self):
+        # Danh sách game mẫu
+        game_list = [
+            {"memberCode": "MOCBAI", "websiteName": "MB66", "id": "1739230912039436290"},
+            {"memberCode": "OK9", "websiteName": "OK9", "id": "1798608608416931842"},
+            {"memberCode": "78win", "websiteName": "78win", "id": "1814571722874535937"},
+            {"memberCode": "QQ88", "websiteName": "QQ88", "id": "1863085503318499329"},
+            {"memberCode": "F168", "websiteName": "F168", "id": "1863085976314355713"},
+        ]
+        dialog = GameInputDialog(game_list, "Liên Kết Tài Khoản", "User", "Số Điện Thoại")
+        if dialog.exec():
+            game_info = dialog.selected_game
+            game_account = dialog.game_account
+            game_phone = dialog.game_phone
+        else:
+            return
+        row = self.table.currentRow()
+        if row == -1:
+            return
+        # Lấy dữ liệu acc đang chọn
+        token = self.table.item(row, 0).text()
+        proxy = self.table.item(row, 1).text()
+        tkkk = self.table.item(row, 2).text()
+        password = self.password_map.get(row)
+        f_id = self.table.item(row, 4).text()
+        acc = [token, proxy, tkkk, password, f_id]
+        # Chạy liên kết trên thread
+        self.thuan_lienket_thread = ThuanLienKet([row], [acc], game_info, game_account, game_phone, self)
+        self.thuan_lienket_thread.result.connect(self.handle_lienket_tuychon_result)
+        self.thuan_lienket_thread.start()
+
+    def handle_lienket_tuychon_result(self, row, message):
+        self.table.setItem(row, 6, QTableWidgetItem(message))
+
+    def Thuanrutdiemday(self):
+        import hashlib
+        game_list = [
+            {"memberCode": "MOCBAI", "websiteName": "MB66", "id": "1739230912039436290"},
+            {"memberCode": "OK9", "websiteName": "OK9", "id": "1798608608416931842"},
+            {"memberCode": "78win", "websiteName": "78win", "id": "1814571722874535937"},
+            {"memberCode": "QQ88", "websiteName": "QQ88", "id": "1863085503318499329"},
+            {"memberCode": "F168", "websiteName": "F168", "id": "1863085976314355713"},
+        ]
+        dialog = GameInputDialog(game_list, "Rút Điểm", "Số Điểm Muốn Rút", "Mã PIN")
+        if dialog.exec():
+            game_info = dialog.selected_game
+            game_account = dialog.game_account
+            game_phone = dialog.game_phone
+        else:
+            return
+        row = self.table.currentRow()
+        if row == -1:
+            return
+        token = self.table.item(row, 0).text()
+        proxy = self.table.item(row, 1).text()
+        tkkk = self.table.item(row, 2).text()
+        password = self.password_map.get(row)
+        f_id = self.table.item(row, 4).text()
+        acc = [token, proxy, tkkk, password, f_id]
+        self.thuan_lienket_thread = Thuanrutdiem([row], [acc], game_info, game_account, game_phone, self)
+        self.thuan_lienket_thread.result.connect(self.handle_lienket_tuychon_result)
+        self.thuan_lienket_thread.start()
+
 class GetPointWorker(QRunnable):
     def __init__(self, row, token, f_id, proxy_string):
         super().__init__()
@@ -943,6 +1191,220 @@ class GetPointWorker(QRunnable):
             print(f"GetPointWorker Exception: {e}")
             self.signals.update_status.emit(self.row, "Lấy điểm thất bại!")
             self.signals.login_result.emit(self.row, self.token, "GET_POINT_FAIL", None, str(e))
+
+class ThuanLienKet(QThread):
+    result = Signal(int, str)  # row, message
+    def __init__(self, selected_rows, accounts, game_info, game_account, game_phone, parent=None):
+        super().__init__(parent)
+        self.selected_rows = selected_rows
+        self.accounts = accounts
+        self.game_info = game_info
+        self.game_account = game_account
+        self.game_phone = game_phone
+    def run(self):
+        import requests
+        def create_proxy(proxy_string):
+            parts = proxy_string.split(":")
+            ip = parts[0]
+            port = parts[1]
+            username = parts[2]
+            password = parts[3]
+            proxies = {
+                "http": f"http://{username}:{password}@{ip}:{port}",
+                "https": f"http://{username}:{password}@{ip}:{port}"
+            }
+            return proxies
+        row = self.selected_rows[0]
+        account = self.accounts[0]
+        token = account[0]
+        proxy = account[1]
+        tkkk = account[2]
+        password = account[3]
+        f_id = account[4]
+        self.result.emit(row, f"Đang liên kết tài khoản game...")
+        headers = {
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json",
+            "f-id": f_id,
+            "locale": "vi_vn",
+            "referer": "https://m.oklavip26.live/wallet?type=0",
+            "token": token,
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+        }
+        data = {
+            "gameAccount": self.game_account,
+            "gamePhone": self.game_phone,
+            "websiteId": self.game_info["id"],
+            "memberCode": self.game_info["memberCode"]
+        }
+        try:
+            proxies = create_proxy(proxy)
+            response = requests.post(
+                "https://m.oklavip26.live/api/wallet/bindGameAccount",
+                headers=headers,
+                json=data,
+                proxies=proxies,
+                timeout=10
+            )
+            self.result.emit(row, f"✅ {response.status_code} - {response.text}")
+        except Exception as e:
+            self.result.emit(row, f"❌ Lỗi: {str(e)}")
+
+class GameInputDialog(QDialog):
+    def __init__(self, game_list, Thuan, s1, s2, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(Thuan)
+        self.setStyleSheet("""
+            QDialog {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #23243a, stop:1 #181928);
+                color: #fff;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 16px;
+                border-radius: 18px;
+            }
+            QLabel {
+                color: #ffa726;
+                font-weight: bold;
+                font-size: 15px;
+                margin-bottom: 6px;
+            }
+            QLineEdit {
+                padding: 12px 14px;
+                border: 1.5px solid #444;
+                border-radius: 10px;
+                background-color: #23243a;
+                color: #fff;
+                font-size: 16px;
+                margin-bottom: 12px;
+            }
+            QPushButton {
+                background-color: #ffa726;
+                padding: 14px 0;
+                border: none;
+                border-radius: 10px;
+                font-weight: bold;
+                color: #23243a;
+                font-size: 18px;
+                margin-top: 18px;
+                margin-bottom: 8px;
+            }
+            QPushButton:hover {
+                background-color: #ffb74d;
+                color: #181928;
+            }
+            QTabWidget::pane {
+                border: none;
+                background: transparent;
+            }
+            QTabBar::tab {
+                background: #23243a;
+                color: #fff;
+                padding: 10px 32px;
+                border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+                font-size: 16px;
+                margin-right: 2px;
+            }
+            QTabBar::tab:selected {
+                background: #ffa726;
+                color: #23243a;
+            }
+        """)
+        self.selected_game = None
+        self.game_account = ""
+        self.game_phone = ""
+        main_layout = QVBoxLayout()
+        self.tab_widget = QTabWidget()
+        self.tab_data = {}  # tab index -> game data
+        for game in game_list:
+            tab = QWidget()
+            layout = QFormLayout()
+            layout.setLabelAlignment(Qt.AlignLeft)
+            layout.setFormAlignment(Qt.AlignTop)
+            account_input = QLineEdit()
+            phone_input = QLineEdit()
+            layout.addRow(s1 + ':', account_input)
+            layout.addRow(s2 + ':', phone_input)
+            tab.setLayout(layout)
+            self.tab_widget.addTab(tab, game['websiteName'])
+            self.tab_data[self.tab_widget.count() - 1] = {
+                "game": game,
+                "account_input": account_input,
+                "phone_input": phone_input
+            }
+        main_layout.addWidget(self.tab_widget)
+        self.btn = QPushButton("Liên kết")
+        self.btn.clicked.connect(self.accept)
+        main_layout.addWidget(self.btn)
+        self.setLayout(main_layout)
+        self.resize(480, 340)
+    def accept(self):
+        index = self.tab_widget.currentIndex()
+        data = self.tab_data.get(index)
+        if data:
+            self.selected_game = data["game"]
+            self.game_account = data["account_input"].text()
+            self.game_phone = data["phone_input"].text()
+        super().accept()
+
+class Thuanrutdiem(QThread):
+    result = Signal(int, str)
+    def __init__(self, selected_rows, accounts, game_info, game_account, game_phone, parent=None):
+        super().__init__(parent)
+        self.selected_rows = selected_rows
+        self.accounts = accounts
+        self.game_info = game_info
+        self.game_account = game_account
+        self.game_phone = game_phone
+    def run(self):
+        import requests, hashlib
+        def create_proxy(proxy_string):
+            parts = proxy_string.split(":")
+            ip = parts[0]
+            port = parts[1]
+            username = parts[2]
+            password = parts[3]
+            proxies = {
+                "http": f"http://{username}:{password}@{ip}:{port}",
+                "https": f"http://{username}:{password}@{ip}:{port}"
+            }
+            return proxies
+        row = self.selected_rows[0]
+        account = self.accounts[0]
+        token = account[0]
+        proxy = account[1]
+        tkkk = account[2]
+        password = account[3]
+        f_id = account[4]
+        self.result.emit(row, f"Thực Hiện Rút Điểm")
+        headers = {
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json",
+            "f-id": f_id,
+            "locale": "vi_vn",
+            "referer": "https://m.oklavip26.live/wallet?type=0",
+            "token": token,
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+        }
+        pin_md5 = hashlib.md5(self.game_phone.encode('utf-8')).hexdigest()
+        data = {
+            "withdrawPoint":  self.game_account,
+            "withdrawPassword": pin_md5,
+            "websiteId": self.game_info["id"],
+            "memberCode": self.game_info["memberCode"]
+        }
+        try:
+            proxies = create_proxy(proxy)
+            response = requests.post(
+                "https://m.oklavip26.live/api/withdrawRecord/withdraw",
+                headers=headers,
+                json=data,
+                proxies=proxies,
+                timeout=10
+            )
+            self.result.emit(row, f"✅ {response.status_code} - {response.text}")
+        except Exception as e:
+            self.result.emit(row, f"✅ Đã Thực Hiện Lệnh")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
