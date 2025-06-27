@@ -1,2988 +1,982 @@
-import sys
-import threading
-import time
-import requests
-import random
-import hashlib
-import json
-import concurrent.futures
-import re
-import traceback
-import string
-import base64
-from datetime import datetime
-from pathlib import Path
-from PyQt6.QtWidgets import (
-	QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QTableWidget, QTableWidgetItem, QComboBox, QSpinBox, QStackedWidget, QHeaderView, QInputDialog, QDialog, QTextEdit, QDialogButtonBox, QLineEdit, QMenu, QMessageBox
+from qtpy.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
+    QGraphicsDropShadowEffect, QHeaderView, QCheckBox, QLabel, QPushButton, QAbstractItemView,
+    QHBoxLayout, QFrame, QMenu, QMessageBox
 )
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QDate
-from PyQt6.QtGui import QBrush, QColor
-from faker import Faker
-from unidecode import unidecode
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_v1_5
-from Crypto.Random import get_random_bytes
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
-import subprocess
+from qtpy.QtGui import QColor, QFont, QCursor, QAction, QIcon
+from qtpy.QtCore import Qt, QPropertyAnimation, QRect, QTimer, QPoint, QRunnable, QThreadPool, Signal, QObject
+import sys
 import os
 import requests
+import hashlib
+import threading
 
+FILE_PATH = "ACC.txt"
 
-
-# ===================== TIỆN ÍCH DÙNG CHUNG =====================
-def create_proxy(proxy_string):
-	parts = proxy_string.split(":")
-	if len(parts) != 4:
-		raise ValueError("Proxy string phải có dạng ip:port:user:pass")
-	ip, port, username, password = parts
-	proxy_url = f"http://{username}:{password}@{ip}:{port}"
-	return {"http": proxy_url, "https": proxy_url}
-
-def md5_hash(text):
-	return hashlib.md5(text.encode('utf-8')).hexdigest()
-
-def make_headers(base=None, **kwargs):
-	headers = base.copy() if base else {}
-	headers.update(kwargs)
-	return headers
-
-from qtpy.QtWidgets import (
-	QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QWidget, QTabWidget, QFormLayout
-)
-from qtpy.QtGui import QFont
-from qtpy.QtCore import Qt
-
-class GameInputDialog(QDialog):
-	def __init__(self, game_list,Thuan,s1,s2 ,parent=None):
-		super().__init__(parent)
-		self.setWindowTitle(Thuan)
-		self.setStyleSheet("""
-			QDialog {
-				background-color: #1f1f2e;
-				color: white;
-				font-family: Arial;
-				font-size: 14px;
-			}
-			QLabel {
-				color: orange;
-				font-weight: bold;
-			}
-			QLineEdit {
-				padding: 8px;
-				border: 1px solid #555;
-				border-radius: 5px;
-				background-color: #2b2b3d;
-				color: white;
-			}
-			QPushButton {
-				background-color: orange;
-				padding: 10px;
-				border: none;
-				border-radius: 5px;
-				font-weight: bold;
-				color: black;
-			}
-			QPushButton:hover {
-				background-color: #ffaa00;
-			}
-			QTabWidget::pane {
-				border: none;
-			}
-			QTabBar::tab {
-				background: #2b2b3d;
-				color: white;
-				padding: 8px 20px;
-				border-top-left-radius: 5px;
-				border-top-right-radius: 5px;
-			}
-			QTabBar::tab:selected {
-				background: orange;
-				color: black;
-			}
-		""")
-
-		self.selected_game = None
-		self.game_account = ""
-		self.game_phone = ""
-
-		main_layout = QVBoxLayout()
-
-		self.tab_widget = QTabWidget()
-		self.tab_data = {}  # tab index -> game data
-
-		for game in game_list:
-			tab = QWidget()
-			layout = QFormLayout()
-			layout.setLabelAlignment(Qt.AlignLeft)
-			layout.setFormAlignment(Qt.AlignTop)
-
-			account_input = QLineEdit()
-			phone_input = QLineEdit()
-
-			layout.addRow(s1, account_input)
-			layout.addRow(s2, phone_input)
-
-			tab.setLayout(layout)
-			self.tab_widget.addTab(tab, game['websiteName'])
-			self.tab_data[self.tab_widget.count() - 1] = {
-				"game": game,
-				"account_input": account_input,
-				"phone_input": phone_input
-			}
-
-		main_layout.addWidget(self.tab_widget)
-
-		self.btn = QPushButton("Liên kết")
-		self.btn.clicked.connect(self.accept)
-		main_layout.addWidget(self.btn)
-
-		self.setLayout(main_layout)
-		self.resize(400, 300)
-
-	def accept(self):
-		index = self.tab_widget.currentIndex()
-		data = self.tab_data.get(index)
-		if data:
-			self.selected_game = data["game"]
-			self.game_account = data["account_input"].text()
-			self.game_phone = data["phone_input"].text()
-		super().accept()
-
-
-class PingThread(QThread):
-	ping_result = pyqtSignal(str, str)
-
-	def __init__(self, address):
-		super().__init__()
-		self.address = address
-
-	def run(self):
-		phan_hoi = subprocess.run(["ping", "-n", "4", self.address], capture_output=True, text=True)
-		if "Reply from" in phan_hoi.stdout:
-			lines = phan_hoi.stdout.splitlines()
-			for line in lines:
-				if "time=" in line:
-					time_ms = int(line.split("time=")[-1].split("ms")[0])
-					if time_ms < 50:
-						status = "Mạng rất khỏe ✅"
-					elif time_ms < 100:
-						status = "Mạng ổn định 👍"
-					elif time_ms < 200:
-						status = "Mạng trung bình ⚠️"
-					else:
-						status = "Mạng yếu 🚨"
-					self.ping_result.emit(f"Ping: {time_ms} ms", status)
-		else:
-			self.ping_result.emit("Không khả dụng", "❌")
-class ProxyCheckWorker(QThread):
-	result_signal = pyqtSignal(int, str, bool)  # i, status, is_live
-
-	def __init__(self, accounts, parent=None):
-		super().__init__(parent)
-		self.accounts = accounts
-
-	def run(self):
-		from concurrent.futures import ThreadPoolExecutor, as_completed
-
-		def check_single_proxy(i, acc):
-			proxy_str = acc[1]
-			status = "❌ [DIE]"
-			for attempt in range(3):
-				try:
-					proxies = create_proxy(proxy_str)
-					r = requests.get("https://geo.myip.link/", proxies=proxies, timeout=5)
-					ip_info = r.json()
-					status = f"✅ [LIVE] {ip_info['ip']} - {ip_info['country']} ({ip_info['city']})"
-					return i, status, True
-				except:
-					continue
-			return i, status, False
-
-		with ThreadPoolExecutor(max_workers=10) as executor:
-			futures = [executor.submit(check_single_proxy, i, acc) for i, acc in enumerate(self.accounts)]
-
-			for future in as_completed(futures):
-				i, status, is_live = future.result()
-				self.result_signal.emit(i, status, is_live)
-
-class ProxyCheckDialog(QDialog):
-	def __init__(self, accounts, parent=None):
-		super().__init__(parent)
-		self.setWindowTitle("Kiểm Tra Proxy & Thay Proxy")
-		self.setMinimumSize(600, 400)
-		self.accounts = accounts
-		self.results = []
-		self.die_indexes = []
-		self.results = []
-		self.live_count = 0
-		self.die_count = 0
-		self.die_indexes = []
-
-
-		layout = QVBoxLayout(self)
-
-		self.result_text = QTextEdit(self)
-		self.result_text.setReadOnly(True)
-		layout.addWidget(self.result_text)
-
-		self.replace_box = QTextEdit(self)
-		self.replace_box.setPlaceholderText("Proxy mới - 1 dòng mỗi proxy")
-		layout.addWidget(self.replace_box)
-
-		buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-		buttons.accepted.connect(self.accept)
-		buttons.rejected.connect(self.reject)
-		layout.addWidget(buttons)
-
-		self.check_proxies()
-
-	def check_proxies(self):
-		self.worker = ProxyCheckWorker(self.accounts)
-		self.worker.result_signal.connect(self.update_status)
-		self.worker.start()
-	def update_status(self, i, status, is_live):
-		self.results.append(status)
-
-		item = QTableWidgetItem(status)
-		color = QColor("green") if is_live else QColor("red")
-		item.setForeground(QBrush(color))
-		self.parent().table.setItem(i, 6, item)
-
-		if is_live:
-			self.live_count += 1
-		else:
-			self.die_count += 1
-			self.die_indexes.append(i)
-
-		# Cập nhật summary
-		summary = f"\nTổng proxy: {len(self.accounts)} | ✅ LIVE: {self.live_count} | ❌ DIE: {self.die_count}"
-		self.result_text.setText("\n".join(self.results) + summary)
-
-
-		def apply_proxy_replacements(self):
-			new_proxies = [p.strip() for p in self.replace_box.toPlainText().splitlines() if p.strip()]
-			for i, idx in enumerate(self.die_indexes):
-				if i < len(new_proxies):
-					self.accounts[idx][1] = new_proxies[i]
-
-class AccountWorker(QThread):
-	update_signal = pyqtSignal(int, str)  # Cập nhật điểm cho tài khoản
-	log_signal = pyqtSignal(str)  # Cập nhật log
-
-	def __init__(self, accounts, selected_rows):
-		super().__init__()
-		self.accounts = accounts
-		self.selected_rows = selected_rows
-
-	def run(self):
-		for row in self.selected_rows:
-			try:
-				account = self.accounts[row]
-				token=account[0]
-				proxy=account[1]
-				f_id=account[4]
-				proxy_url, port, username, password = proxy.split(':')
-				proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-				proxies = {
-					"http": proxy_address,
-					"https": proxy_address
-				}
-				headers={
-					"authority": "m.oklavip26.live",
-					"accept": "application/json, text/plain, */*",
-					"accept-language": "vi-VN,vi;q=0.9",
-					"content-type": "application/json",
-					"locale": "vi_vn",
-					"origin": "https://m.oklavip26.live",
-					"priority": "u=1, i",
-					"sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-					"sec-ch-ua-mobile": "?0",
-					"sec-ch-ua-platform": "Windows",
-					"sec-fetch-dest": "empty",
-					"sec-fetch-mode": "cors",
-					"sec-fetch-site": "same-origin",
-					"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-					"f-id": f_id,
-					"token": token,
-					"cache-control": "no-cache",
-					"pragma": "no-cache",
-					"referer": "https://m.oklavip26.live/",
-				}
-				responsediem=requests.get("https://m.oklavip26.live/api/wallet/getWallet",headers=headers, proxies=proxies , timeout=500).json()
-				
-				print(responsediem)
-				self.log_signal.emit(f"Đang xử lý tài khoản: {account[2]}")
-				account[5] =f"{responsediem["data"]['integral']}"  
-				account[6] = "Hoàn thành Lấy Điểm"
-				self.update_signal.emit(row, account[5])  
-				self.log_signal.emit(f"Đã hoàn thành tài khoản: {account[2]}")
-			except:
-				print("Lỗi",account)
-
-
-
-
-
-class LienKetWorker(QThread):
-	result_signal = pyqtSignal(int, str, str)  # row, message, color
-
-	def __init__(self, accounts, row, check_func, table):
-		super().__init__()
-		self.accounts = accounts
-		self.row = row
-		self.check_func = check_func
-		self.table = table  # ✅ Thêm tham chiếu đến bảng
-
-	def DangNhap(self,account, passwordf, f_id, proxy_string):
-		def create_proxy(proxy_string):
-			parts = proxy_string.split(":")
-			ip = parts[0]
-			port = parts[1]
-			username = parts[2]
-			password = parts[3]
-			
-			proxies = {
-				"http": f"http://{username}:{password}@{ip}:{port}",
-				"https": f"http://{username}:{password}@{ip}:{port}"
-			}
-			return proxies
-
-		# Create the proxies using the provided string
-		proxies = create_proxy(proxy_string)
-
-		# URL for captcha request
-		url = "https://oklavip26.live/api/accountLogin/captcha"
-
-		# Headers for captcha request
-		headers = {
-			"accept": "application/json, text/plain, */*",
-			"accept-encoding": "gzip, deflate, br, zstd",
-			"accept-language": "vi-VN,vi;q=0.9",
-			"referer": "https://oklavip26.live/?backRoute=%2Fpersonal",
-			"sec-ch-ua": '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
-			"sec-ch-ua-mobile": "?0",
-			"sec-ch-ua-platform": '"Windows"',
-			"sec-fetch-dest": "empty",
-			"sec-fetch-mode": "cors",
-			"sec-fetch-site": "same-origin",
-			"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
-		}
-
-		# Attempt login up to 3 times if captcha is invalid
-		attempts = 0
-		while attempts < 3:
-			# Request captcha image
-			response = requests.get(url, headers=headers, proxies=proxies)
-
-			# Check status code and print response
-			print(response.status_code)
-			print(response.json())
-
-			# Extract image and uuid from the response
-			img = response.json()
-			img_src, uuid = img['data']['image'], img['data']['uuid']
-
-			# Send OCR request to get captcha code
-			ocr_response = requests.post("http://103.77.242.210:8000/ocr", headers={"accept": "application/json"}, data={"image": img_src}, verify=False).json()
-			code = ocr_response['data']
-
-			# MD5 hash the password
-			password_md5 = hashlib.md5(passwordf.encode('utf-8')).hexdigest()
-
-			# Headers for login request
-			headers = {
-				"authority": "m.oklavip26.live",
-				"accept": "application/json, text/plain, */*",
-				"accept-language": "vi-VN,vi;q=0.9",
-				"content-type": "application/json",
-				"locale": "vi_vn",
-				"origin": "https://m.oklavip26.live",
-				"priority": "u=1, i",
-				"referer": "https://m.oklavip26.live/login",
-				"sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-				"sec-ch-ua-mobile": "?0",
-				"sec-ch-ua-platform": "Windows",
-				"sec-fetch-dest": "empty",
-				"sec-fetch-mode": "cors",
-				"sec-fetch-site": "same-origin",
-				"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-				"f-id": f_id
-			}
-
-			# Prepare data for login
-			data = {
-				"account": account,
-				"password": password_md5,
-				"code": code,
-				"uuid": uuid,
-				"device": "H5"
-			}
-
-			# Send login request
-			response = requests.post(
-				"https://m.oklavip26.live/api/accountLogin/doLogin",
-				headers=headers,
-				json=data,
-				proxies=proxies,
-				timeout=20,
-			)
-
-			# Print login response
-			print(response.json())
-
-			# Check the response for status
-			if response.json()['code'] == 200:
-				print("Login successful!")
-				print(f"Token: {response.json()['data']['token']}")
-				return response.json()['data']['token'],"DONE"
-			elif response.json()['code'] == 40000:
-				print("Invalid captcha code, try again.")
-				attempts += 1
-			else:
-				print(f"Error: {response.json()['message']}")
-				break
-
-		print("Failed to login after 3 attempts.")
-		return None,response.json()
-	def create_proxy(self,proxy_string):
-		parts = proxy_string.split(":")
-		ip = parts[0]
-		port = parts[1]
-		username = parts[2]
-		password = parts[3]
-		
-		proxies = {
-			"http": f"http://{username}:{password}@{ip}:{port}",
-			"https": f"http://{username}:{password}@{ip}:{port}"
-		}
-		return proxies
-	def CheckTokenLive(self,token,Fidd,proxy):
-		proxies=self.create_proxy(proxy)
-		try:
-			headers={
-				"authority": "m.oklavip26.live",
-				"accept": "application/json, text/plain, */*",
-				"accept-language": "vi-VN,vi;q=0.9",
-				"content-type": "application/json",
-				"locale": "vi_vn",
-				"referer": "https://m.oklavip26.live/personal",
-				"sec-ch-ua-platform": "Windows",
-				"sec-fetch-mode": "cors",
-				"sec-fetch-site": "same-origin",
-				"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-				"f-id": Fidd,
-				"token": token,
-			}
-			responsediem=requests.get("https://m.oklavip26.live/api/wallet/getWallet",headers=headers, proxies=proxies , timeout=500).json()
-			print(responsediem)
-			diem=responsediem['data']['integral']
-			return False,diem
-		except:
-			return True,None
-	def run(self):
-		try:
-			account = self.accounts[self.row]
-			token = account[0]
-			proxy = account[1]
-			proxies=self.create_proxy(proxy)
-			username = account[2]
-			password = account[3]
-			f_id = account[4]
-			self.result_signal.emit(self.row, "Loading......", "green")
-			self.result_signal.emit(self.row, "[❌❌❌] Chờ Mạng (PROXY)", "green")
-			headers = {
-				"authority": "m.oklavip26.live",
-				"accept": "application/json, text/plain, */*",
-				"accept-language": "vi-VN,vi;q=0.9",
-				"content-type": "application/json",
-				"locale": "vi_vn",
-				"origin": "https://m.oklavip26.live",
-				"priority": "u=1, i",
-				"referer": "https://m.oklavip26.live/login",
-				"sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-				"sec-ch-ua-mobile": "?0",
-				"sec-ch-ua-platform": "Windows",
-				"sec-fetch-dest": "empty",
-				"sec-fetch-mode": "cors",
-				"sec-fetch-site": "same-origin",
-				"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-				"f-id": f_id,
-				"token": token
-			}
-			TrangThaiDangNhap,dime=self.CheckTokenLive(token,f_id,proxy)
-
-			if TrangThaiDangNhap:
-				self.result_signal.emit(self.row, "[❌❌❌] Chờ Đăng Nhập Thử Lại", "red")
-				token,log = self.DangNhap(username, password, f_id, proxy)
-				if token is None:
-					self.result_signal.emit(self.row, f"[❌❌❌] {log}", "red")
-					print(log)
-				if log == "DONE":
-					self.table.setItem(self.row, 0, QTableWidgetItem(token))  # ✅ Ghi token mới vào cột 0
-					self.result_signal.emit(self.row, f"✅ Đăng Nhập Thành Công", "green")
-				else:
-					self.result_signal.emit(self.row, f"{log}", "green")
-				return
-
-
-			response = requests.get("https://m.oklavip26.live/api/website/listForWallet", headers=headers, proxies=proxies, timeout=500).json()
-			is_linked = any(site.get("isBind", False) for site in response.get("data", []))
-
-			if is_linked:
-				self.result_signal.emit(self.row, "✅ Token Còn Hoạt Động Tốt!!!!", "green")
-
-			else:
-				self.result_signal.emit(self.row, "❌ Chưa Liên Kết tiến hành tạo OK9 Liên kết", "red")
-				fake = Faker('vi_VN')
-				lock = threading.Lock()
-
-				proxy="103.151.52.38:64993:2nf14h43:qbATDrltaIDW"
-				host, port, userss, pwd = proxy.split(":")
-				proxy_url = f"http://{userss}:{pwd}@{host}:{port}"
-				proxies = {"http": proxy_url, "https": proxy_url}
-
-				# Global session
-				session = requests.Session()
-				session.headers = {
-					"Content-Type": "application/json",
-					"accept-language": "en-US,en;q=0.9,vi;q=0.8",
-					"origin": "https://www.010070.com",
-					"priority": "u=1, i",
-					"referer": "https://www.010070.com/vit/home/index/in-play",
-					"sec-ch-ua": '"Google Chrome";v="135", "Not-A.Brand";v="8", "Chromium";v="135"',
-					"sec-ch-ua-mobile": "?0",
-					"sec-ch-ua-platform": '"Windows"',
-					"sec-fetch-dest": "empty",
-					"sec-fetch-mode": "cors",
-					"sec-fetch-site": "same-origin",
-					"x-kzapi-domain": "www.010070.com",
-					"x-kzapi-language": "vit",
-					"x-kzapi-platform": "web",
-					"x-kzapi-timezone": "+07:00",
-					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
-				}
-
-				# --- Functions ---
-
-				def encrypt_data(data: str, public_key: str):
-					rsa_key = RSA.import_key(public_key)
-					cipher = PKCS1_v1_5.new(rsa_key)
-					encrypted_bytes = cipher.encrypt(data.encode())
-					return base64.b64encode(encrypted_bytes).decode()
-
-				def get_encryption_key():
-					url = "https://www.010070.com/api/encryption-key"
-					payload = "{}"
-					response = session.post(url, data=payload)
-					if response.status_code == 200:
-						return response.json()['data']['publicKey']
-					else:
-						return None
-
-				def random_string(length=10):
-					return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
-
-				def random_number(length=8):
-					return '9' + ''.join(random.choices(string.digits, k=length))
-
-				def random_STK():
-					return ''.join(random.choices(string.digits, k=random.randint(9,12)))
-
-				def get_random_name():
-					try:
-						url = 'https://story-shack-cdn-v2.glitch.me/generators/vietnamese-name-generator/'
-						response = requests.get(url)
-						random_sex = random.choice(['male', 'female'])
-						return response.json()['data'][random_sex]
-					except:
-						return 'Nguyen Van Thinh'
-
-				def remove_accents(text: str):
-					if text:
-						return unidecode(text)
-					else:
-						return ''
-
-				def add_card(bankCode: str, account: str, stk: str):
-					try:
-						url = "https://www.010070.com/api/add-bankcard"
-						payload = {
-							"bankCode": bankCode,
-							"account": account,
-							"card": stk,
-							"bankNode": "HA NOI",
-							"note": "",
-							"needSms": False,
-							"smsCode": "",
-							"smsPhoneNo": "",
-							"smsPhoneNoCountry": "vn",
-							"bankpassbook": "",
-							"addrA": "",
-							"addrB": "",
-							"ifsccode": ""
-						}
-						response = session.post(url, json=payload, proxies=proxies)
-						if response.status_code == 200 and response.json()['status'] == 0:
-							print(f"✅ Thêm bank thành công: {stk}")
-							return True
-						else:
-							print(f"❌ Thêm bank thất bại: {stk} | {response.json().get('message')}")
-							return False
-					except Exception:
-						traceback.print_exc()
-						return False
-
-				def do_register():
-					try:
-						url = "https://www.010070.com/api/register-account-v2"
-						user = random_string(9)
-						fullname = get_random_name()
-						fullname = remove_accents(fullname).upper()
-						password = random_string(12) + '0a'
-						phone = random_number()
-						print(f"Đăng ký với: {user}, {password}, {fullname}")
-
-						payload = {
-							"verifycode": "",
-							"email": "",
-							"joinpwd": encrypt_data(password, get_encryption_key()),
-							"joiname": user,
-							"birthmonth": random.randint(1, 12),
-							"birthyear": random.randint(1980, 2005),
-							"jsessionid": random_string(32).upper(),
-							"birthday": None,
-							"fullname": fullname,
-							"nickname": "",
-							"agc": "12531",
-							"wdpassword": "",
-							"weixin": "",
-							"line": "",
-							"whatsapp": "",
-							"telegram": "",
-							"facebook": "",
-							"tiktok": "",
-							"x": "",
-							"zalo": "",
-							"google": "",
-							"skype": "",
-							"qq": "",
-							"regpath": "/vit/home/index/in-play",
-							"emailcode": "",
-							"smscode": "",
-							"autologin": "1",
-							"redirectedFromDomain": "www.010070.com",
-							"gpn": "",
-							"rfc": "",
-							"adminreferal": None,
-							"utm_code": None,
-							"visitor_id": None,
-							"captchaValidate": "",
-							"wtdCardBankCode": "",
-							"wtdCardBankName": "Tên ngân hàng",
-							"wtdCardNumber": "",
-							"uphonecountry": "vn",
-							"uphone": phone
-						}
-
-						response = session.post(url, json=payload, proxies=proxies)
-						if response.status_code == 200 and response.json()['status'] == 0:
-							user_token = response.json()['data']['_userToken']
-							session.headers['x-kzapi-User'] = user_token
-
-							# Thêm bank sau khi đăng ký
-							for _ in range(3):
-								stk = random_STK()
-								if add_card("VNVCB", fullname, stk):
-									break
-
-							return user, password, fullname, phone
-						else:
-							print(f"❌ Đăng ký thất bại: {response.text}")
-							return False
-					except Exception:
-						traceback.print_exc()
-						return False
-
-				def create_account_and_save():
-					status = do_register()
-					if status:
-						user, password, fullname, phone = status
-						print(f"✅ Tạo thành công: {user}")
-						return user,phone
-					else:
-						print("❌ Đăng ký thất bại.")
-
-				gameAccount,fullPhone=create_account_and_save()
-				gamePhone = fullPhone[-4:]
-
-			  
-				# Tạo data gửi
-				data = {
-					"gameAccount": gameAccount,
-					"gamePhone": gamePhone,
-					"websiteId": "1798608608416931842",
-					"memberCode": "OK9"
-				}
-
-				try:
-					response = requests.post(
-						"https://m.oklavip26.live/api/wallet/bindGameAccount",
-						headers=headers,
-						proxies=proxies,
-						json=data,
-						timeout=20
-					)
-					message = response.json().get('message', '')
-					print(message)
-					self.result_signal.emit(self.row, f"{message}", "red")
-				  
-				except Exception as e:
-					print(f"Lỗi gửi request: {e}")
-					self.result_signal.emit(self.row, f"Lỗi gửi request: {e}", "red")
-				response = requests.get("https://m.oklavip26.live/api/website/listForWallet", headers=headers, proxies=proxies, timeout=500).json()
-				is_linked = any(site.get("isBind", False) for site in response.get("data", []))
-
-				if is_linked:
-					self.result_signal.emit(self.row, "✅ Đã Có Liên Kết", "green")
-				else:
-					self.result_signal.emit(self.row, "❌ Chưa Liên Kết", "red")
-
-
-		except Exception as e:
-			self.result_signal.emit(self.row, f"❌ Lỗi: {str(e)}", "red")
-
-
-
-class MainWindow(QWidget):
-	def __init__(self):
-		super().__init__()
-		self.accounts = []  # Dữ liệu tài khoản
-		self.threads = []  # Danh sách luồng đang chạy
-		
-		# Load tool key and set max threads
-		if not self.load_tool_key():
-			QMessageBox.critical(self, "Lỗi", "Không thể đọc file tool_key.json")
-			self.close()
-			return
-		
-		# Start expiration check and countdown timer
-		self.start_expiration_check()
-		self.start_countdown_timer()
-		
-		self.init_ui()
-		self.load_accounts_from_file()
-		self.start_auto_save()
-	def open_proxy_checker(self):
-		dlg = ProxyCheckDialog(self.accounts, self)
-		if dlg.exec():
-			dlg.apply_proxy_replacements()
-			self.reload_table()
-			self.save_accounts_to_file()
-
-	def init_ui(self):
-		self.setWindowTitle("Quản lý tài khoản")
-		self.setGeometry(100, 100, 1200, 700)
-
-		# ========== Thiết lập màu nền chính ==========
-		self.setStyleSheet("background-color: #252526; color: white;")
-
-		# ========== Layout tổng ==========
-		main_layout = QHBoxLayout(self)
-
-		# ========== Menu bên trái ==========
-		self.side_menu = QVBoxLayout()
-		self.side_menu.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-		# Add countdown timer label in top right
-		self.countdown_label = QLabel()
-		self.countdown_label.setStyleSheet("""
-			QLabel {
-				color: #00ff00;
-				font-size: 14px;
-				font-weight: bold;
-				padding: 5px;
-				background-color: #2b2b2b;
-				border-radius: 5px;
-			}
-		""")
-		self.countdown_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-		
-		# Add countdown to side menu
-		self.side_menu.addWidget(self.countdown_label)
-
-		self.home_button = QPushButton("🏠 Home")
-		self.proxy_button = QPushButton("🌐 Proxy")
-		for btn in [self.home_button, self.proxy_button]:
-			btn.setFixedHeight(40)
-			btn.setStyleSheet("""
-				QPushButton {
-					font-size: 14px;
-					padding: 8px;
-					background-color: #4e4e4e;
-					border: none;
-					color: white;
-				}
-				QPushButton:hover {
-					background-color: #5e5e5e;
-				}
-			""")
-
-		self.side_menu.addWidget(self.home_button)
-		self.side_menu.addWidget(self.proxy_button)
-
-		# Thêm nút "Thêm tài khoản" vào menu bên trái
-		self.add_account_button = QPushButton("➕ Thêm Tài Khoản")
-		self.add_account_button.setFixedHeight(40)
-		self.add_account_button.setStyleSheet("""
-			QPushButton {
-				font-size: 14px;
-				padding: 8px;
-				background-color: #4e4e4e;
-				border: none;
-				color: white;
-			}
-			QPushButton:hover {
-				background-color: #5e5e5e;
-			}
-		""")
-		self.side_menu.addWidget(self.add_account_button)
-		
-		# Kết nối sự kiện click
-		self.add_account_button.clicked.connect(self.show_add_account_dialog)
-
-		side_menu_widget = QWidget()
-		side_menu_widget.setLayout(self.side_menu)
-		side_menu_widget.setFixedWidth(150)
-		
-		main_layout.addWidget(side_menu_widget)
-
-		# ========== Stack nội dung ==========
-		self.stack = QStackedWidget()
-
-		# Trang HOME
-		self.home_page = QWidget()
-		self.init_home_ui(self.home_page)
-		self.stack.addWidget(self.home_page)
-
-		# Trang PROXY
-		self.proxy_page = QWidget()
-		self.init_proxy_ui(self.proxy_page)
-		self.stack.addWidget(self.proxy_page)
-
-		main_layout.addWidget(self.stack)
-
-		# ====== Sự kiện ======
-		self.home_button.clicked.connect(lambda: self.stack.setCurrentWidget(self.home_page))
-		self.proxy_button.clicked.connect(lambda: self.stack.setCurrentWidget(self.proxy_page))
-
-	def check_all_proxies(self):
-		row_count = self.table.rowCount()
-		proxies_seen = set()
-		proxy_list = []
-
-		for row in range(row_count):
-			proxy_item = self.table.item(row, 1)
-			if proxy_item:
-				proxy_text = proxy_item.text().strip()
-				if proxy_text and proxy_text not in proxies_seen:
-					proxies_seen.add(proxy_text)
-					proxy_list.append(proxy_text)
-
-		self.proxy_table.setRowCount(len(proxy_list))
-		self.proxy_table.setColumnCount(2)
-		self.proxy_table.setHorizontalHeaderLabels(["Proxy", "Kết quả"])
-		self.proxy_table.horizontalHeader().setStretchLastSection(True)
-
-		def check_proxy(proxy):
-			try:
-				proxies = create_proxy(proxy)
-				resp = requests.get("https://geo.myip.link/", proxies=proxies, timeout=10)
-				data = resp.json()
-				country = data.get("country", "Unknown")
-				city = data.get("city", "")
-				ip = data.get("ip", "")
-				return proxy, f"✅ {ip} | {city}, {country}"
-			except Exception as e:
-				return proxy, "❌ Không kết nối"
-
-		# Update the ThreadPoolExecutor to use max_threads
-		with ThreadPoolExecutor(max_workers=self.max_threads) as executor:
-			future_to_proxy = {executor.submit(check_proxy, proxy): proxy for proxy in proxy_list}
-			for i, future in enumerate(as_completed(future_to_proxy)):
-				proxy, result = future.result()
-				self.proxy_table.setItem(i, 0, QTableWidgetItem(proxy))
-				self.proxy_table.setItem(i, 1, QTableWidgetItem(result))
-
-		self.proxy_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-	def init_proxy_ui(self, parent):
-		layout = QVBoxLayout(parent)
-		label = QLabel("🛰️ Kiểm tra proxy:")
-		label.setStyleSheet("font-size: 16px; color: white;")
-		layout.addWidget(label)
-
-		self.proxy_table = QTableWidget()
-		self.proxy_table.setColumnCount(2)
-		self.proxy_table.setHorizontalHeaderLabels(["Proxy", "Trạng thái"])
-		layout.addWidget(self.proxy_table)
-
-		check_button = QPushButton("🔍 Kiểm tra tất cả proxy")
-		check_button.clicked.connect(lambda: threading.Thread(target=self.check_all_proxies).start())
-
-		layout.addWidget(check_button)
-	def save_selected_rows_to_group_file(self):
-		selected_ranges = self.table.selectedRanges()
-		if not selected_ranges:
-			self.status_label.setText("⚠️ Chưa chọn dòng nào để tạo nhóm.")
-			return
-
-		import csv
-		from pathlib import Path
-
-		file_path = Path("groups.csv")
-		headers = [self.table.horizontalHeaderItem(i).text() for i in range(self.table.columnCount())]
-		full_headers = ["GroupID"] + headers
-
-		rows_to_save = []
-
-		for range_ in selected_ranges:
-			for row in range(range_.topRow(), range_.bottomRow() + 1):
-				row_data = [self.table.item(row, col).text() if self.table.item(row, col) else "" for col in range(self.table.columnCount())]
-				rows_to_save.append([self.group_id] + row_data)
-
-		file_exists = file_path.exists()
-		with open(file_path, mode="a", newline='', encoding="utf-8") as f:
-			writer = csv.writer(f)
-			if not file_exists:
-				writer.writerow(full_headers)
-			writer.writerows(rows_to_save)
-
-		self.status_label.setText(f"✅ Đã lưu nhóm {self.group_id} ({len(rows_to_save)} dòng).")
-		self.group_id += 1
-		self.group_filter_combo.addItem(str(self.group_id - 1))
-	def filter_table_by_group(self, selected_group):
-		for row in range(self.table.rowCount()):
-			item = self.table.item(row, 0)  # Cột GroupID không có trong table hiện tại, ta dùng Note hoặc Status thay thế
-			match = False
-			if selected_group == "Tất cả":
-				match = True
-			else:
-				# Giả sử bạn gán GroupID tạm vào cột Note (index 7)
-				cell_value = self.table.item(row, 7).text() if self.table.item(row, 7) else ""
-				match = (cell_value == selected_group)
-			self.table.setRowHidden(row, not match)
-
-	def init_home_ui(self, parent):
-		layout = QVBoxLayout(parent)
-
-		# ============ MENU HÀNG TRÊN ============
-		menu_bar_layout = QHBoxLayout()
-
-		self.theme_button = QPushButton("🌙 Chế độ Tối")
-		self.sort_asc_button = QPushButton("🔼 Thấp → Cao")
-		self.sort_desc_button = QPushButton("🔽 Cao → Thấp")
-		self.reset_button = QPushButton("🔁 Reset")
-		self.backup_button = QPushButton("🛡️ Backup")
-		self.create_group_button = QPushButton("➕ Tạo Nhóm")
-		self.status_filter_combo = QComboBox()
-		self.status_filter_combo.addItems(["Tất cả", "Thành công", "Thất bại"])
-
-		self.group_filter_combo = QComboBox()
-		self.group_filter_combo.addItem("Tất cả")
-		self.text_input = QLineEdit()
-		self.text_input.setPlaceholderText("Nhập nội dung tại đây...")
-		self.text_input.setStyleSheet("font-size: 14px; padding: 6px;")
-		layout.addWidget(self.text_input)
-
-		for widget in [self.create_group_button, self.theme_button, self.sort_asc_button,
-					   self.sort_desc_button, self.reset_button, self.backup_button,
-					   self.status_filter_combo, self.group_filter_combo]:
-			widget.setStyleSheet("QPushButton, QComboBox {font-size: 14px; padding: 6px;}")
-			menu_bar_layout.addWidget(widget)
-
-		layout.addLayout(menu_bar_layout)
-
-		# Gán sự kiện
-		self.create_group_button.clicked.connect(self.save_selected_rows_to_group_file)
-		self.status_filter_combo.currentTextChanged.connect(self.filter_by_status)
-		self.group_filter_combo.currentTextChanged.connect(self.filter_table_by_group)
-		self.theme_button.clicked.connect(self.toggle_theme)
-		self.sort_asc_button.clicked.connect(self.sort_by_points_asc)
-		self.sort_desc_button.clicked.connect(self.sort_by_points_desc)
-		self.reset_button.clicked.connect(self.reset_table)
-		self.backup_button.clicked.connect(self.backup_accounts)
-
-		# Biến đếm nhóm
-		self.group_id = 1
-
-		# ============ BẢNG TÀI KHOẢN ============
-		self.table = QTableWidget()
-		self.table.setColumnCount(9)
-		self.table.setHorizontalHeaderLabels(["Token", "Proxy", "User", "Pass", "F_ID", "Điểm", "Status", "Note", "Điểm danh"])
-		self.table.horizontalHeader().setStyleSheet("color: white; background-color: #3a3b45;")
-		self.table.setAlternatingRowColors(True)
-		self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-		self.table.setSortingEnabled(True)  # ✅ Bật sorting khi click tiêu đề cột
-		self.table.setStyleSheet("""
-			QHeaderView::section {
-				color: white;
-				background-color: #3a3b45;
-			}
-			QTableWidget {
-				color: white;
-				background-color: #2e2f38;
-				alternate-background-color: #3a3b45;
-			}
-		""")
-		self.table.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)
-		layout.addWidget(self.table)
-
-		# ============ SPINBOX ============
-		self.spinbox = QSpinBox()
-		self.spinbox.setRange(1, 10)
-		self.spinbox.setValue(1)
-		self.spinbox.setStyleSheet("QSpinBox {font-size: 14px;}")
-		layout.addWidget(self.spinbox)
-
-		# ============ TRẠNG THÁI ============
-		status_layout = QHBoxLayout()
-
-		self.log_label = QLabel()
-		self.log_label.setStyleSheet("QLabel {font-size: 24px; color: green;}")
-		status_layout.addWidget(self.log_label)
-
-		self.status_label = QLabel()
-		self.status_label.setStyleSheet("QLabel {font-size: 12px; color: blue;}")
-		status_layout.addWidget(self.status_label)
-
-		layout.addLayout(status_layout)
-
-		# ============ TỔNG ĐIỂM ============
-		self.total_points_label = QLabel("Tổng điểm: 0 | Tổng tài khoản: 0 | Điểm cao nhất: 0")
-		self.total_points_label.setStyleSheet("QLabel {font-size: 14px; color: red;}")
-		self.total_points_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-		layout.addWidget(self.total_points_label)
-
-		# ============ NÚT PROXY ============
-		self.replace_proxy_button = QPushButton("♻️ Thay Proxy [❌❌❌] Chờ Đăng Nhập Thử Lại")
-		self.replace_proxy_button.clicked.connect(self.replace_proxies_for_failed_accounts)
-		self.replace_proxy_button.setStyleSheet("QPushButton {font-size: 14px; padding: 6px;}")
-		layout.addWidget(self.replace_proxy_button)
-
-
-	def toggle_menu(self):
-		# Khi bấm nút MENU
-		if self.menu_open:
-			# Ẩn các nút chức năng
-			self.theme_button.hide()
-			self.sort_asc_button.hide()
-			self.sort_desc_button.hide()
-			self.reset_button.hide()
-			self.backup_button.hide()
-			self.status_filter_combo.hide()
-			self.menu_button.setText("☰ Menu")
-		else:
-			# Hiện các nút chức năng
-			self.theme_button.show()
-			self.sort_asc_button.show()
-			self.sort_desc_button.show()
-			self.reset_button.show()
-			self.backup_button.show()
-			self.status_filter_combo.show()
-			self.menu_button.setText("✖ Đóng Menu")
-		self.menu_open = not self.menu_open
-		self.replace_proxy_button.setVisible(self.menu_open)
-
-	def replace_proxies_for_failed_accounts(self):
-
-		# Lọc các dòng cần thay proxy
-		failed_rows = []
-		for row in range(self.table.rowCount()):
-			status_item = self.table.item(row, 6)
-			if status_item:
-				txt = status_item.text()
-				if ("❌ Lỗi: HTTPSConnectionPool(host='m.oklavip26.live'" in txt
-					or "[❌❌❌] Chờ Đăng Nhập Thử Lại" in txt
-					or "[❌❌❌] Chờ Mạng (PROXY)" in txt
-					or "❌ Proxy không hoạt động." in txt):
-					failed_rows.append(row)
-
-		if not failed_rows:
-			self.log_label.setText("Không có tài khoản nào cần thay proxy.")
-			return
-
-		# Hỏi người dùng nhập proxy thủ công
-		text, ok = QInputDialog.getMultiLineText(
-			self, "Nhập proxy mới",
-			f"Nhập {len(failed_rows)} proxy mới (1 dòng 1 proxy):"
-		)
-
-		proxies = [line.strip() for line in text.strip().splitlines() if line.strip()]
-		
-		if len(proxies) < len(failed_rows):
-			self.log_label.setText(f"⚠️ Cần {len(failed_rows)} proxy nhưng chỉ nhập {len(proxies)}.")
-			return
-
-		# Áp dụng proxy cho từng dòng lỗi
-		for i, row in enumerate(failed_rows):
-			new_proxy = proxies[i]
-			self.table.setItem(row, 1, QTableWidgetItem(new_proxy))
-			self.accounts[row][1] = new_proxy
-
-		self.log_label.setText(f"✅ Đã thay {len(failed_rows)} proxy.")
-		self.save_accounts_to_file()
-
-
-	def backup_accounts(self):
-		try:
-			now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-			backup_filename = f"ACC_backup_{now}.txt"
-			with open("ACC.txt", "r", encoding="utf-8") as f_original, open(backup_filename, "w", encoding="utf-8") as f_backup:
-				f_backup.write(f_original.read())
-			self.log_label.setText(f"Đã backup thành: {backup_filename}")
-		except Exception as e:
-			self.log_label.setText(f"Lỗi backup: {str(e)}")
-
-	def filter_by_status(self, selected_status):
-		if selected_status == "ALL":
-			self.reload_table()
-			return
-
-		self.table.setRowCount(0)
-		for acc in self.accounts:
-			status = acc[7] if len(acc) > 7 else ""
-			if selected_status == status:
-				row = self.table.rowCount()
-				self.table.insertRow(row)
-				for col, value in enumerate(acc):
-					item = QTableWidgetItem(value)
-					item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-					self.table.setItem(row, col, item)
-
-	def update_status_filter(self):
-		status_set = set()
-		for row in range(self.table.rowCount()):
-			item = self.table.item(row, 7)  # Cột status
-			if item:
-				status_set.add(item.text().strip())
-
-		current = self.status_filter_combo.currentText()
-		self.status_filter_combo.blockSignals(True)
-		self.status_filter_combo.clear()
-		self.status_filter_combo.addItem("ALL")
-		self.status_filter_combo.addItems(sorted(status_set))
-		self.status_filter_combo.setCurrentText(current)
-		self.status_filter_combo.blockSignals(False)
-
-
-	def sort_by_points_asc(self):
-		self.accounts.sort(key=lambda acc: int(acc[5]) if acc[5].isdigit() else 0)
-		self.reload_table()
-
-	def sort_by_points_desc(self):
-		self.accounts.sort(key=lambda acc: int(acc[5]) if acc[5].isdigit() else 0, reverse=True)
-		self.reload_table()
-
-	def reset_table(self):
-		self.load_accounts_from_file()
-
-	def reload_table(self):
-		self.table.setRowCount(0)
-		for data in self.accounts:
-			row = self.table.rowCount()
-			self.table.insertRow(row)
-			for col, value in enumerate(data):
-				item = QTableWidgetItem(value)
-				item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-				self.table.setItem(row, col, item)
-		self.update_status_filter()
-
-	def toggle_theme(self):
-		if self.theme == "light":
-			self.theme = "dark"
-			self.setStyleSheet("""
-				QWidget {
-					background-color: #121212;
-					color: white;
-				}
-				QTableWidget, QSpinBox, QLabel {
-					background-color: #1e1e1e;
-					color: white;
-					border: 1px solid #333;
-				}
-				QPushButton {
-					background-color: #333;
-					color: white;
-				}
-				QPushButton:hover {
-					background-color: #444;
-				}
-			""")
-			self.theme_button.setText("☀️ Chế độ Sáng")
-		else:
-			self.theme = "light"
-			self.setStyleSheet("")
-			self.theme_button.setText("🌙 Chế độ Tối")
-
-
-	def load_accounts_from_file(self):
-		try:
-			# Xóa bảng và danh sách cũ
-			self.table.setRowCount(0)
-			self.accounts.clear()
-			self.update_status_filter()
-			with open("ACC.txt", "r", encoding="utf-8") as f:
-				lines = f.readlines()
-				for line in lines:
-					data = line.strip().split("|")
-					while len(data) < 8:
-						data.append("")
-					self.accounts.append(data)
-					row = self.table.rowCount()
-					self.table.insertRow(row)
-					for col, value in enumerate(data):
-						item = QTableWidgetItem(value)
-						item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-						self.table.setItem(row, col, item)
-					self.table.setItem(row, 5, QTableWidgetItem(data[5] if data[5] else "0"))
-					self.table.setItem(row, 6, QTableWidgetItem(data[6] if data[6] else "Chưa xử lý"))
-					self.table.setItem(row, 7, QTableWidgetItem(data[7]))  # Note
-					self.update_status_filter()
-
-		except Exception as e:
-			self.log_label.setText(f"Lỗi khi đọc file: {str(e)}")
-
-	def save_accounts_to_file(self):
-
-		try:
-			self.update_total_points()
-
-			with open("ACC.txt", "w", encoding="utf-8") as f:
-				for row in range(self.table.rowCount()):
-					values = []
-					for col in range(self.table.columnCount()):
-						item = self.table.item(row, col)
-						values.append(item.text() if item else "")
-					f.write("|".join(values) + "\n")
-			timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-			self.log_label.setText(f"Đã lưu lại thông tin vào file lúc {timestamp}.")
-		except Exception as e:
-			self.log_label.setText(f"Lỗi khi lưu file: {str(e)}")
-
-
-	def update_total_points(self):
-		total = 0
-		max_point = 0
-		DiemCOthedung = 0
-
-		count = self.table.rowCount()
-		for row in range(count):
-			item = self.table.item(row, 5)
-			note = self.table.item(row, 7)
-			chuoi=note.text()
-			if item:
-				try:
-					point = int(item.text())
-					total += point
-				   
-					if any(keyword in chuoi for keyword in ["MB66", "78win", "QQ88","F168"]):
-						DiemCOthedung+=point
-						if point > max_point:
-							max_point = point
-
-				except ValueError:
-					continue
-		self.total_points_label.setText(
-			f"Tổng điểm: {total} | Tổng tài khoản: {count} | Điểm cao nhất: {max_point} | Điểm Có Thể Dùng : {DiemCOthedung}"
-		)
-
-
-	def start_auto_save(self):
-		self.timer = QTimer(self)
-		self.timer.timeout.connect(self.save_accounts_to_file)
-		self.timer.start(1000)  # Lưu lại sau mỗi 5 giây
-	def LayLaiTokenChoTokenChetttt(self):
-		from PyQt6.QtWidgets import QTableWidgetItem
-		for row in range(self.table.rowCount()):
-			status_item = self.table.item(row, 6)
-			if status_item and "[💩💩💩]> Token Chết MẸ Rồi em!" in status_item.text():
-				account = self.accounts[row]
-				proxy = account[1]
-				username = account[2]
-				password = account[3]
-				f_id = account[4]
-				self.table.setItem(row, 6, QTableWidgetItem("Đang Lấy Lại Token"))
-
-				worker = LienKetWorker(self.accounts, row, self.CheckLoginssssss, self.table)
-				token, log = worker.DangNhap(username, password, proxy, f_id)
-				if token:
-					self.accounts[row][0] = token
-					self.table.setItem(row, 0, QTableWidgetItem(token))
-					self.table.setItem(row, 6, QTableWidgetItem("✅ Đã Lấy Lại Token"))
-				else:
-					self.table.setItem(row, 6, QTableWidgetItem("❌ Đăng Nhập Lại Thất Bại"))
-	def SetMaPinChoTaiKhoan(self, row):
-
-		try:
-			account = self.accounts[row]
-			token = account[0]
-			proxy = account[1]
-			f_id = account[4]
-
-			# Dữ liệu gửi: mã PIN là MD5 của "1234"
-			payload = {
-				"newWithdrawPassword": "4297f44b13955235245b2497399d7a93",
-				"confirmWithdrawPassword": "4297f44b13955235245b2497399d7a93"
-			}
-
-			headers = {
-				"accept": "application/json, text/plain, */*",
-				"content-type": "application/json",
-				"locale": "vi_vn",
-				"referer": "https://m.okvip19.live/setWithDrawalpass",
-				"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-				"f-id": f_id,
-				"token": token
-			}
-
-			# Xử lý thông tin proxy
-			proxy_url, port, username, password = proxy.split(':')
-			proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-			proxies = {
-				"http": proxy_address,
-				"https": proxy_address
-			}
-
-			# URL API
-			url = "https://m.okvip19.live/api/account/setWithdrawPassword"
-			response = requests.post(url, headers=headers, json=payload, proxies=proxies, timeout=15)
-
-			# Kiểm tra kết quả phản hồi
-			if response.status_code == 200 and response.json().get("message") == "Thao tác thành công":
-				self.table.setItem(row, 6, QTableWidgetItem("✅ Đã Set Mã PIN"))
-			else:
-				error_message = response.json().get("message", "Không xác định")
-				self.table.setItem(row, 6, QTableWidgetItem(f"❌ Lỗi Set PIN {error_message}"))
-				print(response.json())
-
-		except Exception as e:
-			self.table.setItem(row, 6, QTableWidgetItem(f"❌ Lỗi: {str(e)}"))
-
-		
-	class ThuanLienKet(QThread):
-		result = pyqtSignal(int, str)  # row, message
-
-		def __init__(self, selected_rows, accounts, game_info, game_account, game_phone):
-			super().__init__()
-			self.selected_rows = selected_rows
-			self.accounts = accounts
-			self.game_info = game_info
-			self.game_account = game_account
-			self.game_phone = game_phone
-
-		def run(self):
-			row=self.selected_rows[0]
-			account = self.accounts[self.selected_rows[0]]
-			token = account[0]
-			proxy = account[1]
-			tkkk = account[2]
-			password = account[3]
-			f_id = account[4]
-			print(account)
-			headers = {
-				"accept": "application/json, text/plain, */*",
-				"content-type": "application/json",
-				"f-id": f_id,
-				"locale": "vi_vn",
-				"referer": "https://m.oklavip26.live/wallet?type=0",
-				"token": token,
-				"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
-			}
-
-			data = {
-				"gameAccount": self.game_account,
-				"gamePhone": self.game_phone,
-				"websiteId": self.game_info["id"],
-				"memberCode": self.game_info["memberCode"]
-			}
-
-			try:
-				proxies = create_proxy(proxy)
-				response = requests.post(
-					"https://m.oklavip26.live/api/wallet/bindGameAccount",
-					headers=headers,
-					json=data,
-					proxies=proxies,
-					timeout=10
-				)
-				self.result.emit(row, f"✅ {response.status_code} - {response.text}")
-			except Exception as e:
-				self.result.emit(row, f"❌ Lỗi: {str(e)}")
-	def Thuanrutdiemday(self):
-		if hasattr(self, "thuan_lienket_thread") and self.thuan_lienket_thread is not None and self.thuan_lienket_thread.isRunning():
-			print("Đang chạy, vui lòng đợi xong!")
-			return
-		game_list = [
-			{"memberCode": "MOCBAI", "websiteName": "MB66", "id": "1739230912039436290"},
-			{"memberCode": "OK9", "websiteName": "OK9", "id": "1798608608416931842"},
-			{"memberCode": "78win", "websiteName": "78win", "id": "1814571722874535937"},
-			{"memberCode": "QQ88", "websiteName": "QQ88", "id": "1863085503318499329"},
-			{"memberCode": "F168", "websiteName": "F168", "id": "1863085976314355713"},
-		]
-		dialog = GameInputDialog(game_list,"Rút Điểm","Số Điểm Muốn Rút","Mã PIN")
-		if dialog.exec():
-			game_info = dialog.selected_game
-			game_account = dialog.game_account
-			game_phone = dialog.game_phone
-		else:
-			return
-		selected_rows = [index.row() for index in self.table.selectedIndexes()]
-		# Nếu đã có thread cũ, disconnect signal trước khi tạo mới
-		if hasattr(self, "thuan_lienket_thread") and self.thuan_lienket_thread is not None:
-			try:
-				self.thuan_lienket_thread.result.disconnect(self.handle_lienket_tuychon_result)
-			except Exception:
-				pass
-		self.thuan_lienket_thread = self.Thuanrutdiem(selected_rows, self.accounts, game_info, game_account, game_phone)
-		self.thuan_lienket_thread.result.connect(self.handle_lienket_tuychon_result)
-		self.thuan_lienket_thread.start()
-
-	class Thuanrutdiem(QThread):
-		result = pyqtSignal(int, str)  # row, message
-
-		def __init__(self, selected_rows, accounts, game_info, game_account, game_phone):
-			super().__init__()
-			self.selected_rows = selected_rows
-			self.accounts = accounts
-			self.game_info = game_info
-			self.game_account = game_account
-			self.game_phone = game_phone
-
-		def run(self):
-			row=self.selected_rows[0]
-			account = self.accounts[self.selected_rows[0]]
-			token = account[0]
-			proxy = account[1]
-			tkkk = account[2]
-			password = account[3]
-			f_id = account[4]
-			self.result.emit(row, f"Thực Hiện Rút Điểm")
-			headers = {
-				"accept": "application/json, text/plain, */*",
-				"content-type": "application/json",
-				"f-id": f_id,
-				"locale": "vi_vn",
-				"referer": "https://m.oklavip26.live/wallet?type=0",
-				"token": token,
-				"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
-			}
-
-			password = hashlib.md5(self.game_phone.encode('utf-8')).hexdigest()
-			data = {
-				"withdrawPoint":  self.game_account,
-				"withdrawPassword": password,
-				"websiteId": self.game_info["id"],
-				"memberCode": self.game_info["memberCode"]
-			}
-			try:
-				proxies = create_proxy(proxy)
-				response = requests.post(
-					"https://m.oklavip26.live/api/withdrawRecord/withdraw",
-					headers=headers,
-					json=data,
-					proxies=proxies,
-					timeout=1
-				)
-				self.result.emit(row, f"✅ {response.status_code} - {response.text}")
-			except Exception as e:
-				self.result.emit(row, f"✅ Đã Thực Hiện Lệnh")
-	def show_context_menu(self, pos):
-		import threading
-		
-		index = self.table.indexAt(pos)
-		if not index.isValid():
-			return
-
-		menu = QMenu(self)
-		
-		# Define menu sections and actions
-		sections = {
-			"👤 Tài khoản": [
-				("📝 Thêm ghi chú", self._handle_add_note),
-				("📂 Load File ACC", self.load_accounts_from_file),
-				("🧑‍💻 Mở Profile", lambda: threading.Thread(target=lambda: self.MoProfileTheoTenUser(self.table.currentRow())).start()),
-				("🔐 Set mã PIN rút tiền", lambda: threading.Thread(target=lambda: self.SetMaPinChoTaiKhoan(self.table.currentRow())).start()),
-				("🗑️ Xóa tài khoản bị cấm", self.delete_banned_accounts)
-			],
-			"🔗 Token & Liên kết": [
-				("🔐 Get Token", lambda: threading.Thread(target=self.TokenGet).start()),
-				("♻️ Lấy lại Token Chết", lambda: threading.Thread(target=self.LayLaiTokenChoTokenChetttt).start()),
-				("[Hot] 🚀 Lấy Token", lambda: threading.Thread(target=self.lienkettaikhoan).start()),
-				("🛠️ Liên kết tùy chọn", self.LienKetTuyChon),
-				("✍️ Liên kết thủ công", lambda: threading.Thread(target=self.LienKetThuCong).start())
-			],
-			"🎯 Nhiệm vụ": [
-				("💰 Lấy điểm", lambda: threading.Thread(target=lambda: self.run_multiple_threads(list({index.row() for index in self.table.selectedIndexes()}), self.spinbox.value())).start() if self.table.selectedIndexes() else None),
-				("📅 Điểm danh", lambda: threading.Thread(target=self.Bu9diem).start()),
-				("[Hot] ⚙️ Chạy tất cả", lambda: threading.Thread(target=self.ChAyAll).start()),
-				("💸 Rút điểm", self.Thuanrutdiemday)
-			],
-			"🔎 Kiểm tra": [
-				("❓ Kiểm tra lượt trả lời", lambda: threading.Thread(target=self.CheckLuotTraLoi).start()),
-				("🧩 Kiểm tra ghép chữ", lambda: threading.Thread(target=self.CheckGhepChu).start()),
-				("🔗 Kiểm tra liên kết", lambda: threading.Thread(target=self.CheckCacLienKet).start()),
-				("[Hot] 🌐 Kiểm tra proxy", lambda: threading.Thread(target=self.CheckProxy).start()),
-				("📊 Xuất điểm tài khoản", self.export_points_to_file)
-			]
-		}
-
-		# Build menu
-		for section_name, actions in sections.items():
-			menu.addSection(section_name)
-			for action_text, callback in actions:
-				menu.addAction(action_text)
-			menu.addSeparator()
-
-		# Handle action
-		action = menu.exec(self.table.viewport().mapToGlobal(pos))
-		if action:
-			# Find and execute the corresponding callback
-			for actions in sections.values():
-				for action_text, callback in actions:
-					if action.text() == action_text:
-						callback()
-						break
-
-	def _handle_add_note(self):
-		row = self.table.currentRow()
-		note, ok = QInputDialog.getText(self, "Thêm ghi chú", "Nhập ghi chú:")
-		if ok:
-			self.table.setItem(row, 7, QTableWidgetItem(note))
-			self.save_accounts_to_file()
-
-	def LienKetThuCong(sedf):
-		threading.Thread(target=self.LienKet).start()
-		
-	def LienKet(self):
-		game_list = [
-			{"memberCode": "MOCBAI", "websiteName": "MB66", "id": "1739230912039436290"},
-			{"memberCode": "OK9", "websiteName": "OK9", "id": "1798608608416931842"},
-			{"memberCode": "78win", "websiteName": "78win", "id": "1814571722874535937"},
-			{"memberCode": "QQ88", "websiteName": "QQ88", "id": "1863085503318499329"},
-			{"memberCode": "F168", "websiteName": "F168", "id": "1863085976314355713"},
-		]
-
-		dialog = GameInputDialog(game_list,'Liên Kết Tài Khoản')
-		if dialog.exec():
-			game_info = dialog.selected_game
-			game_account = dialog.game_account
-			game_phone = dialog.game_phone
-		else:
-			return
-
-		selected_rows = list(set(index.row() for index in self.table.selectedIndexes()))
-		
-		self.thread = LienKetWorker(selected_rows, self.accounts, game_info, game_account, game_phone)
-		self.thread.result.connect(self.handle_result)
-		self.thread.start()
-
-
-
-	def open_proxy_checker1(self):
-		luong = threading.Thread(target=self.open_proxy_checker)
-		luong.start()    
-	def checkloginn(self):
-		for row in range(self.table.rowCount()):
-			try:
-				token = self.table.item(row, 0).text()
-				proxy=self.table.item(row, 1).text()
-				Fidd=self.table.item(row, 4).text()
-				proxy_url, port, username, password = proxy.split(':')
-				proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-				proxies = {
-					"http": proxy_address,
-					"https": proxy_address
-				}
-				headers={
-					"authority": "m.oklavip26.live",
-					"accept": "application/json, text/plain, */*",
-					"accept-language": "vi-VN,vi;q=0.9",
-					"content-type": "application/json",
-					"locale": "vi_vn",
-					"origin": "https://m.oklavip26.live",
-					"priority": "u=1, i",
-					"sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-					"sec-ch-ua-mobile": "?0",
-					"sec-ch-ua-platform": "Windows",
-					"sec-fetch-dest": "empty",
-					"sec-fetch-mode": "cors",
-					"sec-fetch-site": "same-origin",
-					"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-					"f-id": Fidd,
-					"token": token,
-					"cache-control": "no-cache",
-					"pragma": "no-cache",
-					"referer": "https://m.oklavip26.live/",
-				}
-				proxy_url, port, username, password = proxy.split(':')
-				proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-				proxies = {
-					"http": proxy_address,
-					"https": proxy_address
-				}
-				responsediem=requests.get("https://m.oklavip26.live/api/wallet/getWallet",headers=headers, proxies=proxies , timeout=500).json()
-				diem=responsediem['data']['integral']
-				self.table.setItem(row, 5, QTableWidgetItem(f"{diem}"))
-			except:pass
-			self.table.setItem(row, 6, QTableWidgetItem(f"{responsediem}"))
-
-	def CheckLoginssssss(self,row):
-			try:
-				token = self.table.item(row, 0).text()
-				proxy=self.table.item(row, 1).text()
-				Fidd=self.table.item(row, 4).text()
-				proxy_url, port, username, password = proxy.split(':')
-				proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-				proxies = {
-					"http": proxy_address,
-					"https": proxy_address
-				}
-				headers={
-					"authority": "m.oklavip26.live",
-					"accept": "application/json, text/plain, */*",
-					"accept-language": "vi-VN,vi;q=0.9",
-					"content-type": "application/json",
-					"locale": "vi_vn",
-					"origin": "https://m.oklavip26.live",
-					"priority": "u=1, i",
-					"sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-					"sec-ch-ua-mobile": "?0",
-					"sec-ch-ua-platform": "Windows",
-					"sec-fetch-dest": "empty",
-					"sec-fetch-mode": "cors",
-					"sec-fetch-site": "same-origin",
-					"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-					"f-id": Fidd,
-					"token": token,
-					"cache-control": "no-cache",
-					"pragma": "no-cache",
-					"referer": "https://m.oklavip26.live/",
-				}
-				proxy_url, port, username, password = proxy.split(':')
-				proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-				proxies = {
-					"http": proxy_address,
-					"https": proxy_address
-				}
-				responsediem=requests.get("https://m.oklavip26.live/api/wallet/getWallet",headers=headers, proxies=proxies , timeout=500).json()
-				diem=responsediem['data']['integral']
-				self.table.setItem(row, 5, QTableWidgetItem(f"{diem}"))
-				return True
-			except:
-				return False
-
-
-
-	
-	def update_link_status(self, row, message, color):
-		item = QTableWidgetItem(message)
-		item.setForeground(QBrush(QColor(color)))
-		self.table.setItem(row, 6, item)
-
-	def lienkettaikhoan(self):
-		from concurrent.futures import ThreadPoolExecutor
-
-		def start_worker(row):
-			worker = LienKetWorker(self.accounts, row, self.CheckLoginssssss, self.table)  # ✅ đã thêm self.table
-			worker.result_signal.connect(self.update_link_status)
-			worker.start()
-			self.threads.append(worker)
-
-
-		with ThreadPoolExecutor(max_workers=20) as executor:
-			for row in range(self.table.rowCount()):
-				executor.submit(start_worker, row)
-   
-
-	def MoProfileTheoTenUser(self, row):
-		username = self.table.item(row, 2).text().strip()
-		proxy = self.table.item(row, 1).text().strip()
-		token = self.table.item(row, 0).text().strip()
-		f_id = self.table.item(row, 4).text().strip()
-
-		# Step 1: GET list profile
-		response = requests.get("http://127.0.0.1:19995/api/v3/profiles?per_page=100000", timeout=10).json()
-		if not response.get("success"):
-			self.table.setItem(row, 6, QTableWidgetItem("❌ API profile lỗi"))
-			return
-
-		profiles = response["data"]
-		matched = next((p for p in profiles if p["name"].strip().lower() == username.lower()), None)
-
-		if not matched:
-			self.table.setItem(row, 6, QTableWidgetItem("❌ Không tìm thấy profile"))
-			headers = {
-			"Content-Type": "application/json"
-			}
-			data = {
-				"profile_name": f"{username}",
-			}
-			ID = requests.post(f"http://127.0.0.1:19995/api/v3/profiles/create", json=data,headers=headers).json()['data']['id']
-			response = requests.get("http://127.0.0.1:19995/api/v3/profiles?per_page=100000", timeout=10).json()
-			if not response.get("success"):
-				self.table.setItem(row, 6, QTableWidgetItem("❌ API profile lỗi"))
-				return
-
-			profiles = response["data"]
-			matched = next((p for p in profiles if p["name"].strip().lower() == username.lower()), None)
-		profile_id = matched["id"]
-		headers = {
-		"Content-Type": "application/json"
-		}
-		data = {
-			"profile_name": username,
-			"raw_proxy": f"{proxy}",
-			"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36"
-		}
-		res = requests.post(f"http://127.0.0.1:19995/api/v3/profiles/update/{profile_id}", json=data,headers=headers)
-		print("Status:", res.status_code)
-		# Step 2: Start profile and get debug address
-		url = f"http://127.0.0.1:19995/api/v3/profiles/start/{profile_id}"
-		json_data = requests.get(url).json()
-		remote_debugging_address = json_data["data"]["remote_debugging_address"]
-		driver_path = json_data["data"]["driver_path"]
-		options = webdriver.ChromeOptions()
-		options.debugger_address = remote_debugging_address
-		service = Service(driver_path)
-		driver = webdriver.Chrome(service=service, options=options)
-
-		driver.get("https://m.oklavip26.live")
-
-		# ĐỢI DOM SẴN SÀNG
-		WebDriverWait(driver, 15).until(
-			lambda d: d.execute_script("return document.readyState") == "complete"
-		)
-
-		# INJECT LOCAL STORAGE
-		script = f'''
-			window.localStorage.setItem("token", "{token}");
-		'''
-		driver.execute_script(script)
-		script = f'''
-			window.localStorage.setItem("F-Id", "{f_id}");
-		'''
-		driver.execute_script(script)
-
-		# LOAD LẠI ĐỂ ÁP DỤNG
-		driver.get("https://m.oklavip26.live")
-
-		self.table.setItem(row, 6, QTableWidgetItem("✅ Đã set localStorage và mở okvip18.live"))
-
-	  
-
-
-
-	def Bu9diem(self):
-		from concurrent.futures import ThreadPoolExecutor, as_completed
-		def chay_20_mot_luot():
-			def xu_ly_row(row):
-				token = self.table.item(row, 0).text()
-				proxy=self.table.item(row, 1).text()
-				Fidd=self.table.item(row, 4).text()
-				url = "https://m.oklavip26.live/api/activitySignIn/singIn"
-
-				headers = {
-					"authority": "m.oklavip26.live",
-					"accept": "application/json, text/plain, */*",
-					"accept-language": "vi-VN,vi;q=0.9",
-					"content-type": "application/json",
-					"locale": "vi_vn",
-					"origin": "https://m.oklavip26.live",
-					"priority": "u=1, i",
-					"referer": "https://m.oklavip26.live/login",
-					"sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-					"sec-ch-ua-mobile": "?0",
-					"sec-ch-ua-platform": "Windows",
-					"sec-fetch-dest": "empty",
-					"sec-fetch-mode": "cors",
-					"sec-fetch-site": "same-origin",
-					"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-					"f-id": Fidd,
-					"token": token
-				}
-				self.table.setItem(row, 6, QTableWidgetItem(f"Điểm Danhhhhhhhhhhhhhhh"))
-
-				proxy_url, port, username, password = proxy.split(':')
-				proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-				proxies = {
-					"http": proxy_address,
-					"https": proxy_address
-				}
-
-				chechDangNhap=self.CheckLoginssssss(row)
-				print(chechDangNhap)
-				if chechDangNhap:
-					response = requests.post(url, headers=headers, proxies=proxies ,timeout=500)
-					print(response.text)
-					aaaaaaaaaaaa=response.json()["data"]["continueDays"]
-					response = requests.get("https://m.oklavip26.live/api/accountLogin/updateOnline", headers=headers, proxies=proxies ,timeout=500)
-				   
-					self.table.setItem(row, 6, QTableWidgetItem(f"✅ Đã Điểm Danh Thành Công: {aaaaaaaaaaaa}"))
-					try:
-						aaaaaaaaaaaa=int(aaaaaaaaaaaa)
-						current_date = QDate.currentDate()
-						formatted_date = current_date.toString("dd/MM")
-						self.table.setItem(row, 8, QTableWidgetItem(formatted_date+f"[{aaaaaaaaaaaa}]"))
-
-					except:pass
-				else:
-					self.table.setItem(row, 6, QTableWidgetItem(f"[💩]> Token Chết MẸ Rồi em! <[💩]"))
-			   
-
-			with ThreadPoolExecutor(max_workers=50) as executor:
-				futures = [executor.submit(xu_ly_row, row) for row in range(self.table.rowCount())]
-				for future in as_completed(futures):
-					pass  # bạn có thể xử lý kết quả hoặc log tại đây nếu cần
-		chay_20_mot_luot() 
-	def CheckCacLienKet(self):
-		from concurrent.futures import ThreadPoolExecutor, as_completed
-		def chay_20_mot_luot():
-			def xu_ly_row(row):
-				token = self.table.item(row, 0).text()
-				proxy=self.table.item(row, 1).text()
-				Fidd=self.table.item(row, 4).text()
-				self.table.setItem(row, 6, QTableWidgetItem(f"[XXX] Kiểm Tra Proxy!"))
-
-				headers = {
-					"authority": "m.oklavip26.live",
-					"accept": "application/json, text/plain, */*",
-					"accept-language": "vi-VN,vi;q=0.9",
-					"content-type": "application/json",
-					"locale": "vi_vn",
-					"origin": "https://m.oklavip26.live",
-					"priority": "u=1, i",
-					"referer": "https://m.oklavip26.live/login",
-					"sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-					"sec-ch-ua-mobile": "?0",
-					"sec-ch-ua-platform": "Windows",
-					"sec-fetch-dest": "empty",
-					"sec-fetch-mode": "cors",
-					"sec-fetch-site": "same-origin",
-					"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-					"f-id": Fidd,
-					"token": token
-				}
-				proxy_url, port, username, password = proxy.split(':')
-				proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-				proxies = {
-					"http": proxy_address,
-					"https": proxy_address
-				}
-				response = requests.get("https://m.oklavip26.live/api/website/listForWallet", headers=headers, proxies=proxies, timeout=500).json()
-			   # Lấy các giá trị isBind từ response
-				MB66 = response['data'][0]["isBind"]
-				OK9 = response['data'][1]["isBind"]
-				s78win = response['data'][2]["isBind"]
-				QQ88 = response['data'][3]["isBind"]
-				F168 = response['data'][4]["isBind"]
-
-				# Tạo danh sách tên ứng với giá trị True
-				bindings = []
-				if MB66:pass
-				else: bindings.append("MB66")
-				if OK9:pass
-				else: bindings.append("OK9")
-				if s78win:pass
-				else: bindings.append("78win")
-				if QQ88:pass
-				else: bindings.append("QQ88")
-				if F168:pass
-				else: bindings.append("F168")
-
-				# Hiển thị chuỗi kết quả, ngăn cách bằng " | "
-				result_text = " ".join(bindings)
-
-				# Hiển thị trong bảng
-				self.table.setItem(row, 7, QTableWidgetItem(result_text))
-
-				self.table.setItem(row, 6, QTableWidgetItem(f"[OK] Hoàn Thành Lấy Liên Kết"))
-
-			with ThreadPoolExecutor(max_workers=50) as executor:
-				futures = [executor.submit(xu_ly_row, row) for row in range(self.table.rowCount())]
-				for future in as_completed(futures):
-					pass  # bạn có thể xử lý kết quả hoặc log tại đây nếu cần
-		chay_20_mot_luot()    
-	def CheckProxy(self):
-		from concurrent.futures import ThreadPoolExecutor, as_completed
-		def chay_20_mot_luot():
-			def xu_ly_row(row):
-				proxy=self.table.item(row, 1).text()
-				self.table.setItem(row, 6, QTableWidgetItem(f"[XXX] Kiểm Tra Mạng Máy!"))
-				def kiem_tra_mang():
-					for lan in range(3):
-						try:
-							requests.get("https://www.google.com", timeout=10)
-							return True
-						except requests.RequestException:
-							self.table.setItem(row, 6, QTableWidgetItem(f"❌ Máy tính không có kết nối mạng. Thử lại lần {lan + 1}"))
-					return False
-
-				def kiem_tra_proxy(proxy_str):
-					ip, port, user, password = proxy_str.split(":")
-					proxy_url = f"http://{user}:{password}@{ip}:{port}"
-
-					proxies = {
-						"http": proxy_url,
-						"https": proxy_url
-					}
-
-					try:
-						response = requests.get("https://geo.myip.link/", proxies=proxies, timeout=10)
-						if response.status_code == 200:
-							return True, response.json()
-						else:
-							return False, f"Lỗi mã trạng thái HTTP: {response.status_code}"
-					except requests.RequestException as e:
-						return False, str(e)
-
-				# Gọi hàm kiểm tra
-				if kiem_tra_mang():
-					self.table.setItem(row, 6, QTableWidgetItem(f"✅ Mạng hoạt động."))
-					thanh_cong, ket_qua = kiem_tra_proxy(proxy)
-					if thanh_cong:
-						self.table.setItem(row, 6, QTableWidgetItem(f"✅ Proxy hoạt động. "))
-						print(ket_qua)
-					else:
-						self.table.setItem(row, 6, QTableWidgetItem(f"❌ Proxy không hoạt động. "))
-						print(ket_qua)
-				else:
-					print("")
-					self.table.setItem(row, 6, QTableWidgetItem(f"❌ Máy tính không có kết nối mạng."))
-
-
-
-			with ThreadPoolExecutor(max_workers=99) as executor:
-				futures = [executor.submit(xu_ly_row, row) for row in range(self.table.rowCount())]
-				for future in as_completed(futures):
-					pass  # bạn có thể xử lý kết quả hoặc log tại đây nếu cần
-		chay_20_mot_luot()    
-	def ChAyAll(self):
-		try:
-			from concurrent.futures import ThreadPoolExecutor, as_completed
-			def chay_20_mot_luot():
-				def xu_ly_row(row):
-					try:
-						self.table.setItem(row, 6, QTableWidgetItem(f"Bắt Đầu"))
-						self.table.setItem(row, 6, QTableWidgetItem(f"Check Token"))
-
-						chechDangNhap=self.CheckLoginssssss(row)
-						print(chechDangNhap)
-						if chechDangNhap:
-							self.table.setItem(row, 6, QTableWidgetItem(f"Bắt Trả Lời Câu Hỏi"))
-							self.CheckLuotTraLoiall(row)
-							self.table.setItem(row, 6, QTableWidgetItem(f"Bắt Quay Chữ"))
-							self.CheckGhepChuall(row)
-							self.table.setItem(row, 6, QTableWidgetItem(f"☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️"))
-						else:
-							self.table.setItem(row, 6, QTableWidgetItem(f"[💩💩💩]> Token Chết MẸ Rồi em!"))
-					except:
-						self.table.setItem(row, 6, QTableWidgetItem(f"[💩💩💩]> Lỗi Cái Chó Gì Á Tự Check !"))
-
-				# Đọc file tool_key.json và lấy giá trị threads
-				with open("tool_key.json", "r", encoding="utf-8") as f:
-					data = json.load(f)
-
-				if "threads" not in data:
-					raise ValueError("Không tìm thấy 'threads' trong file tool_key.json")
-
-				so_luong_luong = data["threads"]
-
-				with ThreadPoolExecutor(max_workers=so_luong_luong) as executor:
-					futures = [executor.submit(xu_ly_row, row) for row in range(self.table.rowCount())]
-					for future in as_completed(futures):
-						pass  # xử lý kết quả nếu cần
-			chay_20_mot_luot()
-		except:pass
-	
-	def TokenGetsl(self):
-		def login_to_account(account, passwordf, proxy,f_id):
-			proxy_url, port, username, password = proxy.split(':')
-			proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-			proxies = {
-				"http": proxy_address,
-				"https": proxy_address
-			}
-			import requests
-			import random
-			import hashlib
-			import json
-			import time
-			import concurrent.futures
-			import re
-			
-			uuid, code = get_captcha_text(proxies)
-			md5_hash = hashlib.md5()
-			md5_hash.update(passwordf.encode('utf-8'))
-			passwordf = md5_hash.hexdigest()
-			print(uuid, code)
-			url = "https://m.oklavip26.live/api/accountLogin/doLogin"
-			headers = {
-				"authority": "m.oklavip26.live",
-				"accept": "application/json, text/plain, */*",
-				"accept-language": "vi-VN,vi;q=0.9",
-				"content-type": "application/json",
-				"locale": "vi_vn",
-				"origin": "https://m.oklavip26.live",
-				"priority": "u=1, i",
-				"referer": "https://m.oklavip26.live/login",
-				"sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-				"sec-ch-ua-mobile": "?0",
-				"sec-ch-ua-platform": "Windows",
-				"sec-fetch-dest": "empty",
-				"sec-fetch-mode": "cors",
-				"sec-fetch-site": "same-origin",
-				"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-				"f-id": f_id
-			}
-			data = {
-				"account": account,
-				"password": passwordf,
-				"code": code,
-				"uuid": uuid,
-				"device": "H5"
-			}
-
-			# Nếu proxy không phải là None, thêm vào tham số proxies
-			if proxy:
-				proxy_url, port, username, password = proxy.split(':')
-				proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-				proxies = {
-					"http": proxy_address,
-					"https": proxy_address
-				}
-				response = requests.post(url, headers=headers, json=data, proxies=proxies ,timeout=20)
-			else:
-				response = requests.post(url, headers=headers, json=data,timeout=20)
-			print(response.text)
-			# Kiểm tra phản hồi
-			if response.json()['message'] == 'Thao tác thành công':
-				token = response.json()['data']['token']
-				return f'{token}'
-			elif response.json()['message'] == 'Mã xác nhận sai':
-				login_to_account(account, password, proxy,f_id)
-			else:
-				return None
-		def kiem_tra_ky_tu(chuoi):
-			return not re.match("^[a-zA-Z0-9]+$", chuoi)
-		def get_captcha_text(proxies):
-			solan = 0
-			text = ""
-			while len(text) < 4 or kiem_tra_ky_tu(text):
-				solan += 1
-				if solan >= 2:
-					try:IMG = requests.get("https://m.oklavip26.live/api/accountLogin/captcha", proxies=proxies ,timeout=20).json()
-					except:pass
-					solan = 0
-				try:
-					IMG = requests.get("https://m.oklavip26.live/api/accountLogin/captcha", proxies=proxies ,timeout=20).json()
-					img_src = IMG['data']['image']
-					uuid = IMG['data']['uuid']
-					url = "http://103.77.242.210:8000/ocr"
-					headers = {"accept": "application/json"}
-					data = {"image": img_src}
-					response = requests.post(url, headers=headers, data=data,timeout=20)
-					print(response.json()['data'])
-					text=response.json()['data']
-				except:pass
-				print("captcha: ",text)
-			return uuid,text
-		def LayToken(account, password, proxy,f_id):
-			return login_to_account(account, password, proxy,f_id)
-		for row in range(self.table.rowCount()):
-			token = self.table.item(row, 0).text()
-			proxy=self.table.item(row, 1).text()
-			Taikhoan=self.table.item(row, 2).text()
-			Matkhau=self.table.item(row, 3).text()
-			Fidd=self.table.item(row, 4).text()
-			tokennew=LayToken(Taikhoan, Matkhau, proxy,Fidd)
-			self.table.setItem(row, 0, QTableWidgetItem(f"{tokennew}"))
-			self.table.setItem(row, 6, QTableWidgetItem(f"Đã Lấy Token Mới"))
-			time.sleep(3)
-
-	 
-
-			
-	def TokenGet(self):
-		selected_row = self.table.currentRow()
-		selected_rows = [index.row() for index in self.table.selectedIndexes()]
-		for row in selected_rows:
-			account = self.accounts[row]
-			token = account[0]
-			proxy = account[1]
-			password = account[3]
-			tkkk = account[2]
-			print(row)
-			f_id = account[4]
-			self.table.setItem(row, 6, QTableWidgetItem("Bắt đầu kiểm tra"))
-			print(token,account,proxy,f_id)
-			def login_to_account(account, passwordf, proxy,f_id):
-				passwordfcc=passwordf
-				proxy_url, port, username, password = proxy.split(':')
-				proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-				proxies = {
-					"http": proxy_address,
-					"https": proxy_address
-				}
-				print(passwordf)
-				uuid, code = get_captcha_text(proxies)
-				md5_hash = hashlib.md5()
-				md5_hash.update(passwordf.encode('utf-8'))
-				passwordf = md5_hash.hexdigest()
-				print(uuid, code,passwordf)
-				url = "https://m.oklavip26.live/api/accountLogin/doLogin"
-				headers = {
-					"authority": "m.oklavip26.live",
-					"accept": "application/json, text/plain, */*",
-					"accept-language": "vi-VN,vi;q=0.9",
-					"content-type": "application/json",
-					"locale": "vi_vn",
-					"origin": "https://m.oklavip26.live",
-					"priority": "u=1, i",
-					"referer": "https://m.oklavip26.live/login",
-					"sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-					"sec-ch-ua-mobile": "?0",
-					"sec-ch-ua-platform": "Windows",
-					"sec-fetch-dest": "empty",
-					"sec-fetch-mode": "cors",
-					"sec-fetch-site": "same-origin",
-					"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-					"f-id": f_id
-				}
-				data = {
-					"account": account,
-					"password": passwordf,
-					"code": code,
-					"uuid": uuid,
-					"device": "H5"
-				}
-
-				# Nếu proxy không phải là None, thêm vào tham số proxies
-				if proxy:
-					proxy_url, port, username, password = proxy.split(':')
-					proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-					proxies = {
-						"http": proxy_address,
-						"https": proxy_address
-					}
-					response = requests.post(url, headers=headers, json=data, proxies=proxies ,timeout=500)
-				else:
-					response = requests.post(url, headers=headers, json=data,timeout=500)
-				print(response.text)
-				# Kiểm tra phản hồi
-				if response.json()['message'] == 'Thao tác thành công':
-					token = response.json()['data']['token']
-					return f'{token}|{proxy}|{account}|{passwordfcc}|{f_id}'
-				elif response.json()['message'] == 'Mã xác nhận sai':
-					login_to_account(account, password, proxy,f_id)
-				else:
-					return None
-			def kiem_tra_ky_tu(chuoi):
-				return not re.match("^[a-zA-Z0-9]+$", chuoi)
-			def get_captcha_text(proxies):
-				solan = 0
-				text = ""
-				while len(text) < 4 or kiem_tra_ky_tu(text):
-					IMG = requests.get("https://m.oklavip26.live/api/accountLogin/captcha", proxies=proxies ,timeout=500).json()
-					solan += 1
-					if solan >= 5:
-						try:
-							IMG = requests.get("https://m.oklavip26.live/api/accountLogin/captcha", proxies=proxies ,timeout=500).json()
-						except:
-							pass
-						solan = 0
-
-					try:
-
-						IMG = requests.get("https://m.oklavip26.live/api/accountLogin/captcha", proxies=proxies ,timeout=500).json()
-
-						img_src = IMG['data']['image']
-						uuid = IMG['data']['uuid']
-						url = "http://103.77.242.210:8000/ocr"
-						headers = {"accept": "application/json"}
-						data = {"image": img_src}
-
-						response = requests.post(url, headers=headers, data=data,timeout=500)
-						print(response.json()['data'])
-						text=response.json()['data']
-					except:
-						time.sleep(1)
-					print(text)
-				return uuid,text
-		aaa=login_to_account(tkkk,password,proxy,f_id)
-		def thay_doi_dong(file_path, dong_muon_thay, noi_dung_moi):
-			try:
-				with open(file_path, 'r', encoding='utf-8') as file:
-					lines = file.readlines()
-
-				if dong_muon_thay < 1 or dong_muon_thay > len(lines):
-					print(f"Dòng {dong_muon_thay} không tồn tại trong tệp.")
-					return
-
-				lines[dong_muon_thay - 1] = noi_dung_moi + '\n'
-
-				with open(file_path, 'w', encoding='utf-8') as file:
-					file.writelines(lines)
-				self.table.setItem(selected_row, 0, QTableWidgetItem(f"{noi_dung_moi}"))
-
-				print(f"Đã thay đổi dòng {dong_muon_thay} thành: {noi_dung_moi}")
-				self.save_accounts_to_file()
-			except FileNotFoundError:
-				print(f"Tệp {file_path} không tồn tại.")
-
-		thay_doi_dong("ACC.txt", row+1, f"{aaa}")
-		self.load_accounts_from_file()
-	def CheckLuotTraLoiall(self,selected_row):
-		row=selected_row
-		import random
-		def lay_answer_list():
-			if not hasattr(lay_answer_list, "shuffled_answers") or lay_answer_list.index >= len(lay_answer_list.shuffled_answers):
-				# Gộp toàn bộ 15 câu
-				all_answers = [
-					{"id":"1813068590722039810","submitAnswer":"B"},
-					{"id":"1885293145245704194","submitAnswer":"D"},
-					{"id":"1813055126444163073","submitAnswer":"B"},
-					{"id":"1758663639615070209","submitAnswer":"D"},
-					{"id":"1785300906974543873","submitAnswer":"B"},
-					{"id":"1832001421560930305","submitAnswer":"C"},
-					{"id":"1862969516842795009","submitAnswer":"A"},
-					{"id":"1813061385461415937","submitAnswer":"C"},
-					{"id":"1852195947499892738","submitAnswer":"C"},
-					{"id":"1845597110031245313","submitAnswer":"A"},
-					{"id":"1852198018005479426","submitAnswer":"B"},
-					{"id":"1785310696345862145","submitAnswer":"B"},
-					{"id":"1785286596449697793","submitAnswer":"D"},
-					{"id":"1742430977931452417","submitAnswer":"D"},
-					{"id":"1839964599813079042","submitAnswer":"D"},
-					{"id":"1854143870443585537","submitAnswer":"D"},
-					{"id":"1785518438150995969","submitAnswer":"B"},
-					{"id":"1824048832353558530","submitAnswer":"C"},
-					{"id":"1832922633518604290","submitAnswer":"A"},
-					{"id":"1845605186754994177","submitAnswer":"A"},
-					{"id":"1910234836605042689","submitAnswer":"C"},
-					{"id":"1743642787544043521","submitAnswer":"C"},
-					{"id":"1839623537886142465","submitAnswer":"B"},
-					{"id":"1857079383320297474","submitAnswer":"B"},
-					{"id":"1758729048947089409","submitAnswer":"D"},
-					{"id":"1913734370549690370","submitAnswer":"A"},
-					{"id":"1790399254207328258","submitAnswer":"A"},
-					{"id":"1758658110029225986","submitAnswer":"B"},
-					{"id":"1857079675314675714","submitAnswer":"C"},
-					{"id":"1906204991478239234","submitAnswer":"B"},
-					{"id":"1813068590722039810","submitAnswer":"B"},
-					{"id":"1758661648285360129","submitAnswer":"C"},
-					{"id":"1900874100297801729","submitAnswer":"A"},
-					{"id":"1785309013456879617","submitAnswer":"A"}
-
-				]
-				random.shuffle(all_answers)  # Trộn kỹ mỗi lần làm mới
-				lay_answer_list.shuffled_answers = all_answers
-				lay_answer_list.index = 0
-
-			# Lấy 5 câu liên tiếp
-			start = lay_answer_list.index
-			end = start + 5
-			result = lay_answer_list.shuffled_answers[start:end]
-			lay_answer_list.index += 5
-			return result
-
-		
-		account = self.accounts[row]
-		token = account[0]
-		proxy = account[1]
-		f_id = account[4]
-		self.table.setItem(row, 6, QTableWidgetItem("Bắt đầu kiểm tra"))
-		try:
-			proxy_url, port, username, password = proxy.split(':')
-			proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-			proxies = {"http": proxy_address, "https": proxy_address}
-			headers = {
-				"authority": "m.oklavip26.live",
-				"accept": "application/json, text/plain, */*",
-				"accept-language": "vi-VN,vi;q=0.9",
-				"content-type": "application/json",
-				"locale": "vi_vn",
-				"origin": "https://m.oklavip26.live",
-				"priority": "u=1, i",
-				"sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-				"sec-ch-ua-mobile": "?0",
-				"sec-ch-ua-platform": "Windows",
-				"sec-fetch-dest": "empty",
-				"sec-fetch-mode": "cors",
-				"sec-fetch-site": "same-origin",
-				"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-				"f-id": f_id,
-				"token": token,
-				"cache-control": "no-cache",
-				"pragma": "no-cache",
-				"referer": "https://m.oklavip26.live/",
-			}
-			response = requests.get(
-				"https://m.oklavip26.live/api/activityQuestion/getActivityQuestionInfo",
-				headers=headers, proxies=proxies, timeout=500).json()
-			luot = response['data']['surplusNumber']
-			self.table.setItem(row, 6, QTableWidgetItem(f"Còn {luot} lượt"))
-			account[6] = f"Còn {luot} lượt"
-			self.update_log(f"{account[2]} còn {luot} lượt trả lời.")
-			for cac in range(int(luot)):
-				DanhSachCauHoi = requests.get('https://m.oklavip26.live/api/activityQuestion/getQuestionList',headers=headers, proxies=proxies, timeout=500).json()['data']
-				delay_time = random.randint(20, 35)
-				for delay in range(delay_time, -1, -1):
-					self.table.setItem(selected_row, 6, QTableWidgetItem(f"Delay {delay}"))
-					time.sleep(1)
-				date_time = int(time.time())
-				recordNo = requests.get('https://m.oklavip26.live/api/activityQuestion/startAnswerQuestion',headers=headers, proxies=proxies, timeout=500).json()['data']['recordNo']
-				dataTraloi = {
-					"answerList": lay_answer_list(),
-					"timeStart": date_time,
-					"recordNo": recordNo
-				}
-				response = requests.post('https://m.oklavip26.live/api/activityQuestion/submitQuestion',headers=headers,json=dataTraloi, proxies=proxies, timeout=500)
-				print(response.json())
-				time.sleep(3)
-			print("Kimochi")
-			CheckLuotQuay=requests.get("https://m.oklavip26.live/api/lottery/getLuckyDrawBaseInfo",headers=headers , proxies=proxies , timeout=500).json()
-			data2 = {"raffleId": CheckLuotQuay['data']['raffleId']}
-			CheckLuotQuay=requests.post("https://m.oklavip26.live/api/lottery/getLuckyDrawInfoByDaily",headers=headers , proxies=proxies , timeout=500).json()['data']['drawCount']
-			print(CheckLuotQuay)
-			for xx in range(int(CheckLuotQuay)):
-				CheckLuotQuay=requests.post("https://m.oklavip26.live/api/lottery/lotteryByDaily",headers=headers, json=data2 , proxies=proxies , timeout=500).json()
-				delay_time = random.randint(5,6)
-				for delay in range(delay_time, -1, -1):
-					self.table.setItem(selected_row, 6, QTableWidgetItem(f"Delay {delay} [{CheckLuotQuay["data"]['prizeInfo']['prizeName']}]"))
-					time.sleep(1)
-			self.table.setItem(selected_row, 6, QTableWidgetItem(f"Xong!"))
-
-		except Exception as e:
-			self.update_log(f"Lỗi kiểm tra lượt:")
-	def CheckLuotTraLoi(self):
-		selected_row = self.table.currentRow()
-		import random
-		def lay_answer_list():
-			if not hasattr(lay_answer_list, "shuffled_answers") or lay_answer_list.index >= len(lay_answer_list.shuffled_answers):
-				# Gộp toàn bộ 15 câu
-				all_answers = [
-					{"id":"1813068590722039810","submitAnswer":"B"},
-					{"id":"1885293145245704194","submitAnswer":"D"},
-					{"id":"1813055126444163073","submitAnswer":"B"},
-					{"id":"1758663639615070209","submitAnswer":"D"},
-					{"id":"1785300906974543873","submitAnswer":"B"},
-					{"id":"1832001421560930305","submitAnswer":"C"},
-					{"id":"1862969516842795009","submitAnswer":"A"},
-					{"id":"1813061385461415937","submitAnswer":"C"},
-					{"id":"1852195947499892738","submitAnswer":"C"},
-					{"id":"1845597110031245313","submitAnswer":"A"},
-					{"id":"1852198018005479426","submitAnswer":"B"},
-					{"id":"1785310696345862145","submitAnswer":"B"},
-					{"id":"1785286596449697793","submitAnswer":"D"},
-					{"id":"1742430977931452417","submitAnswer":"D"},
-					{"id":"1839964599813079042","submitAnswer":"D"},
-					{"id":"1854143870443585537","submitAnswer":"D"},
-					{"id":"1785518438150995969","submitAnswer":"B"},
-					{"id":"1824048832353558530","submitAnswer":"C"},
-					{"id":"1832922633518604290","submitAnswer":"A"},
-					{"id":"1845605186754994177","submitAnswer":"A"},
-					{"id":"1910234836605042689","submitAnswer":"C"},
-					{"id":"1743642787544043521","submitAnswer":"C"},
-					{"id":"1839623537886142465","submitAnswer":"B"},
-					{"id":"1857079383320297474","submitAnswer":"B"},
-					{"id":"1758729048947089409","submitAnswer":"D"},
-					{"id":"1913734370549690370","submitAnswer":"A"},
-					{"id":"1790399254207328258","submitAnswer":"A"},
-					{"id":"1758658110029225986","submitAnswer":"B"},
-					{"id":"1857079675314675714","submitAnswer":"C"},
-					{"id":"1906204991478239234","submitAnswer":"B"},
-					{"id":"1813068590722039810","submitAnswer":"B"},
-					{"id":"1758661648285360129","submitAnswer":"C"},
-					{"id":"1900874100297801729","submitAnswer":"A"},
-					{"id":"1785309013456879617","submitAnswer":"A"}
-
-				]
-				random.shuffle(all_answers)  # Trộn kỹ mỗi lần làm mới
-				lay_answer_list.shuffled_answers = all_answers
-				lay_answer_list.index = 0
-
-			# Lấy 5 câu liên tiếp
-			start = lay_answer_list.index
-			end = start + 5
-			result = lay_answer_list.shuffled_answers[start:end]
-			lay_answer_list.index += 5
-			return result
-
-		selected_rows = [index.row() for index in self.table.selectedIndexes()]
-		for row in selected_rows:
-			account = self.accounts[row]
-			token = account[0]
-			proxy = account[1]
-			f_id = account[4]
-			self.table.setItem(row, 6, QTableWidgetItem("Bắt đầu kiểm tra"))
-			try:
-				proxy_url, port, username, password = proxy.split(':')
-				proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-				proxies = {"http": proxy_address, "https": proxy_address}
-				headers = {
-					"authority": "m.oklavip26.live",
-					"accept": "application/json, text/plain, */*",
-					"accept-language": "vi-VN,vi;q=0.9",
-					"content-type": "application/json",
-					"locale": "vi_vn",
-					"origin": "https://m.oklavip26.live",
-					"priority": "u=1, i",
-					"sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-					"sec-ch-ua-mobile": "?0",
-					"sec-ch-ua-platform": "Windows",
-					"sec-fetch-dest": "empty",
-					"sec-fetch-mode": "cors",
-					"sec-fetch-site": "same-origin",
-					"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-					"f-id": f_id,
-					"token": token,
-					"cache-control": "no-cache",
-					"pragma": "no-cache",
-					"referer": "https://m.oklavip26.live/",
-				}
-				response = requests.get(
-					"https://m.oklavip26.live/api/activityQuestion/getActivityQuestionInfo",
-					headers=headers, proxies=proxies, timeout=500).json()
-				luot = response['data']['surplusNumber']
-				self.table.setItem(row, 6, QTableWidgetItem(f"Còn {luot} lượt"))
-				account[6] = f"Còn {luot} lượt"
-				self.update_log(f"{account[2]} còn {luot} lượt trả lời.")
-				for cac in range(int(luot)):
-					DanhSachCauHoi = requests.get('https://m.oklavip26.live/api/activityQuestion/getQuestionList',headers=headers, proxies=proxies, timeout=500).json()['data']
-					delay_time = random.randint(20, 35)
-					for delay in range(delay_time, -1, -1):
-						self.table.setItem(selected_row, 6, QTableWidgetItem(f"Delay {delay}"))
-						time.sleep(1)
-					date_time = int(time.time())
-					recordNo = requests.get('https://m.oklavip26.live/api/activityQuestion/startAnswerQuestion',headers=headers, proxies=proxies, timeout=500).json()['data']['recordNo']
-					dataTraloi = {
-						"answerList": lay_answer_list(),
-						"timeStart": date_time,
-						"recordNo": recordNo
-					}
-					response = requests.post('https://m.oklavip26.live/api/activityQuestion/submitQuestion',headers=headers,json=dataTraloi, proxies=proxies, timeout=500)
-					print(response.json())
-					time.sleep(3)
-				print("Kimochi")
-				CheckLuotQuay=requests.get("https://m.oklavip26.live/api/lottery/getLuckyDrawBaseInfo",headers=headers , proxies=proxies , timeout=500).json()
-				data2 = {"raffleId": CheckLuotQuay['data']['raffleId']}
-				CheckLuotQuay=requests.post("https://m.oklavip26.live/api/lottery/getLuckyDrawInfoByDaily",headers=headers , proxies=proxies , timeout=500).json()['data']['drawCount']
-				print(CheckLuotQuay)
-				for xx in range(int(CheckLuotQuay)):
-					CheckLuotQuay=requests.post("https://m.oklavip26.live/api/lottery/lotteryByDaily",headers=headers, json=data2 , proxies=proxies , timeout=500).json()
-					delay_time = random.randint(5,6)
-					for delay in range(delay_time, -1, -1):
-						self.table.setItem(selected_row, 6, QTableWidgetItem(f"Delay {delay} [{CheckLuotQuay["data"]['prizeInfo']['prizeName']}]"))
-						time.sleep(1)
-				self.table.setItem(selected_row, 6, QTableWidgetItem(f"Xong!"))
-
-			except Exception as e:
-				self.update_log(f"Lỗi kiểm tra lượt:")
-	def CheckGhepChu(self):
-		selected_row = self.table.currentRow()
-		if selected_row < 0:
-			return
-
-		account = self.accounts[selected_row]
-		token = account[0]
-		proxy = account[1]
-		f_id = account[4]
-
-		proxy_url, port, username, password = proxy.split(':')
-		proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-		proxies = {
-			"http": proxy_address,
-			"https": proxy_address
-		}
-
-		headers = {
-			"authority": "m.oklavip26.live",
-			"accept": "application/json, text/plain, */*",
-			"accept-language": "vi-VN,vi;q=0.9",
-			"content-type": "application/json",
-			"locale": "vi_vn",
-			"origin": "https://m.oklavip26.live",
-			"priority": "u=1, i",
-			"sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-			"sec-ch-ua-mobile": "?0",
-			"sec-ch-ua-platform": "Windows",
-			"sec-fetch-dest": "empty",
-			"sec-fetch-mode": "cors",
-			"sec-fetch-site": "same-origin",
-			"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-			"f-id": f_id,
-			"token": token,
-			"cache-control": "no-cache",
-			"pragma": "no-cache",
-			"referer": "https://m.oklavip26.live/",
-		}
-
-		try:
-			response = requests.get('https://m.oklavip26.live/api/activityCollect/getListAvailable', headers=headers, proxies=proxies, timeout=500).json()
-			idGame = response['data'][0]['id']
-			data = {"id": idGame}
-			draw_response = requests.post("https://m.oklavip26.live/api/activityCollect/get", headers=headers, json=data, proxies=proxies, timeout=500).json()
-			draw_times = draw_response['data']['drawTimes']
-			status_text = f"Lượt ghép chữ còn lại: {draw_times}"
-			self.status_label.setText(status_text)
-			self.table.setItem(selected_row, 6, QTableWidgetItem(status_text))  # Cập nhật cột Status (index = 3)
-			for _ in range(int(draw_times)):
-				response = requests.post('https://m.oklavip26.live/api/activityCollect/drawWord', headers=headers, json=data, proxies=proxies, timeout=500)
-				print(response.text)
-				for delay in range(5,-1,-1):
-					self.table.setItem(selected_row, 6, QTableWidgetItem(f"Delay {delay} [{response.json()["data"]['textName']}]"))  # Cập nhật cột Status (index = 3)
-					time.sleep(1)
-			response = requests.post("https://m.oklavip26.live/api/activityCollect/get", headers=headers, json=data, proxies=proxies, timeout=500)
-			synthesisTimes = response.json()['data']['synthesisTimes']
-			data2 = {"raffleId": requests.get("https://m.oklavip26.live/api/activityCollect/getListAvailable", headers=headers, proxies=proxies, timeout=500).json()['data'][0]['lotteryId']}
-			for _ in range(int(synthesisTimes)):
-				response = requests.post('https://m.oklavip26.live/api/activityCollect/mergeWord', headers=headers, json=data, proxies=proxies, timeout=500)
-				response2 = requests.post('https://m.oklavip26.live/api/lottery/lottery', headers=headers, json=data2, proxies=proxies, timeout=500)
-				print(response2.text)
-				for delay in range(5,-1,-1):
-					self.table.setItem(selected_row, 6, QTableWidgetItem(f"Delay {delay} [{response2.json()["data"]["prizeInfo"]["prizeName"]}]"))  # Cập nhật cột Status (index = 3)
-					time.sleep(1)
-			self.table.setItem(selected_row, 6, QTableWidgetItem(f"Ghép Chữ Hoàn Tất!"))  # Cập nhật cột Status (index = 3)
-
-			account[6] = status_text  # Cập nhật dữ liệu tài khoản nếu cần
-			self.table.setItem(selected_row, 6, QTableWidgetItem(f"Ghép Chữ Hoàn Tất!!"))
-
-		except Exception as e:
-			error_text = f"Lỗi: {str(e)}"
-			self.status_label.setText(error_text)
-			self.table.setItem(selected_row, 6, QTableWidgetItem(error_text))  # Cập nhật lỗi vào Status
-
-	def CheckGhepChuall(self,selected_row):
-		row=selected_row
-
-		account = self.accounts[selected_row]
-		token = account[0]
-		proxy = account[1]
-		f_id = account[4]
-
-		proxy_url, port, username, password = proxy.split(':')
-		proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
-		proxies = {
-			"http": proxy_address,
-			"https": proxy_address
-		}
-
-		headers = {
-			"authority": "m.oklavip26.live",
-			"accept": "application/json, text/plain, */*",
-			"accept-language": "vi-VN,vi;q=0.9",
-			"content-type": "application/json",
-			"locale": "vi_vn",
-			"origin": "https://m.oklavip26.live",
-			"priority": "u=1, i",
-			"sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-			"sec-ch-ua-mobile": "?0",
-			"sec-ch-ua-platform": "Windows",
-			"sec-fetch-dest": "empty",
-			"sec-fetch-mode": "cors",
-			"sec-fetch-site": "same-origin",
-			"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
-			"f-id": f_id,
-			"token": token,
-			"cache-control": "no-cache",
-			"pragma": "no-cache",
-			"referer": "https://m.oklavip26.live/",
-		}
-
-		try:
-			response = requests.get('https://m.oklavip26.live/api/activityCollect/getListAvailable', headers=headers, proxies=proxies, timeout=500).json()
-			idGame = response['data'][0]['id']
-			data = {"id": idGame}
-			draw_response = requests.post("https://m.oklavip26.live/api/activityCollect/get", headers=headers, json=data, proxies=proxies, timeout=500).json()
-			draw_times = draw_response['data']['drawTimes']
-			status_text = f"Lượt ghép chữ còn lại: {draw_times}"
-			self.status_label.setText(status_text)
-			self.table.setItem(selected_row, 6, QTableWidgetItem(status_text))  # Cập nhật cột Status (index = 3)
-			for _ in range(int(draw_times)):
-				response = requests.post('https://m.oklavip26.live/api/activityCollect/drawWord', headers=headers, json=data, proxies=proxies, timeout=500)
-				print(response.text)
-				for delay in range(5,-1,-1):
-					self.table.setItem(selected_row, 6, QTableWidgetItem(f"Delay {delay} [{response.json()["data"]['textName']}]"))  # Cập nhật cột Status (index = 3)
-					time.sleep(1)
-			response = requests.post("https://m.oklavip26.live/api/activityCollect/get", headers=headers, json=data, proxies=proxies, timeout=500)
-			synthesisTimes = response.json()['data']['synthesisTimes']
-			data2 = {"raffleId": requests.get("https://m.oklavip26.live/api/activityCollect/getListAvailable", headers=headers, proxies=proxies, timeout=500).json()['data'][0]['lotteryId']}
-			for _ in range(int(synthesisTimes)):
-				response = requests.post('https://m.oklavip26.live/api/activityCollect/mergeWord', headers=headers, json=data, proxies=proxies, timeout=500)
-				response2 = requests.post('https://m.oklavip26.live/api/lottery/lottery', headers=headers, json=data2, proxies=proxies, timeout=500)
-				print(response2.text)
-				for delay in range(5,-1,-1):
-					self.table.setItem(selected_row, 6, QTableWidgetItem(f"Delay {delay} [{response2.json()["data"]["prizeInfo"]["prizeName"]}]"))  # Cập nhật cột Status (index = 3)
-					time.sleep(1)
-			self.table.setItem(selected_row, 6, QTableWidgetItem(f"Ghép Chữ Hoàn Tất!"))  # Cập nhật cột Status (index = 3)
-
-			account[6] = status_text  # Cập nhật dữ liệu tài khoản nếu cần
-			self.table.setItem(selected_row, 6, QTableWidgetItem(f"Ghép Chữ Hoàn Tất!!"))
-
-		except Exception as e:
-			error_text = f"Lỗi: {str(e)}"
-			self.status_label.setText(error_text)
-			self.table.setItem(selected_row, 6, QTableWidgetItem(error_text))  # Cập nhật lỗi vào Status
-
-
-	def run_multiple_threads(self, selected_rows, num_threads):
-		# Ensure we don't exceed the max threads from the key
-		actual_threads = min(num_threads, self.max_threads)
-		
-		# Chia các tài khoản đã chọn thành nhóm nhỏ theo số lượng luồng
-		chunks = [selected_rows[i:i + actual_threads] for i in range(0, len(selected_rows), actual_threads)]
-		
-		for chunk in chunks:
-			worker = AccountWorker(self.accounts, chunk)
-			worker.update_signal.connect(self.update_account_status)
-			worker.log_signal.connect(self.update_log)
-			worker.start()
-			self.threads.append(worker)
-
-	def update_account_status(self, row, points):
-		self.table.setItem(row, 5, QTableWidgetItem(points))  # Cập nhật điểm
-		self.table.setItem(row, 6, QTableWidgetItem("Hoàn thành"))  # Đánh dấu hoàn thành
-		self.save_accounts_to_file()  # Lưu lại điểm sau khi cập nhật
-
-	def update_log(self, log_message):
-		self.log_label.setText(log_message)
-
-	def contextMenuEvent(self, event):
-		self.show_context_menu(event.pos())
-
-	def LienKetTuyChon(self):
-		if hasattr(self, "thuan_lienket_thread") and self.thuan_lienket_thread is not None and self.thuan_lienket_thread.isRunning():
-			print("Đang chạy, vui lòng đợi xong!")
-			return
-		game_list = [
-			{"memberCode": "MOCBAI", "websiteName": "MB66", "id": "1739230912039436290"},
-			{"memberCode": "OK9", "websiteName": "OK9", "id": "1798608608416931842"},
-			{"memberCode": "78win", "websiteName": "78win", "id": "1814571722874535937"},
-			{"memberCode": "QQ88", "websiteName": "QQ88", "id": "1863085503318499329"},
-			{"memberCode": "F168", "websiteName": "F168", "id": "1863085976314355713"},
-		]
-		dialog = GameInputDialog(game_list,"Liên Kết Tài Khoản","User","Số Điện Thoại")
-		if dialog.exec():
-			game_info = dialog.selected_game
-			game_account = dialog.game_account
-			game_phone = dialog.game_phone
-		else:
-			return
-		selected_rows = [index.row() for index in self.table.selectedIndexes()]
-		# Nếu đã có thread cũ, disconnect signal trước khi tạo mới
-		if hasattr(self, "thuan_lienket_thread") and self.thuan_lienket_thread is not None:
-			try:
-				self.thuan_lienket_thread.result.disconnect(self.handle_lienket_tuychon_result)
-			except Exception:
-				pass
-		self.thuan_lienket_thread = self.ThuanLienKet(selected_rows, self.accounts, game_info, game_account, game_phone)
-		self.thuan_lienket_thread.result.connect(self.handle_lienket_tuychon_result)
-		self.thuan_lienket_thread.start()
-
-	def handle_lienket_tuychon_result(self, row, message):
-		# Cập nhật vào bảng nếu muốn, hoặc chỉ log
-		self.table.setItem(row, 6, QTableWidgetItem(message))
-		print(f"[Dòng {row}] {message}")
-
-	def load_tool_key(self):
-		try:
-			with open('tool_key.json', 'r', encoding='utf-8') as f:
-				key_data = json.load(f)
-				self.max_threads = key_data.get('threads', 20)  # Default to 20 if not specified
-				self.expire_time = key_data.get('expire_time', 0)
-				return True
-		except Exception as e:
-			print(f"Error loading tool key: {e}")
-			return False
-
-	def check_key_expiration(self):
-		current_time = int(time.time())
-		if current_time >= self.expire_time:
-			QMessageBox.critical(self, "Key hết hạn", "Key của bạn đã hết hạn. Vui lòng gia hạn để tiếp tục sử dụng.")
-			self.close()
-			return False
-		return True
-
-	def start_expiration_check(self):
-		self.expiration_timer = QTimer(self)
-		self.expiration_timer.timeout.connect(self.check_key_expiration)
-		self.expiration_timer.start(60000)  # Check every minute
-
-	def start_countdown_timer(self):
-		self.countdown_timer = QTimer(self)
-		self.countdown_timer.timeout.connect(self.update_countdown)
-		self.countdown_timer.start(1000)  # Update every second
-
-	def update_countdown(self):
-		current_time = int(time.time())
-		remaining_time = self.expire_time - current_time
-		
-		if remaining_time <= 0:
-			self.countdown_label.setText("Key đã hết hạn!")
-			self.countdown_label.setStyleSheet("""
-				QLabel {
-					color: #ff0000;
-					font-size: 14px;
-					font-weight: bold;
-					padding: 5px;
-					background-color: #2b2b2b;
-					border-radius: 5px;
-				}
-			""")
-			self.close()
-			return
-		
-		# Convert remaining time to hours, minutes, seconds
-		hours = int(remaining_time // 3600)
-		minutes = int((remaining_time % 3600) // 60)
-		seconds = int(remaining_time % 60)
-		
-		# Format the countdown text
-		countdown_text = f"Thời gian còn lại: {hours:02d}:{minutes:02d}:{seconds:02d}"
-		
-		# Change color based on remaining time
-		if remaining_time < 300:  # Less than 5 minutes
-			color = "#ff0000"  # Red
-		elif remaining_time < 1800:  # Less than 30 minutes
-			color = "#ffa500"  # Orange
-		else:
-			color = "#00ff00"  # Green
-		
-		self.countdown_label.setStyleSheet(f"""
-			QLabel {{
-				color: {color};
-				font-size: 14px;
-				font-weight: bold;
-				padding: 5px;
-				background-color: #2b2b2b;
-				border-radius: 5px;
-			}}
-		""")
-		self.countdown_label.setText(countdown_text)
-
-	def show_add_account_dialog(self):
-		dialog = QDialog(self)
-		dialog.setWindowTitle("Thêm Tài Khoản Mới")
-		dialog.setFixedWidth(400)
-		dialog.setStyleSheet("""
-			QDialog {
-				background-color: #252526;
-				color: white;
-			}
-			QLabel {
-				color: white;
-				font-size: 14px;
-			}
-			QLineEdit {
-				padding: 8px;
-				border: 1px solid #555;
-				border-radius: 5px;
-				background-color: #2b2b2b;
-				color: white;
-				font-size: 14px;
-			}
-			QPushButton {
-				background-color: #4e4e4e;
-				padding: 10px;
-				border: none;
-				border-radius: 5px;
-				color: white;
-				font-size: 14px;
-			}
-			QPushButton:hover {
-				background-color: #5e5e5e;
-			}
-		""")
-
-		layout = QVBoxLayout(dialog)
-
-		# Tạo các trường nhập liệu
-		fields = [
-			("Token:", "token"),
-			("Proxy:", "proxy"),
-			("Tài Khoản:", "username"),
-			("Mật Khẩu:", "password"),
-			("Mã Trình Duyệt:", "f_id")
-		]
-
-		inputs = {}
-		for label_text, field_name in fields:
-			label = QLabel(label_text)
-			input_field = QLineEdit()
-			inputs[field_name] = input_field
-			layout.addWidget(label)
-			layout.addWidget(input_field)
-
-		# Nút lưu
-		save_button = QPushButton("Lưu")
-		save_button.clicked.connect(lambda: self.save_new_account(inputs, dialog))
-		layout.addWidget(save_button)
-
-		dialog.exec()
-
-	def save_new_account(self, inputs, dialog):
-		# Lấy giá trị từ các trường nhập liệu
-		token = inputs["token"].text().strip() or ""  # Nếu token trống thì gán chuỗi rỗng
-		proxy = inputs["proxy"].text().strip()
-		username = inputs["username"].text().strip()
-		password = inputs["password"].text().strip()
-		f_id = inputs["f_id"].text().strip()
-		
-		# Kiểm tra các trường bắt buộc
-		if not all([proxy, username, password, f_id]):
-			QMessageBox.warning(dialog, "Lỗi", "Vui lòng điền đầy đủ thông tin!")
-			return
-
-		# Tạo dòng mới với token trống
-		new_line = f"{token}|{proxy}|{username}|{password}|{f_id}\n"
-
-		# Đọc nội dung file hiện tại
-		with open("ACC.txt", "r", encoding="utf-8") as f:
-			existing_content = f.read()
-
-		# Ghi nội dung mới vào đầu file
-		with open("ACC.txt", "w", encoding="utf-8") as f:
-			f.write(new_line + existing_content)
-
-		# Thêm dòng mới vào bảng
-		row_position = self.table.rowCount()
-		self.table.insertRow(row_position)
-		
-		# Đảm bảo bảng có đủ cột
-		if self.table.columnCount() < 5:
-			self.table.setColumnCount(5)
-			self.table.setHorizontalHeaderLabels(["Token", "Proxy", "Username", "Password", "F_ID"])
-		
-		# Điền thông tin vào các cột tương ứng
-		self.table.setItem(row_position, 0, QTableWidgetItem(token))  # Token (có thể trống)
-		self.table.setItem(row_position, 1, QTableWidgetItem(proxy))
-		self.table.setItem(row_position, 2, QTableWidgetItem(username))
-		self.table.setItem(row_position, 3, QTableWidgetItem(password))
-		self.table.setItem(row_position, 4, QTableWidgetItem(f_id))
-		
-		
-		QMessageBox.information(dialog, "Thành công", "Đã thêm tài khoản mới!")
-		dialog.accept()
-
-	def delete_banned_accounts(self):
-		rows_to_delete = []
-		for row in range(self.table.rowCount()):
-			status_item = self.table.item(row, 6)
-			if status_item and status_item.text() == "{'code': 50000, 'message': 'Tài khoản đã bị cấm dùng', 'data': None}":
-				rows_to_delete.append(row)
-		
-		# Delete rows in reverse order to avoid index shifting
-		for row in sorted(rows_to_delete, reverse=True):
-			self.table.removeRow(row)
-			self.accounts.pop(row)
-		
-		self.save_accounts_to_file()
-		self.log_label.setText(f"✅ Đã xóa {len(rows_to_delete)} tài khoản bị cấm")
-
-	def export_points_to_file(self):
-		selected_rows = list(set([index.row() for index in self.table.selectedIndexes()]))
-		if not selected_rows:
-			self.update_log("Vui lòng chọn ít nhất một tài khoản để xuất điểm!")
-			return
-
-		timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-		filename = f"points_export_{timestamp}.txt"
-		
-		total_points = 0
-		with open(filename, "w", encoding="utf-8") as f:
-			for row in selected_rows:
-				username = self.table.item(row, 2).text()
-				points = self.table.item(row, 5).text()
-				try:
-					points_int = int(points)
-					total_points += points_int
-					f.write(f"{username}: {points} điểm\n")
-				except ValueError:
-					f.write(f"{username}: 0 điểm\n")
-
-			f.write("\n=== TỔNG KẾT ===\n")
-			f.write(f"Tổng số tài khoản: {len(selected_rows)}\n")
-			f.write(f"Tổng điểm: {total_points}")
-
-		self.update_log(f"Đã xuất điểm ra file {filename}")
-
-
-class ThongBaoDialog(QDialog):
-    def __init__(self, message, parent=None):
+class AnimatedToggle(QWidget):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("🔔 THÔNG BÁO BẢO TRÌ 🔔")
-        self.setStyleSheet("""
-            QDialog {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #23243a, stop:1 #2b2b3d);
-                color: white;
-                font-size: 17px;
-                border-radius: 18px;
-                border: 2px solid #ffaa00;
-                padding: 18px 18px 10px 18px;
-                box-shadow: 0 8px 32px 0 rgba(31,38,135,0.37);
+        self.setFixedSize(60, 30)
+        self.checkbox = QCheckBox(self)
+        self.checkbox.setGeometry(0, 0, 60, 30)
+        self.checkbox.setCursor(Qt.PointingHandCursor)
+        self.checkbox.setStyleSheet("""
+            QCheckBox::indicator {
+                width: 60px;
+                height: 30px;
+                border-radius: 15px;
+                background-color: #ddd;
             }
-            QLabel {
-                color: #ffcc00;
-                font-weight: bold;
-                font-size: 18px;
-                padding: 10px 0 10px 0;
-                qproperty-alignment: AlignCenter;
-            }
-            QPushButton {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #ffaa00, stop:1 #ff8800);
-                color: #23243a;
-                font-weight: bold;
-                font-size: 16px;
-                padding: 10px 0;
-                border-radius: 8px;
-                margin-top: 18px;
-                border: 2px solid #ffcc00;
-            }
-            QPushButton:hover {
-                background-color: #fff200;
-                color: #23243a;
+            QCheckBox::indicator:checked {
+                background-color: #6666ff;
             }
         """)
-        layout = QVBoxLayout(self)
-        # Thêm icon thông báo lớn ở trên cùng
-        icon_label = QLabel("<span style='font-size:48px;'>⚠️</span>")
-        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(icon_label)
-        # Nội dung thông báo
-        label = QLabel(message)
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        label.setWordWrap(True)
-        layout.addWidget(label)
-        btn = QPushButton("Đã hiểu")
-        btn.clicked.connect(self.accept)
-        layout.addWidget(btn)
-        self.setFixedWidth(440)
-        self.setFixedHeight(320)
-        self.setModal(True)
+        self.icon = QLabel("\ud83c\udf1e", self)
+        self.icon.setGeometry(3, 3, 24, 24)
+        self.icon.setFont(QFont("Arial", 16))
+        self.icon.setAlignment(Qt.AlignCenter)
+        self.icon.setStyleSheet("background: transparent;")
+        self.anim = QPropertyAnimation(self.icon, b"geometry")
+        self.checkbox.stateChanged.connect(self.start_animation)
 
+    def start_animation(self, state):
+        if state:
+            self.anim.setStartValue(QRect(3, 3, 24, 24))
+            self.anim.setEndValue(QRect(33, 3, 24, 24))
+            self.icon.setText("\ud83c\udf19")
+        else:
+            self.anim.setStartValue(QRect(33, 3, 24, 24))
+            self.anim.setEndValue(QRect(3, 3, 24, 24))
+            self.icon.setText("\ud83c\udf1e")
+        self.anim.setDuration(200)
+        self.anim.start()
+
+    def isChecked(self):
+        return self.checkbox.isChecked()
+
+    def stateChanged(self, func):
+        self.checkbox.stateChanged.connect(func)
+
+class LoginSignals(QObject):
+    update_status = Signal(int, str)  # row, status
+    login_result = Signal(int, str, str, object)  # row, token, result, diem
+
+class LoginWorker(QRunnable):
+    def __init__(self, row, account, password, f_id, proxy_string, token=None):
+        super().__init__()
+        self.row = row
+        self.account = account
+        self.password = password
+        self.f_id = f_id
+        self.proxy_string = proxy_string
+        self.token = token
+        self.signals = LoginSignals()
+
+    def create_proxy(self, proxy_string):
+        parts = proxy_string.split(":")
+        ip = parts[0]
+        port = parts[1]
+        username = parts[2]
+        password = parts[3]
+        proxies = {
+            "http": f"http://{username}:{password}@{ip}:{port}",
+            "https": f"http://{username}:{password}@{ip}:{port}"
+        }
+        return proxies
+
+    def check_token_live(self, token, f_id, proxy_string):
+        import requests
+        proxies = self.create_proxy(proxy_string)
+        try:
+            headers = {
+                "authority": "m.oklavip26.live",
+                "accept": "application/json, text/plain, */*",
+                "accept-language": "vi-VN,vi;q=0.9",
+                "content-type": "application/json",
+                "locale": "vi_vn",
+                "referer": "https://m.oklavip26.live/personal",
+                "sec-ch-ua-platform": "Windows",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "same-origin",
+                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
+                "f-id": f_id,
+                "token": token,
+            }
+            responsediem = requests.get("https://m.oklavip26.live/api/wallet/getWallet", headers=headers, proxies=proxies, timeout=20).json()
+            print(responsediem)
+            diem = responsediem['data']['integral']
+            return False, diem  # False = token còn sống
+        except Exception as e:
+            print(f"CheckTokenLive Exception: {e}")
+            return True, None  # True = token die
+
+    def run(self):
+        import requests, hashlib
+        from qtpy.QtWidgets import QTableWidgetItem
+        # Kiểm tra token trước khi đăng nhập
+        if self.token and self.token.strip():
+            self.signals.update_status.emit(self.row, "Đang kiểm tra token...")
+            is_die, diem = self.check_token_live(self.token, self.f_id, self.proxy_string)
+            if not is_die:
+                self.signals.update_status.emit(self.row, f"Token sống | Điểm: {diem}")
+                # Cập nhật điểm vào cột 5
+                self.signals.login_result.emit(self.row, self.token, "TOKEN_OK", diem)
+                return
+            else:
+                self.signals.update_status.emit(self.row, "Token die, đăng nhập lại...")
+        # Nếu token die hoặc không có, tiến hành đăng nhập như cũ
+        def create_proxy(proxy_string):
+            parts = proxy_string.split(":")
+            ip = parts[0]
+            port = parts[1]
+            username = parts[2]
+            password = parts[3]
+            proxies = {
+                "http": f"http://{username}:{password}@{ip}:{port}",
+                "https": f"http://{username}:{password}@{ip}:{port}"
+            }
+            return proxies
+        proxies = create_proxy(self.proxy_string)
+        url = "https://oklavip26.live/api/accountLogin/captcha"
+        headers_captcha = {
+            "accept": "application/json, text/plain, */*",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "vi-VN,vi;q=0.9",
+            "referer": "https://oklavip26.live/?backRoute=%2Fpersonal",
+            "sec-ch-ua": '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+        }
+        attempts = 0
+        while attempts < 3:
+            try:
+                self.signals.update_status.emit(self.row, f"Lấy captcha (lần {attempts+1})...")
+                response = requests.get(url, headers=headers_captcha, proxies=proxies)
+                print(response.status_code)
+                print(response.json())
+                img = response.json()
+                img_src, uuid = img['data']['image'], img['data']['uuid']
+                self.signals.update_status.emit(self.row, "Đang nhận diện captcha...")
+                ocr_response = requests.post("http://103.77.242.210:8000/ocr", headers={"accept": "application/json"}, data={"image": img_src}, verify=False).json()
+                code = ocr_response['data']
+                password_md5 = hashlib.md5(self.password.encode('utf-8')).hexdigest()
+                headers_login = {
+                    "authority": "m.oklavip26.live",
+                    "accept": "application/json, text/plain, */*",
+                    "accept-language": "vi-VN,vi;q=0.9",
+                    "content-type": "application/json",
+                    "locale": "vi_vn",
+                    "origin": "https://m.oklavip26.live",
+                    "priority": "u=1, i",
+                    "referer": "https://m.oklavip26.live/login",
+                    "sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+                    "sec-ch-ua-mobile": "?0",
+                    "sec-ch-ua-platform": "Windows",
+                    "sec-fetch-dest": "empty",
+                    "sec-fetch-mode": "cors",
+                    "sec-fetch-site": "same-origin",
+                    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
+                    "f-id": self.f_id
+                }
+                data = {
+                    "account": self.account,
+                    "password": password_md5,
+                    "code": code,
+                    "uuid": uuid,
+                    "device": "H5"
+                }
+                self.signals.update_status.emit(self.row, "Đang gửi thông tin đăng nhập...")
+                response = requests.post(
+                    "https://m.oklavip26.live/api/accountLogin/doLogin",
+                    headers=headers_login,
+                    json=data,
+                    proxies=proxies,
+                    timeout=20,
+                )
+                print(response.json())
+                resp_json = response.json()
+                if resp_json['code'] == 200:
+                    print("Login successful!")
+                    print(f"Token: {resp_json['data']['token']}")
+                    self.signals.update_status.emit(self.row, "Đăng nhập thành công!")
+                    self.signals.login_result.emit(self.row, resp_json['data']['token'], "DONE", None)
+                    return
+                elif resp_json['code'] == 40000:
+                    print("Invalid captcha code, try again.")
+                    self.signals.update_status.emit(self.row, f"Sai captcha, thử lại ({attempts+1})...")
+                    attempts += 1
+                else:
+                    print(f"Error: {resp_json.get('message', 'Không rõ')}")
+                    self.signals.update_status.emit(self.row, f"Lỗi: {resp_json.get('message', 'Không rõ')}")
+                    break
+            except Exception as e:
+                print(f"Exception: {e}")
+                attempts += 1
+                self.signals.update_status.emit(self.row, f"Lỗi: {str(e)} (thử lại {attempts})")
+        print("Failed to login after 3 attempts.")
+        self.signals.update_status.emit(self.row, "Đăng nhập thất bại!")
+        try:
+            self.signals.login_result.emit(self.row, "", "FAILED", None)
+        except Exception as e:
+            print(f"Emit failed: {e}")
+
+class Table3D(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Bảng 3D - ACC Loader")
+        self.resize(1200, 600)
+        self.is_dark = False
+        self.password_map = {}
+        self.password_shown = set()
+        self.threadpool = QThreadPool()
+        self.threadpool.setMaxThreadCount(200)
+        self.is_login_all = False
+        self.init_ui()
+
+    def toggle_theme(self, state):
+        self.is_dark = bool(state)
+        if self.is_dark:
+            self.apply_dark_theme()
+        else:
+            self.apply_light_theme()
+
+    def apply_light_theme(self):
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #f0f0f0;
+                color: #000;
+            }
+            QTableWidget {
+                background-color: #ffffff;
+                alternate-background-color: #f9f9f9;
+            }
+            QLabel {
+                color: #333;
+            }
+        """)
+
+    def apply_dark_theme(self):
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #2b2b2b;
+                color: #fff;
+            }
+            QTableWidget {
+                background-color: #3c3f41;
+                alternate-background-color: #313335;
+            }
+            QLabel {
+                color: #fff;
+            }
+        """)
+
+    def init_ui(self):
+        layout = QVBoxLayout(self)
+        top_bar = QHBoxLayout()
+
+        self.toggle = AnimatedToggle()
+        self.toggle.stateChanged(self.toggle_theme)
+
+        self.total_label = QLabel("Tổng điểm: 0 | Tổng ACC: 0")
+        self.total_label.setFont(QFont("Arial", 12))
+        self.total_label.setStyleSheet("color: #333;")
+
+        self.login_all_btn = QPushButton("Đăng nhập tất cả")
+        self.login_all_btn.clicked.connect(self.login_all_accounts)
+        self.login_all_btn.setStyleSheet('''
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4f8cff, stop:1 #2353ff);
+                color: white;
+                border-radius: 15px;
+                padding: 8px 24px;
+                font-size: 15px;
+                font-weight: bold;
+                border: none;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #6faaff, stop:1 #3a6cff);
+                color: #fff;
+            }
+            QPushButton:pressed {
+                background: #2353ff;
+            }
+        ''')
+
+        self.run_all_btn = QPushButton("Làm Nhiệm Vụ Tất Cả")
+        self.run_all_btn.clicked.connect(self.run_all_tasks)
+        self.run_all_btn.setStyleSheet(self.login_all_btn.styleSheet())
+
+        self.check_proxy_btn = QPushButton("Kiểm Tra Proxy")
+        self.check_proxy_btn.clicked.connect(self.check_proxy_all)
+        self.check_proxy_btn.setStyleSheet(self.login_all_btn.styleSheet())
+
+        self.replace_proxy_btn = QPushButton("Thay Proxy Không Hoạt Động")
+        self.replace_proxy_btn.clicked.connect(self.replace_dead_proxies)
+        self.replace_proxy_btn.setStyleSheet(self.login_all_btn.styleSheet())
+
+        self.get_point_all_btn = QPushButton("Lấy điểm tất cả")
+        self.get_point_all_btn.clicked.connect(self.get_point_all)
+        self.get_point_all_btn.setStyleSheet(self.login_all_btn.styleSheet())
+
+        top_bar.addWidget(self.toggle)
+        top_bar.addWidget(self.login_all_btn)
+        top_bar.addWidget(self.run_all_btn)
+        top_bar.addWidget(self.check_proxy_btn)
+        top_bar.addWidget(self.replace_proxy_btn)
+        top_bar.addWidget(self.get_point_all_btn)
+        top_bar.addStretch()
+        top_bar.addWidget(self.total_label)
+
+        self.table = QTableWidget()
+        self.table.setColumnCount(8)
+        self.table.setHorizontalHeaderLabels([
+            "Token", "Proxy", "Tài khoản", "Mật khẩu", "F-ID",
+            "Điểm", "Trạng thái", "Ghi chú"
+        ])
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setAlternatingRowColors(True)
+        self.table.setStyleSheet("QTableWidget::item:selected { background-color: #ADD8E6; }")
+
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(10)
+        shadow.setColor(QColor(0, 0, 0, 160))
+        shadow.setOffset(3, 3)
+        self.table.setGraphicsEffect(shadow)
+
+        self.table.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.table.customContextMenuRequested.connect(self.show_context_menu)
+
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        self.table.setColumnWidth(0, 50)   # Token
+        self.table.setColumnWidth(1, 50)   # Proxy
+        self.table.setColumnWidth(2, 120)  # Tài khoản
+        self.table.setColumnWidth(3, 70)  # Mật khẩu
+        self.table.setColumnWidth(4, 80)   # F-ID
+        self.table.setColumnWidth(5, 80)   # Điểm
+        self.table.setColumnWidth(6, 470)  # Trạng thái (to nhất)
+        self.table.setColumnWidth(7, 250)  # Ghi chú (bình thường)
+
+        layout.addLayout(top_bar)
+        layout.addWidget(self.table)
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_totals)
+        self.timer.start(1000)
+
+        self.load_data()
+        self.apply_light_theme()
+
+    def show_context_menu(self, pos):
+        menu = QMenu()
+        login_action = menu.addAction("Đăng Nhập")
+        get_point_action = menu.addAction("Lấy điểm")
+        run_action = menu.addAction("Làm Nhiệm Vụ")
+        # withdraw_action = menu.addAction("Rút Điểm")
+        action = menu.exec_(self.table.mapToGlobal(pos))
+        if action == login_action:
+            self.login_selected_account()
+        elif action == get_point_action:
+            self.get_point_selected()
+        elif action == run_action:
+            self.run_selected_task()
+
+    def login_selected_account(self):
+        row = self.table.currentRow()
+        if row == -1:
+            return
+        self.is_login_all = False
+        account = self.table.item(row, 2).text()
+        password = self.password_map.get(row)
+        f_id = self.table.item(row, 4).text()
+        proxy_string = self.table.item(row, 1).text()
+        token = self.table.item(row, 0).text() if self.table.item(row, 0) else ""
+        worker = LoginWorker(row, account, password, f_id, proxy_string, token)
+        worker.signals.update_status.connect(self.update_status)
+        worker.signals.login_result.connect(self.handle_login_result)
+        self.threadpool.start(worker)
+
+    def login_all_accounts(self):
+        self.is_login_all = True
+        for row in range(self.table.rowCount()):
+            account = self.table.item(row, 2).text()
+            password = self.password_map.get(row)
+            f_id = self.table.item(row, 4).text()
+            proxy_string = self.table.item(row, 1).text()
+            token = self.table.item(row, 0).text() if self.table.item(row, 0) else ""
+            worker = LoginWorker(row, account, password, f_id, proxy_string, token)
+            worker.signals.update_status.connect(self.update_status)
+            worker.signals.login_result.connect(self.handle_login_result)
+            self.threadpool.start(worker)
+
+    def update_status(self, row, status):
+        self.table.setItem(row, 6, QTableWidgetItem(status))
+        print(f"[LOG] Row {row} - {self.table.item(row,2).text()}: {status}")
+
+    def handle_login_result(self, row, token, result, diem):
+        if result == "DONE":
+            self.table.setItem(row, 0, QTableWidgetItem(token))
+            print(f"[LOG] Row {row} - {self.table.item(row,2).text()}: Đăng nhập thành công!")
+            # Cập nhật toàn bộ dòng vào file ACC.txt
+            try:
+                acc_file = FILE_PATH
+                with open(acc_file, "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+                if 0 <= row < len(lines):
+                    # Lấy lại toàn bộ dữ liệu dòng từ bảng
+                    new_cells = []
+                    for col in range(self.table.columnCount()):
+                        item = self.table.item(row, col)
+                        new_cells.append(item.text() if item else "")
+                    # Đảm bảo có 8 trường
+                    if len(new_cells) < 8:
+                        new_cells += [""] * (8 - len(new_cells))
+                    lines[row] = "|".join(new_cells) + "\n"
+                    with open(acc_file, "w", encoding="utf-8") as f:
+                        f.writelines(lines)
+                    print(f"[LOG] Đã cập nhật toàn bộ dòng vào file ACC.txt cho dòng {row}")
+            except Exception as e:
+                print(f"[LOG] Lỗi cập nhật dòng vào file ACC.txt: {e}")
+            if not self.is_login_all:
+                QMessageBox.information(self, "Đăng nhập", f"Đăng nhập thành công cho tài khoản {self.table.item(row,2).text()}.")
+        elif result == "TOKEN_OK":
+            # Token còn sống, chỉ update điểm
+            if diem is not None:
+                self.table.setItem(row, 5, QTableWidgetItem(str(diem)))
+                print(f"[LOG] Row {row} - {self.table.item(row,2).text()}: Token sống, điểm: {diem}")
+        elif result == "GET_POINT_OK":
+            if diem is not None:
+                self.table.setItem(row, 5, QTableWidgetItem(str(diem)))
+                print(f"[LOG] Row {row} - {self.table.item(row,2).text()}: Lấy điểm thành công: {diem}")
+                # Lưu lại dòng vào file ACC.txt
+                try:
+                    acc_file = FILE_PATH
+                    with open(acc_file, "r", encoding="utf-8") as f:
+                        lines = f.readlines()
+                    if 0 <= row < len(lines):
+                        new_cells = []
+                        for col in range(self.table.columnCount()):
+                            item = self.table.item(row, col)
+                            new_cells.append(item.text() if item else "")
+                        if len(new_cells) < 8:
+                            new_cells += [""] * (8 - len(new_cells))
+                        lines[row] = "|".join(new_cells) + "\n"
+                        with open(acc_file, "w", encoding="utf-8") as f:
+                            f.writelines(lines)
+                        print(f"[LOG] Đã lưu dòng vào file ACC.txt sau khi lấy điểm cho dòng {row}")
+                except Exception as e:
+                    print(f"[LOG] Lỗi lưu dòng vào file ACC.txt sau khi lấy điểm: {e}")
+        elif result == "GET_POINT_FAIL":
+            print(f"[LOG] Row {row} - {self.table.item(row,2).text()}: Lấy điểm thất bại!")
+        else:
+            print(f"[LOG] Row {row} - {self.table.item(row,2).text()}: Đăng nhập thất bại!")
+            if not self.is_login_all:
+                QMessageBox.critical(self, "Đăng nhập thất bại", f"Không thể đăng nhập tài khoản {self.table.item(row,2).text()}.")
+
+    def update_totals(self):
+        total_diem = 0
+        for row in range(self.table.rowCount()):
+            try:
+                total_diem += int(self.table.item(row, 5).text())
+            except:
+                continue
+        self.total_label.setText(f"Tổng điểm: {total_diem} | Tổng ACC: {self.table.rowCount()}")
+
+    def load_data(self):
+        if not os.path.exists(FILE_PATH): return
+        with open(FILE_PATH, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        self.table.setRowCount(len(lines))
+        for row, line in enumerate(lines):
+            cells = line.strip().split("|")
+            while len(cells) < 8:
+                cells.append("")
+            for col, text in enumerate(cells):
+                item = QTableWidgetItem(text)
+                item.setTextAlignment(Qt.AlignCenter)
+                self.table.setItem(row, col, item)
+            self.password_map[row] = cells[3]
+
+    def get_point_selected(self):
+        row = self.table.currentRow()
+        if row == -1:
+            return
+        token = self.table.item(row, 0).text() if self.table.item(row, 0) else ""
+        f_id = self.table.item(row, 4).text()
+        proxy_string = self.table.item(row, 1).text()
+        worker = GetPointWorker(row, token, f_id, proxy_string)
+        worker.signals.update_status.connect(self.update_status)
+        worker.signals.login_result.connect(self.handle_login_result)
+        self.threadpool.start(worker)
+
+    def get_point_all(self):
+        for row in range(self.table.rowCount()):
+            token = self.table.item(row, 0).text() if self.table.item(row, 0) else ""
+            f_id = self.table.item(row, 4).text()
+            proxy_string = self.table.item(row, 1).text()
+            worker = GetPointWorker(row, token, f_id, proxy_string)
+            worker.signals.update_status.connect(self.update_status)
+            worker.signals.login_result.connect(self.handle_login_result)
+            self.threadpool.start(worker)
+
+    def run_selected_task(self):
+        row = self.table.currentRow()
+        if row == -1:
+            return
+        threading.Thread(target=self.ChAyAll, args=(row,), daemon=True).start()
+
+    def ChAyAll(self, row):
+        try:
+            import time
+            self.table.setItem(row, 6, QTableWidgetItem(f"Bắt Đầu"))
+            self.table.setItem(row, 6, QTableWidgetItem(f"Check Token"))
+            chechDangNhap = self.CheckLoginssssss(row)
+            print(chechDangNhap)
+            if chechDangNhap:
+                self.table.setItem(row, 6, QTableWidgetItem(f"Bắt Trả Lời Câu Hỏi"))
+                self.CheckLuotTraLoiall(row)
+                self.table.setItem(row, 6, QTableWidgetItem(f"Bắt Quay Chữ"))
+                self.CheckGhepChuall(row)
+                self.table.setItem(row, 6, QTableWidgetItem(f"☑️☑️☑️☑️☑️☑️☑️☑️☑️☑️"))
+            else:
+                self.table.setItem(row, 6, QTableWidgetItem(f"[💩💩💩]> Token Chết MẸ Rồi em!"))
+        except Exception as e:
+            self.table.setItem(row, 6, QTableWidgetItem(f"[💩💩💩]> Lỗi Cái Chó Gì Á Tự Check !"))
+
+    def CheckLoginssssss(self, row):
+        # Dummy check: token phải khác rỗng và không phải 'die' (bạn thay bằng API check thật nếu có)
+        token = self.table.item(row, 0).text() if self.table.item(row, 0) else ""
+        return bool(token and token.lower() != 'die')
+
+    def CheckLuotTraLoiall(self, selected_row):
+        import random, time, requests
+        def lay_answer_list():
+            if not hasattr(lay_answer_list, "shuffled_answers") or lay_answer_list.index >= len(lay_answer_list.shuffled_answers):
+                all_answers = [
+                    {"id":"1813068590722039810","submitAnswer":"B"},
+                    {"id":"1885293145245704194","submitAnswer":"D"},
+                    {"id":"1813055126444163073","submitAnswer":"B"},
+                    {"id":"1758663639615070209","submitAnswer":"D"},
+                    {"id":"1785300906974543873","submitAnswer":"B"},
+                    {"id":"1832001421560930305","submitAnswer":"C"},
+                    {"id":"1862969516842795009","submitAnswer":"A"},
+                    {"id":"1813061385461415937","submitAnswer":"C"},
+                    {"id":"1852195947499892738","submitAnswer":"C"},
+                    {"id":"1845597110031245313","submitAnswer":"A"},
+                    {"id":"1852198018005479426","submitAnswer":"B"},
+                    {"id":"1785310696345862145","submitAnswer":"B"},
+                    {"id":"1785286596449697793","submitAnswer":"D"},
+                    {"id":"1742430977931452417","submitAnswer":"D"},
+                    {"id":"1839964599813079042","submitAnswer":"D"},
+                    {"id":"1854143870443585537","submitAnswer":"D"},
+                    {"id":"1785518438150995969","submitAnswer":"B"},
+                    {"id":"1824048832353558530","submitAnswer":"C"},
+                    {"id":"1832922633518604290","submitAnswer":"A"},
+                    {"id":"1845605186754994177","submitAnswer":"A"},
+                    {"id":"1910234836605042689","submitAnswer":"C"},
+                    {"id":"1743642787544043521","submitAnswer":"C"},
+                    {"id":"1839623537886142465","submitAnswer":"B"},
+                    {"id":"1857079383320297474","submitAnswer":"B"},
+                    {"id":"1758729048947089409","submitAnswer":"D"},
+                    {"id":"1913734370549690370","submitAnswer":"A"},
+                    {"id":"1790399254207328258","submitAnswer":"A"},
+                    {"id":"1758658110029225986","submitAnswer":"B"},
+                    {"id":"1857079675314675714","submitAnswer":"C"},
+                    {"id":"1906204991478239234","submitAnswer":"B"},
+                    {"id":"1813068590722039810","submitAnswer":"B"},
+                    {"id":"1758661648285360129","submitAnswer":"C"},
+                    {"id":"1900874100297801729","submitAnswer":"A"},
+                    {"id":"1785309013456879617","submitAnswer":"A"}
+                ]
+                random.shuffle(all_answers)
+                lay_answer_list.shuffled_answers = all_answers
+                lay_answer_list.index = 0
+            start = lay_answer_list.index
+            end = start + 5
+            result = lay_answer_list.shuffled_answers[start:end]
+            lay_answer_list.index += 5
+            return result
+        token = self.table.item(selected_row, 0).text()
+        proxy = self.table.item(selected_row, 1).text()
+        f_id = self.table.item(selected_row, 4).text()
+        self.table.setItem(selected_row, 6, QTableWidgetItem("Bắt đầu kiểm tra"))
+        try:
+            proxy_url, port, username, password = proxy.split(':')
+            proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
+            proxies = {"http": proxy_address, "https": proxy_address}
+            headers = {
+                "authority": "m.oklavip26.live",
+                "accept": "application/json, text/plain, */*",
+                "accept-language": "vi-VN,vi;q=0.9",
+                "content-type": "application/json",
+                "locale": "vi_vn",
+                "origin": "https://m.oklavip26.live",
+                "priority": "u=1, i",
+                "sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": "Windows",
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "same-origin",
+                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
+                "f-id": f_id,
+                "token": token,
+                "cache-control": "no-cache",
+                "pragma": "no-cache",
+                "referer": "https://m.oklavip26.live/",
+            }
+            response = requests.get(
+                "https://m.oklavip26.live/api/activityQuestion/getActivityQuestionInfo",
+                headers=headers, proxies=proxies, timeout=500).json()
+            luot = response['data']['surplusNumber']
+            self.table.setItem(selected_row, 6, QTableWidgetItem(f"Còn {luot} lượt"))
+            for cac in range(int(luot)):
+                DanhSachCauHoi = requests.get('https://m.oklavip26.live/api/activityQuestion/getQuestionList',headers=headers, proxies=proxies, timeout=500).json()['data']
+                delay_time = random.randint(20, 35)
+                for delay in range(delay_time, -1, -1):
+                    self.table.setItem(selected_row, 6, QTableWidgetItem(f"Delay {delay}"))
+                    time.sleep(1)
+                date_time = int(time.time())
+                recordNo = requests.get('https://m.oklavip26.live/api/activityQuestion/startAnswerQuestion',headers=headers, proxies=proxies, timeout=500).json()['data']['recordNo']
+                dataTraloi = {
+                    "answerList": lay_answer_list(),
+                    "timeStart": date_time,
+                    "recordNo": recordNo
+                }
+                response = requests.post('https://m.oklavip26.live/api/activityQuestion/submitQuestion',headers=headers,json=dataTraloi, proxies=proxies, timeout=500)
+                print(response.json())
+                time.sleep(3)
+            CheckLuotQuay=requests.get("https://m.oklavip26.live/api/lottery/getLuckyDrawBaseInfo",headers=headers , proxies=proxies , timeout=500).json()
+            data2 = {"raffleId": CheckLuotQuay['data']['raffleId']}
+            CheckLuotQuay=requests.post("https://m.oklavip26.live/api/lottery/getLuckyDrawInfoByDaily",headers=headers , proxies=proxies , timeout=500).json()['data']['drawCount']
+            for xx in range(int(CheckLuotQuay)):
+                CheckLuotQuay=requests.post("https://m.oklavip26.live/api/lottery/lotteryByDaily",headers=headers, json=data2 , proxies=proxies , timeout=500).json()
+                delay_time = random.randint(5,6)
+                for delay in range(delay_time, -1, -1):
+                    self.table.setItem(selected_row, 6, QTableWidgetItem(f"Delay {delay} [{CheckLuotQuay}]") )
+                    time.sleep(1)
+            self.table.setItem(selected_row, 6, QTableWidgetItem(f"Xong!"))
+        except Exception as e:
+            self.table.setItem(selected_row, 6, QTableWidgetItem(f"Lỗi kiểm tra lượt: {str(e)}"))
+
+    def CheckGhepChuall(self, selected_row):
+        import requests, time
+        row = selected_row
+        token = self.table.item(row, 0).text()
+        proxy = self.table.item(row, 1).text()
+        f_id = self.table.item(row, 4).text()
+        proxy_url, port, username, password = proxy.split(':')
+        proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
+        proxies = {
+            "http": proxy_address,
+            "https": proxy_address
+        }
+        headers = {
+            "authority": "m.oklavip26.live",
+            "accept": "application/json, text/plain, */*",
+            "accept-language": "vi-VN,vi;q=0.9",
+            "content-type": "application/json",
+            "locale": "vi_vn",
+            "origin": "https://m.oklavip26.live",
+            "priority": "u=1, i",
+            "sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "Windows",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
+            "f-id": f_id,
+            "token": token,
+            "cache-control": "no-cache",
+            "pragma": "no-cache",
+            "referer": "https://m.oklavip26.live/",
+        }
+        try:
+            response = requests.get('https://m.oklavip26.live/api/activityCollect/getListAvailable', headers=headers, proxies=proxies, timeout=500).json()
+            idGame = response['data'][0]['id']
+            data = {"id": idGame}
+            draw_response = requests.post("https://m.oklavip26.live/api/activityCollect/get", headers=headers, json=data, proxies=proxies, timeout=500).json()
+            draw_times = draw_response['data']['drawTimes']
+            status_text = f"Lượt ghép chữ còn lại: {draw_times}"
+            self.table.setItem(selected_row, 6, QTableWidgetItem(status_text))
+            for _ in range(int(draw_times)):
+                response = requests.post('https://m.oklavip26.live/api/activityCollect/drawWord', headers=headers, json=data, proxies=proxies, timeout=500)
+                for delay in range(5,-1,-1):
+                    self.table.setItem(selected_row, 6, QTableWidgetItem(f"Delay {delay} [{response.json()['data']['textName']}]") )
+                    time.sleep(1)
+            response = requests.post("https://m.oklavip26.live/api/activityCollect/get", headers=headers, json=data, proxies=proxies, timeout=500)
+            synthesisTimes = response.json()['data']['synthesisTimes']
+            data2 = {"raffleId": requests.get("https://m.oklavip26.live/api/activityCollect/getListAvailable", headers=headers, proxies=proxies, timeout=500).json()['data'][0]['lotteryId']}
+            for _ in range(int(synthesisTimes)):
+                response = requests.post('https://m.oklavip26.live/api/activityCollect/mergeWord', headers=headers, json=data, proxies=proxies, timeout=500)
+                response2 = requests.post('https://m.oklavip26.live/api/lottery/lottery', headers=headers, json=data2, proxies=proxies, timeout=500)
+                for delay in range(5,-1,-1):
+                    self.table.setItem(selected_row, 6, QTableWidgetItem(f"Delay {delay} [{response2.json()['data']['prizeInfo']['prizeName']}]") )
+                    time.sleep(1)
+            self.table.setItem(selected_row, 6, QTableWidgetItem(f"Ghép Chữ Hoàn Tất!"))
+        except Exception as e:
+            self.table.setItem(selected_row, 6, QTableWidgetItem(f"Lỗi ghép chữ: {str(e)}"))
+
+    def run_all_tasks(self):
+        import threading
+        for row in range(self.table.rowCount()):
+            threading.Thread(target=self.ChAyAll, args=(row,), daemon=True).start()
+
+    def check_proxy_all(self):
+        threading.Thread(target=self._check_proxy_thread, daemon=True).start()
+
+    def _check_proxy_thread(self):
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        import requests
+        from qtpy.QtWidgets import QTableWidgetItem, QDialog, QVBoxLayout, QTextEdit, QLabel, QPushButton
+        import time
+        proxy_errors = []
+        lock = threading.Lock()
+        def xu_ly_row(row):
+            proxy = self.table.item(row, 1).text()
+            self.table.setItem(row, 6, QTableWidgetItem(f"[XXX] Kiểm Tra Mạng Máy!"))
+            def kiem_tra_mang():
+                for lan in range(3):
+                    try:
+                        requests.get("https://www.google.com", timeout=10)
+                        return True
+                    except requests.RequestException:
+                        self.table.setItem(row, 6, QTableWidgetItem(f"❌ Máy tính không có kết nối mạng. Thử lại lần {lan + 1}"))
+                return False
+            def kiem_tra_proxy(proxy_str):
+                try:
+                    ip, port, user, password = proxy_str.split(":")
+                    proxy_url = f"http://{user}:{password}@{ip}:{port}"
+                    proxies = {"http": proxy_url, "https": proxy_url}
+                    response = requests.get("https://geo.myip.link/", proxies=proxies, timeout=10)
+                    if response.status_code == 200:
+                        return True, response.json()
+                    else:
+                        return False, f"Lỗi mã trạng thái HTTP: {response.status_code}"
+                except Exception as e:
+                    return False, str(e)
+            if kiem_tra_mang():
+                self.table.setItem(row, 6, QTableWidgetItem(f"✅ Mạng hoạt động."))
+                thanh_cong, ket_qua = kiem_tra_proxy(proxy)
+                if thanh_cong:
+                    self.table.setItem(row, 6, QTableWidgetItem(f"✅ Proxy hoạt động. "))
+                else:
+                    self.table.setItem(row, 6, QTableWidgetItem(f"❌ Proxy không hoạt động. "))
+                    with lock:
+                        proxy_errors.append((row, proxy, ket_qua))
+                    # Lưu lại dòng lỗi vào ACC.txt
+                    try:
+                        acc_file = FILE_PATH
+                        with open(acc_file, "r", encoding="utf-8") as f:
+                            lines = f.readlines()
+                        if 0 <= row < len(lines):
+                            new_cells = []
+                            for col in range(self.table.columnCount()):
+                                item = self.table.item(row, col)
+                                new_cells.append(item.text() if item else "")
+                            if len(new_cells) < 8:
+                                new_cells += [""] * (8 - len(new_cells))
+                            lines[row] = "|".join(new_cells) + "\n"
+                            with open(acc_file, "w", encoding="utf-8") as f:
+                                f.writelines(lines)
+                    except Exception as e:
+                        print(f"[LOG] Lỗi lưu dòng proxy lỗi vào file ACC.txt: {e}")
+            else:
+                self.table.setItem(row, 6, QTableWidgetItem(f"❌ Máy tính không có kết nối mạng."))
+        with ThreadPoolExecutor(max_workers=30) as executor:
+            futures = [executor.submit(xu_ly_row, row) for row in range(self.table.rowCount())]
+            for future in as_completed(futures):
+                pass
+        # Hiện popup báo proxy lỗi
+        if proxy_errors:
+            def show_error_dialog():
+                dialog = QDialog(self)
+                dialog.setWindowTitle("Danh sách proxy lỗi")
+                layout = QVBoxLayout(dialog)
+                label = QLabel(f"Tổng số proxy lỗi: {len(proxy_errors)}")
+                layout.addWidget(label)
+                textedit = QTextEdit()
+                textedit.setReadOnly(True)
+                textedit.setMinimumWidth(400)
+                textedit.setMinimumHeight(200)
+                textedit.setText("\n".join([f"{row+1}: {proxy} - {err}" for row, proxy, err in proxy_errors]))
+                layout.addWidget(textedit)
+                btn = QPushButton("Đóng")
+                btn.clicked.connect(dialog.accept)
+                layout.addWidget(btn)
+                # CSS đẹp cho dialog
+                dialog.setStyleSheet('''
+                    QDialog {
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #4f8cff, stop:1 #8f5cff);
+                        border-radius: 18px;
+                    }
+                    QLabel {
+                        color: white;
+                        font-size: 18px;
+                        font-weight: bold;
+                        padding: 16px 8px 8px 8px;
+                    }
+                    QPushButton {
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #6faaff, stop:1 #3a6cff);
+                        color: white;
+                        border-radius: 12px;
+                        padding: 8px 24px;
+                        font-size: 15px;
+                        font-weight: bold;
+                        border: none;
+                        margin-bottom: 12px;
+                    }
+                    QPushButton:hover {
+                        background: #2353ff;
+                    }
+                ''')
+                dialog.exec_()
+            QTimer.singleShot(0, lambda: show_error_dialog())
+            # Lưu lại proxy lỗi cho chức năng thay proxy
+            self._last_proxy_errors = proxy_errors
+        else:
+            self._last_proxy_errors = []
+
+    def replace_dead_proxies(self):
+        # Tìm lại proxy lỗi từ lần kiểm tra gần nhất
+        if not hasattr(self, '_last_proxy_errors') or not self._last_proxy_errors:
+            QMessageBox.information(self, "Thông báo", "Bạn cần kiểm tra proxy trước khi thay proxy lỗi!")
+            return
+        from qtpy.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QLabel, QPushButton
+        proxy_errors = self._last_proxy_errors
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Thay Proxy Không Hoạt Động")
+        layout = QVBoxLayout(dialog)
+        label = QLabel(f"Nhập {len(proxy_errors)} proxy mới, mỗi proxy 1 dòng, đúng thứ tự:")
+        layout.addWidget(label)
+        textedit = QTextEdit()
+        textedit.setMinimumWidth(400)
+        textedit.setMinimumHeight(200)
+        layout.addWidget(textedit)
+        btn = QPushButton("Thay thế")
+        layout.addWidget(btn)
+        def on_replace():
+            new_proxies = [line.strip() for line in textedit.toPlainText().splitlines() if line.strip()]
+            if len(new_proxies) != len(proxy_errors):
+                QMessageBox.warning(dialog, "Lỗi", f"Bạn phải nhập đúng {len(proxy_errors)} proxy!")
+                return
+            # Thay vào bảng và file ACC.txt
+            acc_file = FILE_PATH
+            with open(acc_file, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            for idx, (row, old_proxy, err) in enumerate(proxy_errors):
+                proxy = new_proxies[idx]
+                # Update bảng
+                self.table.setItem(row, 1, QTableWidgetItem(proxy))
+                # Update file
+                if 0 <= row < len(lines):
+                    cells = lines[row].strip().split("|")
+                    if len(cells) < 8:
+                        cells += [""] * (8 - len(cells))
+                    cells[1] = proxy
+                    lines[row] = "|".join(cells) + "\n"
+            with open(acc_file, "w", encoding="utf-8") as f:
+                f.writelines(lines)
+            QMessageBox.information(dialog, "Thành công", "Đã thay proxy mới cho các dòng lỗi!")
+            dialog.accept()
+        btn.clicked.connect(on_replace)
+        dialog.exec_()
+
+class GetPointWorker(QRunnable):
+    def __init__(self, row, token, f_id, proxy_string):
+        super().__init__()
+        self.row = row
+        self.token = token
+        self.f_id = f_id
+        self.proxy_string = proxy_string
+        self.signals = LoginSignals()
+
+    def create_proxy(self, proxy_string):
+        parts = proxy_string.split(":")
+        ip = parts[0]
+        port = parts[1]
+        username = parts[2]
+        password = parts[3]
+        proxies = {
+            "http": f"http://{username}:{password}@{ip}:{port}",
+            "https": f"http://{username}:{password}@{ip}:{port}"
+        }
+        return proxies
+
+    def run(self):
+        import requests
+        proxies = self.create_proxy(self.proxy_string)
+        try:
+            headers = {
+                "authority": "m.oklavip26.live",
+                "accept": "application/json, text/plain, */*",
+                "accept-language": "vi-VN,vi;q=0.9",
+                "content-type": "application/json",
+                "locale": "vi_vn",
+                "referer": "https://m.oklavip26.live/personal",
+                "sec-ch-ua-platform": "Windows",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "same-origin",
+                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
+                "f-id": self.f_id,
+                "token": self.token,
+            }
+            responsediem = requests.get("https://m.oklavip26.live/api/wallet/getWallet", headers=headers, proxies=proxies, timeout=20).json()
+            print(responsediem)
+            diem = responsediem['data']['integral']
+            self.signals.update_status.emit(self.row, f"Lấy điểm thành công: {diem}")
+            self.signals.login_result.emit(self.row, self.token, "GET_POINT_OK", diem)
+        except Exception as e:
+            print(f"GetPointWorker Exception: {e}")
+            self.signals.update_status.emit(self.row, "Lấy điểm thất bại!")
+            self.signals.login_result.emit(self.row, self.token, "GET_POINT_FAIL", None)
 
 if __name__ == "__main__":
-	app = QApplication(sys.argv)
-	# Hiện thông báo trước khi vào giao diện chính
-	message = (
-			"🔔 THÔNG BÁO BẢO TRÌ 🔔\n\n"
-			"Tool sẽ bảo trì từ 00 giờ ngày mai tới 21h ngày hôm đó.\n"
-			"Trong thời gian này, mọi chức năng sẽ tạm ngưng hoạt động.\n"
-			"Mong anh em thông cảm và quay lại sau thời gian bảo trì!"
-		)
-	thongbao = ThongBaoDialog(message)
-	thongbao.exec()  # Đợi người dùng bấm "Đã hiểu"
-	window = MainWindow()
-	window.show()
-	sys.exit(app.exec())
+    app = QApplication(sys.argv)
+    from qtpy.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton
+    def show_notice():
+        dialog = QDialog()
+        dialog.setWindowTitle("Thông báo")
+        layout = QVBoxLayout(dialog)
+        label = QLabel("Tool đang trong quá trình hoàn thiện sẽ đầy đủ chức năng")
+        label.setWordWrap(True)
+        layout.addWidget(label)
+        btn = QPushButton("Đóng")
+        btn.clicked.connect(dialog.accept)
+        layout.addWidget(btn)
+        # CSS đẹp cho dialog
+        dialog.setStyleSheet('''
+            QDialog {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #4f8cff, stop:1 #8f5cff);
+                border-radius: 18px;
+            }
+            QLabel {
+                color: white;
+                font-size: 18px;
+                font-weight: bold;
+                padding: 16px 8px 8px 8px;
+            }
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #6faaff, stop:1 #3a6cff);
+                color: white;
+                border-radius: 12px;
+                padding: 8px 24px;
+                font-size: 15px;
+                font-weight: bold;
+                border: none;
+                margin-bottom: 12px;
+            }
+            QPushButton:hover {
+                background: #2353ff;
+            }
+        ''')
+        dialog.exec_()
+    QTimer.singleShot(0, show_notice)
+    win = Table3D()
+    win.show()
+    sys.exit(app.exec())
