@@ -59,7 +59,7 @@ class AnimatedToggle(QWidget):
 
 class LoginSignals(QObject):
     update_status = Signal(int, str)  # row, status
-    login_result = Signal(int, str, str, object)  # row, token, result, diem
+    login_result = Signal(int, str, str, object, object)  # row, token, result, diem, error_msg
 
 class LoginWorker(QRunnable):
     def __init__(self, row, account, password, f_id, proxy_string, token=None):
@@ -120,7 +120,7 @@ class LoginWorker(QRunnable):
             if not is_die:
                 self.signals.update_status.emit(self.row, f"Token sống | Điểm: {diem}")
                 # Cập nhật điểm vào cột 5
-                self.signals.login_result.emit(self.row, self.token, "TOKEN_OK", diem)
+                self.signals.login_result.emit(self.row, self.token, "TOKEN_OK", diem, None)
                 return
             else:
                 self.signals.update_status.emit(self.row, "Token die, đăng nhập lại...")
@@ -152,6 +152,7 @@ class LoginWorker(QRunnable):
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
         }
         attempts = 0
+        last_error_msg = None
         while attempts < 3:
             try:
                 self.signals.update_status.emit(self.row, f"Lấy captcha (lần {attempts+1})...")
@@ -203,24 +204,27 @@ class LoginWorker(QRunnable):
                     print("Login successful!")
                     print(f"Token: {resp_json['data']['token']}")
                     self.signals.update_status.emit(self.row, "Đăng nhập thành công!")
-                    self.signals.login_result.emit(self.row, resp_json['data']['token'], "DONE", None)
+                    self.signals.login_result.emit(self.row, resp_json['data']['token'], "DONE", None, None)
                     return
                 elif resp_json['code'] == 40000:
                     print("Invalid captcha code, try again.")
                     self.signals.update_status.emit(self.row, f"Sai captcha, thử lại ({attempts+1})...")
                     attempts += 1
                 else:
-                    print(f"Error: {resp_json.get('message', 'Không rõ')}")
-                    self.signals.update_status.emit(self.row, f"Lỗi: {resp_json.get('message', 'Không rõ')}")
+                    error_msg = resp_json.get('message', 'Không rõ')
+                    print(f"Error: {error_msg}")
+                    last_error_msg = error_msg
+                    self.signals.update_status.emit(self.row, f"Lỗi: {error_msg}")
                     break
             except Exception as e:
                 print(f"Exception: {e}")
                 attempts += 1
                 self.signals.update_status.emit(self.row, f"Lỗi: {str(e)} (thử lại {attempts})")
+                last_error_msg = str(e)
         print("Failed to login after 3 attempts.")
         self.signals.update_status.emit(self.row, "Đăng nhập thất bại!")
         try:
-            self.signals.login_result.emit(self.row, "", "FAILED", None)
+            self.signals.login_result.emit(self.row, "", "FAILED", None, last_error_msg)
         except Exception as e:
             print(f"Emit failed: {e}")
 
@@ -417,7 +421,7 @@ class Table3D(QWidget):
         self.table.setItem(row, 6, QTableWidgetItem(status))
         print(f"[LOG] Row {row} - {self.table.item(row,2).text()}: {status}")
 
-    def handle_login_result(self, row, token, result, diem):
+    def handle_login_result(self, row, token, result, diem, error_msg):
         if result == "DONE":
             self.table.setItem(row, 0, QTableWidgetItem(token))
             print(f"[LOG] Row {row} - {self.table.item(row,2).text()}: Đăng nhập thành công!")
@@ -474,8 +478,12 @@ class Table3D(QWidget):
             print(f"[LOG] Row {row} - {self.table.item(row,2).text()}: Lấy điểm thất bại!")
         else:
             print(f"[LOG] Row {row} - {self.table.item(row,2).text()}: Đăng nhập thất bại!")
+            msg = f"Không thể đăng nhập tài khoản {self.table.item(row,2).text()}"
+            if error_msg:
+                self.table.setItem(row, 6, QTableWidgetItem(f"Lỗi: {error_msg}"))
+                msg += f"\n\nLý do: {error_msg}"
             if not self.is_login_all:
-                QMessageBox.critical(self, "Đăng nhập thất bại", f"Không thể đăng nhập tài khoản {self.table.item(row,2).text()}.")
+                QMessageBox.critical(self, "Đăng nhập thất bại", msg)
 
     def update_totals(self):
         total_diem = 0
@@ -930,11 +938,11 @@ class GetPointWorker(QRunnable):
             print(responsediem)
             diem = responsediem['data']['integral']
             self.signals.update_status.emit(self.row, f"Lấy điểm thành công: {diem}")
-            self.signals.login_result.emit(self.row, self.token, "GET_POINT_OK", diem)
+            self.signals.login_result.emit(self.row, self.token, "GET_POINT_OK", diem, None)
         except Exception as e:
             print(f"GetPointWorker Exception: {e}")
             self.signals.update_status.emit(self.row, "Lấy điểm thất bại!")
-            self.signals.login_result.emit(self.row, self.token, "GET_POINT_FAIL", None)
+            self.signals.login_result.emit(self.row, self.token, "GET_POINT_FAIL", None, str(e))
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
