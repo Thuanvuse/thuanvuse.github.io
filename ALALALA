@@ -394,6 +394,9 @@ class Table3D(QWidget):
             ("🔄 Thay Proxy Không Hoạt Động", self.replace_dead_proxies),
             ("🪙 Lấy Điểm Tất Cả", self.get_point_all),
             ("📢 Điểm Danh Tất Cả", self.diem_danh_all),
+            ("🔗 Kiểm Tra Liên Kết", self.CheckCacLienKet),
+            ("🗑️ Xóa ACC Bị Cấm", self.delete_all_banned_accounts),
+            ("🔢 Sắp Xếp Theo Điểm", self.sort_by_point_and_save),
         ]
         for text, func in tool_items:
             btn = QPushButton(text)
@@ -1219,6 +1222,150 @@ class Table3D(QWidget):
 
         except Exception as e:
             self.table.setItem(row, 6, QTableWidgetItem(f"❌ Lỗi: {str(e)}"))
+
+    def CheckCacLienKet(self):
+        import requests
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        from qtpy.QtWidgets import QTableWidgetItem
+        def chay_20_mot_luot():
+            def xu_ly_row(row):
+                try:
+                    token = self.table.item(row, 0).text()
+                    proxy = self.table.item(row, 1).text()
+                    Fidd = self.table.item(row, 4).text()
+                    self.table.setItem(row, 6, QTableWidgetItem(f"[XXX] Kiểm Tra Proxy!"))
+                    headers = {
+                        "authority": "m.oklavip26.live",
+                        "accept": "application/json, text/plain, */*",
+                        "accept-language": "vi-VN,vi;q=0.9",
+                        "content-type": "application/json",
+                        "locale": "vi_vn",
+                        "origin": "https://m.oklavip26.live",
+                        "priority": "u=1, i",
+                        "referer": "https://m.oklavip26.live/login",
+                        "sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+                        "sec-ch-ua-mobile": "?0",
+                        "sec-ch-ua-platform": "Windows",
+                        "sec-fetch-dest": "empty",
+                        "sec-fetch-mode": "cors",
+                        "sec-fetch-site": "same-origin",
+                        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/114.0.144 Chrome/114.0.0.0 Safari/537.36",
+                        "f-id": Fidd,
+                        "token": token
+                    }
+                    proxy_url, port, username, password = proxy.split(':')
+                    proxy_address = f"http://{username}:{password}@{proxy_url}:{port}"
+                    proxies = {
+                        "http": proxy_address,
+                        "https": proxy_address
+                    }
+                    response = requests.get("https://m.oklavip26.live/api/website/listForWallet", headers=headers, proxies=proxies, timeout=500).json()
+                    MB66 = response['data'][0]["isBind"]
+                    OK9 = response['data'][1]["isBind"]
+                    s78win = response['data'][2]["isBind"]
+                    QQ88 = response['data'][3]["isBind"]
+                    F168 = response['data'][4]["isBind"]
+                    bindings = []
+                    if not MB66:
+                        bindings.append("MB66")
+                    if not OK9:
+                        bindings.append("OK9")
+                    if not s78win:
+                        bindings.append("78win")
+                    if not QQ88:
+                        bindings.append("QQ88")
+                    if not F168:
+                        bindings.append("F168")
+                    result_text = " ".join(bindings)
+                    self.table.setItem(row, 7, QTableWidgetItem(result_text))
+                    self.table.setItem(row, 6, QTableWidgetItem(f"[OK] Hoàn Thành Lấy Liên Kết"))
+                    # Lưu lại dòng vào file ACC.txt
+                    try:
+                        acc_file = FILE_PATH
+                        with open(acc_file, "r", encoding="utf-8") as f:
+                            lines = f.readlines()
+                        if 0 <= row < len(lines):
+                            cells = lines[row].strip().split("|")
+                            if len(cells) < 8:
+                                cells += [""] * (8 - len(cells))
+                            cells[7] = result_text
+                            lines[row] = "|".join(cells) + "\n"
+                            with open(acc_file, "w", encoding="utf-8") as f:
+                                f.writelines(lines)
+                    except Exception as e:
+                        print(f"[LOG] Lỗi lưu dòng liên kết vào file ACC.txt: {e}")
+                except Exception as e:
+                    self.table.setItem(row, 6, QTableWidgetItem(f"[ERR] {str(e)}"))
+            with ThreadPoolExecutor(max_workers=50) as executor:
+                futures = [executor.submit(xu_ly_row, row) for row in range(self.table.rowCount())]
+                for future in as_completed(futures):
+                    pass
+        chay_20_mot_luot()
+
+    def delete_all_banned_accounts(self):
+        # Xóa tất cả các dòng có trạng thái 'Lỗi: Tài khoản đã bị cấm dùng'
+        banned_text = "Lỗi: Tài khoản đã bị cấm dùng"
+        rows_to_delete = []
+        for row in range(self.table.rowCount()):
+            item = self.table.item(row, 6)
+            if item and banned_text in item.text():
+                rows_to_delete.append(row)
+        if not rows_to_delete:
+            return
+        # Xóa từ cuối lên để không bị lệch chỉ số
+        for row in reversed(rows_to_delete):
+            self.table.removeRow(row)
+        # Xóa trong file ACC.txt
+        try:
+            acc_file = FILE_PATH
+            with open(acc_file, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            # Xóa các dòng tương ứng
+            for row in reversed(rows_to_delete):
+                if 0 <= row < len(lines):
+                    lines.pop(row)
+            with open(acc_file, "w", encoding="utf-8") as f:
+                f.writelines(lines)
+            print(f"[LOG] Đã xóa tất cả ACC bị cấm khỏi file ACC.txt")
+        except Exception as e:
+            print(f"[LOG] Lỗi xóa ACC bị cấm khỏi file ACC.txt: {e}")
+
+    def sort_by_point_and_save(self):
+        # Sắp xếp bảng theo cột điểm (cột 5, giảm dần) và lưu lại vào file ACC.txt
+        data = []
+        for row in range(self.table.rowCount()):
+            row_data = []
+            for col in range(self.table.columnCount()):
+                item = self.table.item(row, col)
+                row_data.append(item.text() if item else "")
+            try:
+                point = int(row_data[5])
+            except:
+                point = 0
+            data.append((point, row_data))
+        # Sắp xếp giảm dần theo điểm
+        data.sort(key=lambda x: x[0], reverse=True)
+        # Cập nhật lại bảng
+        self.table.setRowCount(0)
+        for idx, (point, row_data) in enumerate(data):
+            self.table.insertRow(idx)
+            for col, value in enumerate(row_data):
+                item = QTableWidgetItem(value)
+                item.setTextAlignment(Qt.AlignCenter)
+                self.table.setItem(idx, col, item)
+            self.password_map[idx] = row_data[3]
+        # Lưu lại vào file ACC.txt
+        try:
+            acc_file = FILE_PATH
+            with open(acc_file, "w", encoding="utf-8") as f:
+                for _, row_data in data:
+                    # Đảm bảo có 8 trường
+                    if len(row_data) < 8:
+                        row_data += [""] * (8 - len(row_data))
+                    f.write("|".join(row_data) + "\n")
+            print("[LOG] Đã lưu lại ACC.txt sau khi sắp xếp theo điểm.")
+        except Exception as e:
+            print(f"[LOG] Lỗi lưu ACC.txt sau khi sắp xếp: {e}")
 
 class GetPointWorker(QRunnable):
     def __init__(self, row, token, f_id, proxy_string):
