@@ -1,15 +1,555 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=http://nedsion.xyz/tn.php //xem list tin nhắn
+import requests
+import json
+import random
+import string
+import time
+import hashlib
+import threading
+import os
+import uuid
 
-    http://nedsion.xyz/msg.php?msg=hello //send tin nhắn
+
+def generate_user_agent():
+    return random.choice([
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64)...",
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2_1...)",
+        "Mozilla/5.0 (Linux; Android 14)..."
+    ])
+
+def get_captcha(proxies):
+    print("🧠 Đang lấy captcha và giải mã...")
+    headers = {"user-agent": generate_user_agent(), "accept": "application/json"}
+    res = requests.get("https://oklavip26.live/api/accountLogin/captcha", headers=headers, proxies=proxies)
+    if res.status_code == 200:
+        data = res.json()["data"]
+        ocr = requests.post("http://103.77.242.210:8000/ocr", data={"image": data['image']}).json()
+        print(f"🔍 Captcha: {ocr.get('data')}, UUID: {data['uuid']}")
+        return data['uuid'], ocr.get("data")
+    print(f"❌ Lỗi lấy captcha: {res.status_code}")
+    return None, None
+
+def create_proxy(proxy_string):
+    ip, port, user, pwd = proxy_string.strip().split(":")
+    return {"http": f"http://{user}:{pwd}@{ip}:{port}", "https": f"http://{user}:{pwd}@{ip}:{port}"}
+
+def send_register_phone(phone, proxies, fid):
+    url = "https://m.oklavip29.live/api/accountLogin/sendRegisterPhone"
     
-    http://nedsion.xyz/1.cpp //xem bài đã có chưa, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
+        "Referer": "https://m.oklavip29.live/registerStep",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "vi-VN,vi;q=0.9",
+        "f-id": fid,  
+        "locale": "vi_vn",
+    }
     
-</body>
-</html>
+    payload = {
+        "region": "+84",
+        "phone": phone
+    }
+    
+    response = requests.post(url, headers=headers, data=json.dumps(payload), proxies=proxies)
+    
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Failed to send phone number verification. Status code: {response.status_code}")
+        return None
+
+def buregister_account(account, password, email, phone, code, uuid, valid_code, proxies, fid):
+    url = "https://m.oklavip29.live/api/accountLogin/register"
+    headers = {
+        "content-Type": "application/json",
+        "user-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
+        "referer": "https://m.oklavip29.live/registerStep",
+        "accept": "application/json, text/plain, */*",
+        "accept-Language": "vi-VN,vi;q=0.9",
+        "f-id": fid,
+        "locale": "vi_vn",
+        "token": "",
+    }
+    
+    payload = {
+        "account": account,
+        "password": password,
+        "email": email,
+        "phone": phone,
+        "region": "+84",
+        "registerSource": "H5",
+        "inviteCode": "",
+        "code": code,
+        "uuid": uuid,
+        "checked": True,
+        "device": "H5",
+        "validCode": valid_code
+    }
+    
+    response = requests.post(url, headers=headers, data=json.dumps(payload), proxies=proxies)
+    print(response.text)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Failed to register account. Status code: {response.status_code}")
+        return None
+
+# Chaycodeso3.com API Integration
+API_KEY = "7e791b9ee9cb3624"
+BASE_URL = "https://chaycodeso3.com/api"
+APP_ID = 2914  # Okvip Others
+
+def check_account_balance():
+    """Kiểm tra số dư tài khoản"""
+    url = f"{BASE_URL}?act=account&apik={API_KEY}"
+    try:
+        response = requests.get(url, timeout=10)
+        data = response.json()
+        if data.get("ResponseCode") == 0:
+            balance = data["Result"]["Balance"]
+            print(f"💰 Số dư tài khoản: {balance:,} VND")
+            return balance
+        else:
+            print(f"❌ Lỗi kiểm tra số dư: {data.get('Msg')}")
+            return None
+    except Exception as e:
+        print(f"❌ Lỗi kết nối API: {e}")
+        return None
+
+# Chọn loại số: ["vina"], ["mobi"], ["viettel"], ["vina", "mobi"], ["vina", "viettel"], ["mobi", "viettel"], ["vina", "mobi", "viettel"]
+CHON_LOAI_SO = ["vina", "mobi", "viettel"]  # Sửa tùy ý
+
+def rent_phone_number_custom(loai_list=None):
+    """Thuê số điện thoại theo loại ưu tiên trong loai_list."""
+    if loai_list is None:
+        loai_list = ["mobi"]
+    for loai in loai_list:
+        carrier_param = {
+            "vina": "Vina",
+            "mobi": "Mobi",
+            "viettel": "Viettel"
+        }.get(loai, "Mobi")
+        url = f"{BASE_URL}?act=number&apik={API_KEY}&appId={APP_ID}&carrier={carrier_param}"
+        try:
+            response = requests.get(url, timeout=10)
+            data = response.json()
+            if data.get("ResponseCode") == 0:
+                result = data["Result"]
+                phone_id = result["Id"]
+                phone_number = result["Number"]
+                cost = result["Cost"]
+                balance = result["Balance"]
+                print(f"✅ Thuê số thành công! ({carrier_param})")
+                print(f"📱 Số điện thoại: {phone_number}")
+                print(f"🆔 ID: {phone_id}")
+                print(f"💰 Phí: {cost} VND")
+                print(f"💳 Số dư còn lại: {balance:,} VND")
+                return phone_id, phone_number
+            else:
+                print(f"❌ Lỗi thuê số ({carrier_param}): {data.get('Msg')}")
+        except Exception as e:
+            print(f"❌ Lỗi kết nối API ({carrier_param}): {e}")
+    return None, None
+
+def get_otp_code(phone_id, max_wait_time=20):
+    """Lấy mã OTP với timeout 20 giây"""
+    url = f"{BASE_URL}?act=code&apik={API_KEY}&id={phone_id}"
+    start_time = time.time()
+    
+    while time.time() - start_time < max_wait_time:
+        try:
+            response = requests.get(url, timeout=5)
+            data = response.json()
+            
+            if data.get("ResponseCode") == 0:
+                # Đã nhận được code
+                result = data["Result"]
+                sms_content = result.get("SMS", "")
+                otp_code = result.get("Code", "")
+                cost = result.get("Cost", 0)
+                
+                print(f"🔓 Nhận được OTP!")
+                print(f"📨 Nội dung SMS: {sms_content}")
+                print(f"🔢 Mã OTP: {otp_code}")
+                print(f"💰 Phí: {cost} VND")
+                
+                return otp_code
+            elif data.get("ResponseCode") == 1:
+                # Chưa nhận được code, tiếp tục chờ
+                remaining_time = int(max_wait_time - (time.time() - start_time))
+                print(f"⏳ Đang chờ OTP... Còn {remaining_time}s")
+                time.sleep(2)
+            elif data.get("ResponseCode") == 2:
+                # Không nhận được code (quá thời gian)
+                print("⏰ Hết thời gian chờ OTP")
+                break
+            else:
+                print(f"❌ Lỗi lấy OTP: {data.get('Msg')}")
+                break
+                
+        except Exception as e:
+            print(f"❌ Lỗi kết nối API: {e}")
+            time.sleep(2)
+    
+    print("⏰ Hết thời gian chờ OTP (20s)")
+    return None
+
+def cancel_phone_rental(phone_id):
+    """Hủy thuê số và hoàn tiền"""
+    url = f"{BASE_URL}?act=expired&apik={API_KEY}&id={phone_id}"
+    try:
+        response = requests.get(url, timeout=10)
+        data = response.json()
+        
+        if data.get("ResponseCode") == 0:
+            result = data["Result"]
+            balance = result["Balance"]
+            refund = result["Refund"]
+            print(f"✅ Hủy thuê số thành công!")
+            print(f"💰 Số tiền hoàn lại: {refund} VND")
+            print(f"💳 Số dư mới: {balance:,} VND")
+        else:
+            print(f"❌ Lỗi hủy thuê số: {data.get('Msg')}")
+    except Exception as e:
+        print(f"❌ Lỗi kết nối API: {e}")
+
+def get_fid():
+    file_path="fid.txt"
+    try:
+        lines = open(file_path).readlines()
+        if not lines:
+            print("📂 Tệp fid trống!")
+            return None
+        fid = lines[0].strip()
+        # Xóa dòng đầu và thêm vào cuối
+        with open(file_path, 'w') as f: 
+            f.writelines(lines[1:])
+        return fid
+    except FileNotFoundError:
+        print("❌ Không tìm thấy tệp fid.txt! Vui lòng kiểm tra lại đường dẫn hoặc tạo tệp này.")
+        return None
+    except Exception as e:
+        print(f"❌ Lỗi khi đọc fid: {e}")
+        return None
+
+def return_fid_to_end(fid):
+    """Đưa fid về cuối file để tái sử dụng"""
+    if fid:
+        try:
+            with open("fid.txt", "a") as f:
+                f.write(f"{fid}\n")
+            print(f"🔄 Đã đưa FID về cuối file để tái sử dụng")
+        except Exception as e:
+            print(f"❌ Lỗi khi đưa FID về cuối file: {e}")
+
+def getproxy(file_path='Tainguyen.txt'):
+    try:
+        lines = open(file_path).readlines()
+        if not lines:
+            print("📂 Tệp proxy trống!")
+            return None
+        proxy = lines[0].strip()
+        # Xóa dòng đầu và thêm vào cuối
+        with open(file_path, 'w') as f: 
+            f.writelines(lines[1:])
+        return proxy
+    except Exception as e:
+        print(f"❌ Lỗi khi đọc proxy: {e}")
+        return None
+
+def return_proxy_to_end(proxy):
+    """Đưa proxy về cuối file để tái sử dụng"""
+    if proxy:
+        try:
+            with open("Tainguyen.txt", "a") as f:
+                f.write(f"{proxy}\n")
+            print(f"🔄 Đã đưa proxy về cuối file để tái sử dụng")
+        except Exception as e:
+            print(f"❌ Lỗi khi đưa proxy về cuối file: {e}")
+
+def random_name():
+    return ''.join(random.choices(string.ascii_lowercase, k=random.randint(10, 15)))
+
+def get_device_id():
+    """Tạo mã máy duy nhất, lưu vào file ẩn, không thể thay đổi."""
+    device_file = os.path.expanduser("~/.regacc_device_id")
+    try:
+        if os.path.exists(device_file):
+            with open(device_file, "r") as f:
+                device_id = f.read().strip()
+                if device_id:
+                    return device_id
+        # Tạo mới dựa trên MAC + user + ổ cứng
+        raw = str(uuid.getnode()) + os.environ.get("USERNAME", "") + os.environ.get("COMPUTERNAME", "")
+        device_id = hashlib.sha256(raw.encode()).hexdigest()[:16]
+        with open(device_file, "w") as f:
+            f.write(device_id)
+        return device_id
+    except Exception as e:
+        # Nếu lỗi, fallback dùng uuid4
+        return str(uuid.uuid4())[:16]
+
+def is_device_allowed(device_id):
+    """Kiểm tra mã máy đã được kích hoạt trên server admin chưa."""
+    try:
+        url = "https://raw.githubusercontent.com/Thuanvuse/thuanvuse.github.io/refs/heads/main/checkregacc.json"
+        resp = requests.get(url, timeout=10)
+        allowed = [item["key"] for item in resp.json()]
+        return device_id in allowed
+    except Exception as e:
+        print("Lỗi kiểm tra mã máy:", e)
+        return False
+
+# Main registration function
+def register_with_auto_phone(token_input):
+    """Đăng ký tài khoản với tự động thuê số và lấy OTP"""
+    print("🚀 Bắt đầu quá trình đăng ký tự động...")
+    
+    # Biến toàn cục đếm số acc thành công
+    global success_count
+    global stop_flag
+    # (KHÔNG reset success_count ở đây)
+    
+    # Kiểm tra số dư
+    balance = check_account_balance()
+    if balance is None or balance < 3:  # Cần ít nhất 3 VND để thuê số
+        print("❌ Số dư không đủ để thuê số! Tool sẽ dừng lại.")
+        stop_flag = True
+        return
+    
+    # Lấy thông tin cần thiết
+    fid = get_fid()
+    if not fid:
+        print("❌ Không thể lấy FID! Tool sẽ dừng lại.")
+        stop_flag = True
+        return  # Không cần trả lại FID vì chưa lấy được
+    
+    proxy_string = getproxy()
+    if not proxy_string:
+        print("❌ Không thể lấy proxy! Tool sẽ dừng lại.")
+        return_fid_to_end(fid)  # Trả lại FID nếu lấy proxy thất bại
+        stop_flag = True
+        return
+    
+    proxies = create_proxy(proxy_string)
+    print(f"🌐 Sử dụng proxy: {proxy_string}")
+    
+    # Thuê số điện thoại
+    phone_id, phone_number = rent_phone_number_custom(CHON_LOAI_SO)
+    if not phone_id or not phone_number:
+        print("❌ Không thể thuê số điện thoại!")
+        return_proxy_to_end(proxy_string)
+        return_fid_to_end(fid)
+        return
+    
+    # Gửi yêu cầu OTP
+    print(f"📤 Gửi yêu cầu OTP đến số {phone_number}...")
+    response = send_register_phone(phone_number, proxies, fid)
+    
+    if not response or response.get('code') != 200:
+        print(f"❌ Lỗi gửi OTP: {response.get('message') if response else 'Không có phản hồi'}")
+        cancel_phone_rental(phone_id)
+        return_proxy_to_end(proxy_string)
+        return_fid_to_end(fid)
+        return
+    
+    print("✅ Gửi yêu cầu OTP thành công!")
+    
+    # Chờ và lấy OTP
+    otp_code = get_otp_code(phone_id, max_wait_time=20)
+    
+    if not otp_code:
+        print("❌ Không nhận được OTP trong thời gian quy định!")
+        cancel_phone_rental(phone_id)
+        return_proxy_to_end(proxy_string)
+        return_fid_to_end(fid)
+        return
+    
+    # Đăng ký tài khoản với 3 lần thử
+    print("📝 Bắt đầu đăng ký tài khoản...")
+    
+    # Tạo thông tin tài khoản
+    account_name = random_name()
+    password = hashlib.md5("thuanne123jqk!".encode()).hexdigest()
+    email = f"{account_name}@gmail.com"
+    
+    print(f"👤 Tên tài khoản: {account_name}")
+    print(f"📧 Email: {email}")
+    
+    registration_success = False
+    
+    for attempt in range(1, 4):  # Thử 3 lần
+        print(f"\n🔄 Lần thử {attempt}/3:")
+        
+        try:
+            # Lấy captcha mới cho mỗi lần thử
+            print("🧠 Đang lấy captcha mới...")
+            captcha_uuid, captcha_code = get_captcha(proxies)
+            if not captcha_uuid or not captcha_code:
+                print(f"❌ Lần {attempt}: Không thể lấy captcha!")
+                if attempt < 3:
+                    print("⏳ Chờ 3 giây trước khi thử lại...")
+                    time.sleep(3)
+                continue
+            
+            # Đăng ký
+            result = buregister_account(
+                account_name, password, email, phone_number,
+                captcha_code, captcha_uuid, otp_code, proxies, fid
+            )
+            
+            if result and result.get('code') == 200:
+                token = result['data']['token']
+                print(f"✅ Đăng ký thành công ở lần thử {attempt}!")
+                print(f"🎫 Token: {token}")
+                
+                # Lưu thông tin tài khoản
+                account_info = f"{token}|{proxy_string}|{account_name}|thuanne123jqk!|{token_input}\n"
+                with open("ACCne.txt", "a", encoding="utf-8") as f:
+                    f.write(account_info)
+                print(f"💾 Đã lưu thông tin tài khoản vào ACCne.txt")
+                
+                # KHÔNG gọi return_proxy_to_end(proxy_string) và return_fid_to_end(fid) khi thành công!
+                registration_success = True
+                # Tăng biến đếm acc thành công
+                success_count += 1
+                print(f"📊 Tổng số acc đã tạo thành công: {success_count}")
+                break
+                
+            else:
+                error_msg = result.get('message') if result else 'Không có phản hồi'
+                print(f"❌ Lần {attempt}: Đăng ký thất bại - {error_msg}")
+                
+                # Nếu bị hạn chế thì xóa FID, không lưu lại
+                if error_msg and ("hạn chế" in error_msg.lower() or "limit" in error_msg.lower()):
+                    print(f"⚠️ FID bị hạn chế, sẽ xóa luôn: {fid}")
+                    # Không gọi return_fid_to_end(fid) nữa
+                    return_proxy_to_end(proxy_string)
+                    cancel_phone_rental(phone_id)
+                    return
+                
+                if attempt < 3:
+                    print("⏳ Chờ 3 giây trước khi thử lại...")
+                    time.sleep(3)
+                    
+        except Exception as e:
+            print(f"❌ Lần {attempt}: Lỗi trong quá trình đăng ký: {e}")
+            if attempt < 3:
+                print("⏳ Chờ 3 giây trước khi thử lại...")
+                time.sleep(3)
+    
+    if not registration_success:
+        print(f"\n❌ Đăng ký thất bại sau 3 lần thử!")
+        # Nếu tất cả 3 lần thử đều thất bại, vẫn trả về proxy và fid để tái sử dụng
+        return_proxy_to_end(proxy_string)
+        return_fid_to_end(fid)
+    
+    # Hủy thuê số nếu chưa tự động hết hạn
+    cancel_phone_rental(phone_id)
+
+if __name__ == "__main__":
+    # --- Kiểm tra mã máy trước khi cho chạy tool ---
+    device_id = get_device_id()
+    if not is_device_allowed(device_id):
+        print("\nMã máy của bạn là:")
+        print(f"\n=== {device_id} ===\n")
+        print("\033[91mMã máy này chưa được kích hoạt!\033[0m")
+        print("\nVui lòng liên hệ admin để kích hoạt mã máy này:")
+        print("Telegram: https://t.me/t29032006 hoặc gửi mã này cho admin!")
+        input("\nNhấn Enter để thoát...")
+        exit(0)
+    # --- Hết phần kiểm tra mã máy ---
+
+    import sys
+    try:
+        max_acc = int(input("Nhập số nick muốn tạo: ").strip())
+    except Exception:
+        print("Giá trị nhập không hợp lệ! Mặc định tạo 10 nick.")
+        max_acc = 10
+    try:
+        max_threads = int(input("Nhập số luồng tối đa (mặc định 1): ").strip())
+        if max_threads < 1:
+            max_threads = 1
+    except Exception:
+        max_threads = 1
+
+    # --- Thêm chức năng chọn loại số điện thoại ---
+    print("\nChọn loại số điện thoại muốn ưu tiên khi tạo nick:")
+    print("1. Chỉ Vina")
+    print("2. Chỉ Mobi")
+    print("3. Chỉ Viettel")
+    print("4. Vina + Mobi")
+    print("5. Vina + Viettel")
+    print("6. Mobi + Viettel")
+    print("7. Cả 3 loại (Vina + Mobi + Viettel)")
+    chon = input("Nhập lựa chọn (1-7, mặc định 7): ").strip()
+    if chon == "1":
+        CHON_LOAI_SO = ["vina"]
+    elif chon == "2":
+        CHON_LOAI_SO = ["mobi"]
+    elif chon == "3":
+        CHON_LOAI_SO = ["viettel"]
+    elif chon == "4":
+        CHON_LOAI_SO = ["vina", "mobi"]
+    elif chon == "5":
+        CHON_LOAI_SO = ["vina", "viettel"]
+    elif chon == "6":
+        CHON_LOAI_SO = ["mobi", "viettel"]
+    else:
+        CHON_LOAI_SO = ["vina", "mobi", "viettel"]
+    print(f"Sẽ ưu tiên thuê số theo thứ tự: {CHON_LOAI_SO}\n")
+    # --- Hết phần chọn loại số ---
+
+    # --- Thêm chức năng lưu và đọc token từ settings.json ---
+    SETTINGS_FILE = "settings.json"
+    def load_settings():
+        if os.path.exists(SETTINGS_FILE):
+            with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        return {}
+    def save_settings(settings):
+        with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+            json.dump(settings, f, ensure_ascii=False, indent=2)
+    settings = load_settings()
+    token_input = settings.get("token", "")
+    if token_input:
+        print(f"Đã tìm thấy token trong cài đặt: {token_input}")
+        change = input("Bạn có muốn nhập lại token? (y/n): ").strip().lower()
+        if change == "y":
+            token_input = input("Nhập token (chaycodeso3.com): ").strip()
+            settings["token"] = token_input
+            save_settings(settings)
+    else:
+        token_input = input("Nhập token (chaycodeso3.com): ").strip()
+        settings["token"] = token_input
+        save_settings(settings)
+    # --- Hết phần lưu/đọc token ---
+
+    from threading import Thread, Lock
+    import time
+    
+    success_count = 0
+    success_lock = Lock()
+    stop_flag = False
+    
+    def register_with_auto_phone_wrapper():
+        global success_count, stop_flag
+        while True:
+            if stop_flag:
+                break
+            result = register_with_auto_phone(token_input)
+            with success_lock:
+                if success_count >= max_acc:
+                    stop_flag = True
+                    break
+            time.sleep(2)
+    
+    threads = []
+    for _ in range(max_threads):
+        t = Thread(target=register_with_auto_phone_wrapper)
+        t.start()
+        threads.append(t)
+    
+    for t in threads:
+        t.join()
+    print(f"\n✅ Đã tạo đủ {success_count}/{max_acc} nick!")
