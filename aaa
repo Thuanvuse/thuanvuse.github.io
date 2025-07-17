@@ -553,3 +553,4 @@ if __name__ == "__main__":
     for t in threads:
         t.join()
     print(f"\n✅ Đã tạo đủ {success_count}/{max_acc} nick!")
+input("enter để thoát!!!!")
