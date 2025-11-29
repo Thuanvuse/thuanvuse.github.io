@@ -1,4 +1,5 @@
 {
+  "phienban": 1,
   "byId": {
     "00d42fbb-b260-4c88-aa17-0986eb6c5d8e": "BAPHAI",
     "0004e79b-da93-4a47-901d-46771b3fee78": "BONGBANG",
@@ -582,7 +583,6 @@
     "7485986c-0a13-4296-9d1a-3f1a6932cae4": "GIALANH",
     "f282eb38-0538-4de4-a00f-30e99a0b7062": "BENHTAMTHAN",
     "d9441648-b7c3-4779-b2e4-6e61dbc90289": "DAOTAU",
-    "84cea5ef-feb6-494a-bf9a-7b561546cb92": "CONGTHUC",
     "a4dd7469-ce6e-4db7-a4b7-d8851de9a84f": "TIENLE",
     "e3628f95-be21-44c4-92a6-91093c921b3a": "NHACPHU",
     "71d2eaca-c308-4165-8f55-7df99f6d5512": "TUBI",
@@ -610,7 +610,6 @@
     "821780d2-f415-4d18-b138-6d87892e2473": "TUTINH",
     "574f3490-877d-471c-91b8-22d5549a12e5": "HAUQUA",
     "ebd49029-3685-4340-ba41-2b9ca8892d8f": "PHONGKHONG",
-    "62ffbafa-ce14-4754-9931-a77ae969b1ce": "CHIENSI",
     "fdb4aa70-0917-4521-b781-64898d139afd": "DUONGCAOTOC",
     "28ad104c-6011-40af-a4da-a91e8a15847e": "CONGCONG",
     "57fdbe4b-2823-434e-92ad-e83c004e5281": "VUITINH",
@@ -1155,7 +1154,6 @@
     "OK0044": "CAUMAY",
     "OK01559": "NAUSUSOIKINH",
     "OK0256": "NGHESINHANDAN",
-    "OK01505": "CONGTHUC",
     "OK01619": "TIENLE",
     "OK330": "NHACPHU",
     "OK01599": "TUBI",
