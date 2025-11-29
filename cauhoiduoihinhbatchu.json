@@ -1,4 +1,5 @@
 {
+  "Phienban": 3 ,
   "byId": {
     "00d42fbb-b260-4c88-aa17-0986eb6c5d8e": "BAPHAI",
     "0004e79b-da93-4a47-901d-46771b3fee78": "BONGBANG",
@@ -152,7 +153,6 @@
     "38e10e41-4b38-46d0-a74a-47c6ef38d63b": "HOAMI",
     "59fad355-a161-4443-b442-b4d048d56508": "DONGBAO",
     "9f7ffc20-5f4b-4b6c-a688-e6975afba8e4": "NGUHANH",
-    "420e5e1d-6b03-47c8-8752-527847e7a261": "CHANUOTCHANKHO",
     "cb1727dc-202b-4d36-91f6-a5ea71d78f42": "NEODON",
     "da7fb5a9-bbe3-4577-ae60-b025e6b68ed0": "MANDEM",
     "90c9b815-c0d8-4b58-8e52-8a0d30fdc7e8": "THOTHE",
@@ -580,12 +580,11 @@
     "7485986c-0a13-4296-9d1a-3f1a6932cae4": "GIALANH",
     "f282eb38-0538-4de4-a00f-30e99a0b7062": "BENHTAMTHAN",
     "d9441648-b7c3-4779-b2e4-6e61dbc90289": "DAOTAU",
-    "359d6179-ba6d-40c4-9ae0-4ac3d03131cf": "NEMDADAUAAY",
+    "359d6179-ba6d-40c4-9ae0-4ac3d03131cf": "NEMDADAUTAY",
     "c1eae9a4-3a1b-4425-bccd-7f31607ae43b": "DINHCONG",
     "95fd2aef-31f1-4648-88a0-3bce00264e0e": "XAUHO",
     "bd0c3fdf-1af0-4508-9991-426bd70688f5": "NHANTU",
     "4efeacdc-c7f1-4d46-a580-95b5afa11d62": "KHONGKICH",
-    "4cfef3e7-4701-45c8-b584-0be1b66b03cb": "VITHIEN",
     "718bf273-4773-4af9-b560-4993a1b5423c": "CAUCHUYEN",
     "30ba3425-98de-4a70-b616-2664e7ff4548": "THUOCLAO",
     "62ffbafa-ce14-4754-9931-a77ae969b1ce": "CHIENSY",
@@ -613,12 +612,10 @@
     "701399eb-09ca-4be0-85ac-79e85d19d91e": "TREGIAMANGMOC",
     "a4da299f-1ec8-493b-9068-c35d463785f5": "LAULA",
     "ce0ec8f3-2951-4e0b-abec-253af23fbd25": "LANHDAO",
-    "84cea5ef-feb6-494a-bf9a-7b561546cb92": "CONGCHUA",
     "e3628f95-be21-44c4-92a6-91093c921b3a": "NHACPHU",
     "fdb4aa70-0917-4521-b781-64898d139afd": "DUONGCAOTOC",
     "574f3490-877d-471c-91b8-22d5549a12e5": "HAUQUA",
     "0694fdf7-523a-4179-8b4b-a9eb343570de": "GIAIMA",
-    "aca3e55f-c951-45f6-b561-be2e47da8868": "THUTUONG",
     "e6d621d3-1949-46c7-beea-f793024c7f5b": "MATCAU",
     "0754d756-6c6f-42ef-bd62-537b0e7c6404": "CAUMAY"
 
