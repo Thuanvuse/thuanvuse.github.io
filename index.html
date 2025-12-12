@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nguyễn Tiến Thuận • Portal</title>
+  <style>
+    :root{
+      --bg:#05060b;
+      --fg:rgba(255,255,255,.92);
+      --mut:rgba(255,255,255,.62);
+      --line:rgba(255,255,255,.14);
+      --g1:rgba(0,255,200,.20);
+      --g2:rgba(120,120,255,.18);
+      --g3:rgba(255,90,160,.16);
+      --ease:cubic-bezier(.2,.9,.2,1);
+      --r:22px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      color:var(--fg);
+      background:
+        radial-gradient(900px 700px at 20% 10%, var(--g1), transparent 60%),
+        radial-gradient(900px 700px at 80% 25%, var(--g2), transparent 60%),
+        radial-gradient(900px 700px at 50% 95%, var(--g3), transparent 60%),
+        var(--bg);
+      overflow-x:hidden;
+    }
+
+    /* nền scanline + noise */
+    .scan{
+      position:fixed; inset:0; pointer-events:none; z-index:-3;
+      background:
+        linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px) 0 0/100% 3px;
+      opacity:.18;
+      mix-blend-mode:overlay;
+      animation: drift 10s linear infinite;
+    }
+    @keyframes drift{to{transform:translateY(24px)}}
+    .noise{
+      position:fixed; inset:0; pointer-events:none; z-index:-2;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+      opacity:.12;
+      mix-blend-mode:overlay;
+    }
+
+    canvas#fx{position:fixed; inset:0; z-index:-1; pointer-events:none;}
+
+    .wrap{max-width:1120px;margin:0 auto;padding:26px 18px 80px}
+    .top{
+      display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+      padding:14px 16px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background: rgba(255,255,255,.05);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 18px 70px rgba(0,0,0,.45);
+    }
+    .brand{display:flex; gap:12px; align-items:center; min-width:0}
+    .avatar{
+      width:54px;height:54px;border-radius:18px;
+      background:url("https://avatars.githubusercontent.com/u/88393748?size=256") center/cover;
+      border:1px solid rgba(255,255,255,.22);
+      box-shadow: 0 0 40px rgba(0,255,200,.22);
+      position:relative; overflow:hidden;
+    }
+    .avatar:after{
+      content:""; position:absolute; inset:-60%;
+      background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,.30), transparent 70%);
+      transform: rotate(18deg);
+      animation: shine 3.2s var(--ease) infinite;
+      opacity:.9;
+    }
+    @keyframes shine{
+      0%{transform:translateX(-30%) rotate(18deg)}
+      60%{transform:translateX(55%) rotate(18deg)}
+      100%{transform:translateX(55%) rotate(18deg)}
+    }
+    .brand b{display:block;font-weight:900;letter-spacing:.2px}
+    .brand small{display:block;color:var(--mut);margin-top:2px}
+
+    .nav{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .chip{
+      text-decoration:none; color:rgba(255,255,255,.86);
+      font-size:13px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.045);
+      transition: transform .2s var(--ease), background .2s var(--ease), border-color .2s var(--ease);
+    }
+    .chip:hover{transform:translateY(-2px);background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18)}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap:16px;
+      margin-top:18px;
+    }
+    @media (max-width: 920px){ .grid{grid-template-columns:1fr} }
+
+    .panel{
+      border-radius: var(--r);
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 22px 90px rgba(0,0,0,.55);
+      position:relative;
+      overflow:hidden;
+    }
+    .panel:before{
+      content:""; position:absolute; inset:-2px; pointer-events:none; opacity:.9;
+      background:
+        radial-gradient(700px 260px at var(--mx,50%) var(--my,20%), rgba(0,255,200,.22), transparent 60%),
+        radial-gradient(650px 260px at calc(var(--mx,50%) + 25%) calc(var(--my,20%) + 30%), rgba(120,120,255,.18), transparent 60%),
+        radial-gradient(650px 260px at calc(var(--mx,50%) - 25%) calc(var(--my,20%) + 40%), rgba(255,90,160,.14), transparent 60%);
+    }
+    .pad{padding:22px}
+    h1{
+      margin:0 0 8px;
+      font-size: clamp(28px, 3.2vw, 44px);
+      line-height:1.07;
+      letter-spacing:-.6px;
+    }
+    .sub{margin:0;color:var(--mut);line-height:1.6}
+
+    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+    .btn{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:12px 14px;
+      border-radius: 16px;
+      text-decoration:none;
+      color:rgba(255,255,255,.92);
+      background: rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.14);
+      transition: transform .2s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease);
+      user-select:none;
+      position:relative; overflow:hidden;
+    }
+    .btn:before{
+      content:""; position:absolute; inset:-40%;
+      background: linear-gradient(120deg, transparent 40%, rgba(255,255,255,.22), transparent 70%);
+      transform: translateX(-35%) rotate(12deg);
+      opacity:0;
+    }
+    .btn:hover{
+      transform: translateY(-4px);
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+      background: rgba(255,255,255,.085);
+    }
+    .btn:hover:before{opacity:.9; animation:sweep .8s var(--ease) 1}
+    @keyframes sweep{to{transform:translateX(45%) rotate(12deg)}}
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(0,255,200,.18), rgba(120,120,255,.14), rgba(255,90,160,.12));
+      border-color: rgba(255,255,255,.18);
+    }
+    .k{
+      font-size:12px; opacity:.75;
+      padding:3px 8px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(2,1fr);
+      gap:12px;
+      margin-top:16px;
+    }
+    .stat{
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+    }
+    .stat b{display:block;font-size:22px}
+    .stat span{display:block;margin-top:4px;color:var(--mut);font-size:12px;line-height:1.35}
+
+    .sideBlock{display:flex;flex-direction:column;gap:14px}
+    .miniTitle{margin:0 0 10px;font-size:14px;letter-spacing:.2px}
+    .list{
+      display:grid; gap:10px;
+    }
+    .cardLink{
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      cursor:pointer;
+      transition: transform .2s var(--ease), background .2s var(--ease), border-color .2s var(--ease);
+    }
+    .cardLink:hover{transform:translateY(-3px);background:rgba(255,255,255,.075);border-color:rgba(255,255,255,.18)}
+    .cardLink b{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .tag{
+      font-size:12px;color:rgba(255,255,255,.78);
+      border:1px solid rgba(255,255,255,.14);
+      padding:4px 8px;border-radius:999px;background:rgba(0,0,0,.16)
+    }
+    .cardLink p{margin:8px 0 0;color:var(--mut);font-size:13px;line-height:1.55}
+
+    footer{
+      margin-top:18px;
+      color:rgba(255,255,255,.55);
+      font-size:12px;
+      display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap
+    }
+
+    /* toast */
+    .toast{
+      position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(18px);
+      background:rgba(15,16,25,.72);
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter:blur(12px);
+      border-radius:14px;
+      padding:10px 12px;
+      color:rgba(255,255,255,.88);
+      opacity:0;
+      transition:opacity .22s var(--ease), transform .22s var(--ease);
+      z-index:200;
+      max-width:min(560px, calc(100% - 28px));
+      box-shadow:0 20px 80px rgba(0,0,0,.5);
+      display:flex;align-items:center;gap:10px;
+    }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .dot{width:10px;height:10px;border-radius:99px;background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(0,255,200,.85));box-shadow:0 0 18px rgba(0,255,200,.35)}
+  </style>
+</head>
+<body>
+  <div class="scan"></div>
+  <div class="noise"></div>
+  <canvas id="fx"></canvas>
+
+  <div class="wrap">
+    <div class="top panel tilt">
+      <div class="brand">
+        <div class="avatar"></div>
+        <div style="min-width:0">
+          <b>Nguyễn Tiến Thuận</b>
+          <small>Cyber Portal • Projects • Links</small>
+        </div>
+      </div>
+      <div class="nav">
+        <a class="chip" href="#projects">Du an</a>
+        <a class="chip" href="#birthday">Sinh nhat</a>
+        <a class="chip" href="#contact">Lien he</a>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="panel tilt" id="projects">
+        <div class="pad">
+          <h1>Thuận • Portal</h1>
+          <p class="sub">
+            Mot trang gioi thieu phong cach <b>holo terminal</b> + hieu ung <b>5D</b> (tilt + glow + particles).
+            Ben duoi la nut mo nhanh cac du an cua ban.
+          </p>
+
+          <div class="actions">
+            <a class="btn" href="https://thuanvuse.github.io/thuannoen.html" target="_blank" rel="noopener">🎄 Dem Noel <span class="k">Open</span></a>
+
+            <a class="btn primary" href="https://thuanvuse.github.io/gametx/" target="_blank" rel="noopener">🎮 GAME <span class="k">Open</span></a>
+            <a class="btn" href="https://thuanvuse.github.io/Ngayyeu/index.html" target="_blank" rel="noopener">❤️ Dem Ngay Yeu <span class="k">Open</span></a>
+            <a class="btn" href="https://thuanvuse.github.io/Thanhcuto" target="_blank" rel="noopener">⚡ Thanhcuto <span class="k">Open</span></a>
+            <button class="btn" id="copyBtn" type="button">📌 Copy link hub <span class="k">Ctrl+C</span></button>
+          </div>
+
+          <!-- ĐẾM NGƯỢC SINH NHẬT + TUỔI -->
+          <div class="stats" id="birthday">
+            <div class="stat">
+              <b id="age">--</b>
+              <span>Tuoi hien tai (sinh 29/03/2006)</span>
+            </div>
+            <div class="stat">
+              <b id="countdown">--</b>
+              <span>Dem nguoc den sinh nhat gan nhat</span>
+            </div>
+            <div class="stat">
+              <b id="nextDate">--</b>
+              <span>Ngay sinh nhat sap toi</span>
+            </div>
+            <div class="stat">
+              <b>29/03</b>
+              <span>Ngay sinh (co dinh)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="sideBlock">
+        <section class="panel tilt">
+          <div class="pad">
+            <h3 class="miniTitle">Project Cards</h3>
+            <div class="list">
+                <div class="cardLink tilt" data-go="https://thuanvuse.github.io/thuannoen.html">
+                      <b>Dem Noel <span class="tag">Xmas</span></b>
+                      <p>Trang dem ngay Giang Sinh (thuannoen.html).</p>
+                    </div>
+
+                  <div class="cardLink tilt" data-go="https://thuanvuse.github.io/gametx/">
+                <b>GAME <span class="tag">Play</span></b>
+                <p>Mo nhanh trang game / mini game.</p>
+              </div>
+              <div class="cardLink tilt" data-go="https://thuanvuse.github.io/Ngayyeu/index.html">
+                <b>Dem Ngay Yeu <span class="tag">Love</span></b>
+                <p>Trang dem ngay yeu / ky niem.</p>
+              </div>
+              <div class="cardLink tilt" data-go="https://thuanvuse.github.io/Thanhcuto">
+                <b>Thanhcuto <span class="tag">Tool</span></b>
+                <p>Du an / trang khac cua ban.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel tilt" id="contact">
+          <div class="pad">
+            <h3 class="miniTitle">Lien he</h3>
+            <div class="actions">
+              <a class="btn" href="https://github.com/Thuanvuse" target="_blank" rel="noopener">🐙 GitHub <span class="k">Profile</span></a>
+              <a class="btn" href="mailto:you@example.com">✉️ Email <span class="k">Edit</span></a>
+              <button class="btn" type="button" id="boost">⚡ Boost FX <span class="k">Mode</span></button>
+              <button class="btn" type="button" id="calm">🌙 Calm FX <span class="k">Mode</span></button>
+            </div>
+            <p class="sub" style="margin-top:12px">Ban thay "you@example.com" thanh email that la ok.</p>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <footer>
+      <div>© <span id="year"></span> Nguyễn Tiến Thuận</div>
+      <div>Holo • Scanline • 5D Tilt</div>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast"><span class="dot"></span><span id="toastText"></span></div>
+
+<script>
+  // toast
+  const toastEl=document.getElementById('toast'), toastText=document.getElementById('toastText');
+  let toastT=null;
+  function toast(msg){ toastText.textContent=msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>toastEl.classList.remove('show'),1800); }
+
+  // year
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // open cards
+  document.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>window.open(el.dataset.go,'_blank','noopener')));
+
+  // copy hub link
+  document.getElementById('copyBtn').addEventListener('click', async ()=>{
+    const url = location.href;
+    try{ await navigator.clipboard.writeText(url); toast('Da copy link: '+url); }
+    catch(e){
+      const ta=document.createElement('textarea'); ta.value=url; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); ta.remove();
+      toast('Da copy (fallback): '+url);
+    }
+  });
+
+  // ===== birthday + countdown (29/03/2006) =====
+  const birth = new Date(2006, 2, 29); // month 0-based
+  function pad(n){ return String(n).padStart(2,'0'); }
+
+  function updateBirthday(){
+    const now = new Date();
+
+    // age
+    let age = now.getFullYear() - birth.getFullYear();
+    const had = (now.getMonth() > birth.getMonth()) || (now.getMonth() === birth.getMonth() && now.getDate() >= birth.getDate());
+    if(!had) age--;
+    document.getElementById('age').textContent = age + ' tuoi';
+
+    // next birthday date
+    let next = new Date(now.getFullYear(), birth.getMonth(), birth.getDate(), 0,0,0,0);
+    if(next.getTime() <= now.getTime()) next = new Date(now.getFullYear()+1, birth.getMonth(), birth.getDate(), 0,0,0,0);
+
+    const diff = next.getTime() - now.getTime();
+    const totalSec = Math.max(0, Math.floor(diff/1000));
+    const d = Math.floor(totalSec/86400);
+    const h = Math.floor((totalSec%86400)/3600);
+    const m = Math.floor((totalSec%3600)/60);
+    const s = totalSec%60;
+
+    document.getElementById('countdown').textContent = `${d}d ${pad(h)}h ${pad(m)}m ${pad(s)}s`;
+    document.getElementById('nextDate').textContent = `${pad(next.getDate())}/${pad(next.getMonth()+1)}/${next.getFullYear()}`;
+  }
+  updateBirthday();
+  setInterval(updateBirthday, 1000);
+
+  // ===== 5D tilt hotspot =====
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  document.querySelectorAll('.tilt').forEach(card=>{
+    card.addEventListener('mousemove',(e)=>{
+      const r=card.getBoundingClientRect();
+      const x=(e.clientX-r.left)/r.width;
+      const y=(e.clientY-r.top)/r.height;
+      const rx=clamp((.5-y)*10,-10,10);
+      const ry=clamp((x-.5)*12,-12,12);
+      card.style.transform=`perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-1px)`;
+      card.style.setProperty('--mx',(x*100).toFixed(1)+'%');
+      card.style.setProperty('--my',(y*100).toFixed(1)+'%');
+    });
+    card.addEventListener('mouseleave',()=>{
+      card.style.transform='';
+      card.style.setProperty('--mx','50%');
+      card.style.setProperty('--my','20%');
+    });
+  });
+
+  // ===== particles (canvas) =====
+  const cvs=document.getElementById('fx'), ctx=cvs.getContext('2d');
+  let DPR=1;
+  const state={count:88,speed:.75,linkDist:155};
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+  let pts=[];
+  function resize(){
+    DPR=Math.max(1, Math.min(2, window.devicePixelRatio||1));
+    cvs.width=Math.floor(innerWidth*DPR); cvs.height=Math.floor(innerHeight*DPR);
+    cvs.style.width=innerWidth+'px'; cvs.style.height=innerHeight+'px';
+    ctx.setTransform(1,0,0,1,0,0); ctx.scale(DPR,DPR);
+  }
+  function seed(){
+    pts=Array.from({length:state.count},()=>({x:rnd(0,innerWidth),y:rnd(0,innerHeight),vx:rnd(-state.speed,state.speed),vy:rnd(-state.speed,state.speed),r:rnd(1.2,2.5),a:rnd(.25,.85)}));
+  }
+  addEventListener('resize',()=>{resize();seed();},{passive:true});
+  resize(); seed();
+
+  function loop(){
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+    for(const p of pts){
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<-30) p.x=innerWidth+30;
+      if(p.x>innerWidth+30) p.x=-30;
+      if(p.y<-30) p.y=innerHeight+30;
+      if(p.y>innerHeight+30) p.y=-30;
+      ctx.globalAlpha=p.a;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,1)'; ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const a=pts[i], b=pts[j];
+        const d=Math.hypot(a.x-b.x,a.y-b.y);
+        if(d<state.linkDist){
+          const alpha=(1-d/state.linkDist)*0.18;
+          ctx.strokeStyle=`rgba(255,255,255,${alpha})`;
+          ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+  // mode buttons
+  document.getElementById('boost').addEventListener('click',()=>{state.count=110;state.speed=.95;state.linkDist=175;seed();toast('Boost FX: manh hon');});
+  document.getElementById('calm').addEventListener('click',()=>{state.count=60;state.speed=.55;state.linkDist=130;seed();toast('Calm FX: nhe hon');});
+
+  setTimeout(()=>toast('Portal ready ✨ (co dem nguoc sinh nhat + tuoi)'),450);
+</script>
+</body>
+</html>
