@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bốc Lì Xì 5D VIP</title>
+<style>
+  :root{
+    --bg1:#070818; --bg2:#12062a;
+    --cardW: 128px; --cardH: 170px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:#fff; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto;
+    overflow-x:hidden;
+    background:
+      radial-gradient(1200px 800px at 20% 10%, rgba(255,79,216,.18), transparent 55%),
+      radial-gradient(900px 650px at 80% 30%, rgba(255,213,106,.16), transparent 60%),
+      radial-gradient(900px 650px at 40% 90%, rgba(84,111,255,.12), transparent 60%),
+      linear-gradient(160deg, var(--bg1), var(--bg2));
+  }
+
+  .dust, .dust::before, .dust::after{
+    position:fixed; inset:-20vh -20vw; content:""; pointer-events:none;
+    background-image:
+      radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,.22) 40%, transparent 41%),
+      radial-gradient(1px 1px at 40% 60%, rgba(255,255,255,.18) 40%, transparent 41%),
+      radial-gradient(1.5px 1.5px at 70% 30%, rgba(255,255,255,.20) 40%, transparent 41%),
+      radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,.14) 40%, transparent 41%);
+    filter: blur(.2px);
+    opacity:.9;
+    animation: drift 22s linear infinite;
+  }
+  .dust::before{opacity:.55; animation-duration: 34s; transform: scale(1.35) rotate(8deg)}
+  .dust::after{opacity:.35; animation-duration: 48s; transform: scale(1.7) rotate(-10deg)}
+  @keyframes drift{0%{transform:translate3d(0,0,0)}100%{transform:translate3d(120px,-140px,0)}}
+
+  header{
+    padding:20px 14px 10px;
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px;
+    text-align:center;
+  }
+  .title{
+    font-weight:900; letter-spacing:.6px;
+    font-size: clamp(22px, 3.2vw, 40px);
+    line-height:1.02;
+    background: linear-gradient(90deg, #fff, #ffe19a, #ff7fe8, #fff);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow: 0 0 32px rgba(255,213,106,.14);
+  }
+  .sub{
+    opacity:.9; max-width: 980px;
+    font-size: clamp(13px, 1.6vw, 16px);
+    color: rgba(255,255,255,.82);
+  }
+
+  .bar{
+    width:min(1100px, 96vw);
+    margin: 6px auto 10px;
+    border-radius: 18px;
+    border:1px solid rgba(255,255,255,.10);
+    background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+    backdrop-filter: blur(10px);
+    box-shadow: 0 22px 70px rgba(0,0,0,.45);
+    position:relative;
+    overflow:hidden;
+    padding: 12px 12px;
+    display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+  }
+  .bar::before{
+    content:""; position:absolute; inset:-2px; pointer-events:none; filter: blur(10px);
+    background: radial-gradient(600px 240px at 20% 0%, rgba(255,79,216,.16), transparent 60%),
+                radial-gradient(500px 260px at 90% 10%, rgba(255,213,106,.12), transparent 60%);
+  }
+  .status{
+    position:relative;
+    display:flex; flex-direction:column; gap:4px;
+    padding: 2px 4px;
+  }
+  .status .line1{font-weight:900; letter-spacing:.2px}
+  .status .line2{font-size:13px; color: rgba(255,255,255,.82)}
+  .status b{color:#fff}
+  .reset{
+    position:relative;
+    appearance:none; border:none; cursor:pointer;
+    border-radius: 14px;
+    padding: 11px 14px;
+    color:#0c0a16; font-weight:900;
+    letter-spacing:.3px;
+    background: linear-gradient(180deg, #ffe7a9, #ffd56a);
+    box-shadow: 0 12px 30px rgba(255,213,106,.20), 0 0 0 1px rgba(255,255,255,.12) inset;
+    transition: transform .18s ease, filter .18s ease;
+  }
+  .reset:hover{transform: translateY(-1px) scale(1.01); filter:saturate(1.1)}
+  .reset:active{transform: translateY(1px) scale(.99)}
+
+  .stage{
+    width:min(1100px, 96vw);
+    margin: 10px auto 24px;
+  }
+  .gridWrap{
+    border-radius: 22px;
+    border:1px solid rgba(255,255,255,.10);
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    backdrop-filter: blur(12px);
+    box-shadow: 0 24px 80px rgba(0,0,0,.46);
+    padding: 16px 14px 22px;
+    position:relative; overflow:hidden;
+  }
+  .gridWrap::after{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:
+      radial-gradient(700px 260px at 50% 0%, rgba(255,42,42,.12), transparent 60%),
+      radial-gradient(700px 260px at 10% 30%, rgba(255,79,216,.10), transparent 60%),
+      radial-gradient(700px 260px at 90% 30%, rgba(255,213,106,.08), transparent 60%);
+  }
+  .hint{
+    position:relative; z-index:1;
+    padding: 6px 6px 12px;
+    color: rgba(255,255,255,.86);
+    font-size: 14px;
+  }
+  .hint b{color:#fff}
+  .grid{
+    position:relative; z-index:1;
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--cardW), 1fr));
+    gap: 14px;
+    align-items:center; justify-items:center;
+    padding: 6px 6px 10px;
+  }
+
+  /* 3D card */
+  .card{width: var(--cardW); height: var(--cardH); perspective: 1200px; position:relative; user-select:none;}
+  .cardInner{
+    width:100%; height:100%; position:absolute; inset:0;
+    transform-style: preserve-3d;
+    transition: transform .75s cubic-bezier(.2,.85,.2,1), filter .3s ease;
+    filter: drop-shadow(0 18px 26px rgba(0,0,0,.45));
+  }
+  .card.faceDown .cardInner{ transform: rotateY(180deg) rotateZ(.5deg); }
+  .card.revealed .cardInner{ transform: rotateY(0deg) rotateZ(0deg); }
+  .card.locked{pointer-events:none; opacity:.6}
+
+  .side{
+    position:absolute; inset:0;
+    backface-visibility:hidden;
+    border-radius: 18px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.12);
+    background: rgba(0,0,0,.25);
+  }
+  .front{
+    display:grid; grid-template-rows: 1fr auto;
+    padding: 12px;
+    background:
+      radial-gradient(160px 120px at 25% 15%, rgba(255,213,106,.28), transparent 60%),
+      radial-gradient(160px 120px at 80% 25%, rgba(255,79,216,.22), transparent 60%),
+      linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+  }
+  .amt{
+    font-weight:1000;
+    font-size: 34px;
+    letter-spacing:.3px;
+    align-self:center; justify-self:center;
+    text-align:center;
+    text-shadow: 0 0 30px rgba(255,213,106,.22);
+  }
+  .unit{justify-self:center; opacity:.9; font-weight:800; letter-spacing: 2px; margin-top:-8px; color: rgba(255,255,255,.85);}
+  .ribbon{position:absolute; inset:0; background: linear-gradient(135deg, transparent 0 42%, rgba(255,255,255,.10) 42% 58%, transparent 58% 100%); opacity:.65; mix-blend-mode: screen; pointer-events:none;}
+  .stamp{
+    position:absolute; right:10px; top:10px;
+    width:42px; height:42px; border-radius:999px;
+    display:grid; place-items:center;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.28), rgba(255,255,255,.06));
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow: 0 0 22px rgba(255,79,216,.16);
+    font-weight:1000; color: rgba(255,255,255,.88);
+  }
+  .back{
+    transform: rotateY(180deg);
+    background:
+      radial-gradient(200px 140px at 20% 20%, rgba(255,42,42,.26), transparent 60%),
+      radial-gradient(220px 160px at 80% 25%, rgba(255,213,106,.20), transparent 60%),
+      linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.10));
+    display:grid; place-items:center; position:relative;
+  }
+  .back::before{content:""; position:absolute; inset:10px; border-radius: 16px; border:1px dashed rgba(255,255,255,.22); opacity:.7;}
+  .seal{
+    width: 62px; height: 62px; border-radius: 999px;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.30), rgba(255,255,255,.05));
+    border: 1px solid rgba(255,255,255,.16);
+    display:grid; place-items:center;
+    box-shadow: 0 0 35px rgba(255,42,42,.18), 0 0 26px rgba(255,213,106,.14);
+  }
+  .seal span{font-weight:1000; letter-spacing:.6px; color: rgba(255,255,255,.9); transform: translateY(1px);}
+
+  /* shuffle hop */
+  .card.shuffle{animation: hop .6s ease-in-out;}
+  @keyframes hop{0%{transform:translateY(0) scale(1)}40%{transform:translateY(-10px) scale(1.02)}100%{transform:translateY(0) scale(1)}}
+
+  /* pick: strong shake + zoom + glow */
+  .card.pickShake{animation: pickShake .62s cubic-bezier(.2,.8,.2,1) both;}
+  @keyframes pickShake{
+    0%{transform: translate3d(0,0,0) rotate(0deg) scale(1)}
+    10%{transform: translate3d(-2px,-1px,0) rotate(-6deg) scale(1.02)}
+    20%{transform: translate3d(3px,1px,0) rotate(7deg) scale(1.03)}
+    30%{transform: translate3d(-4px,2px,0) rotate(-9deg) scale(1.05)}
+    40%{transform: translate3d(4px,-2px,0) rotate(10deg) scale(1.07)}
+    55%{transform: translate3d(-3px,1px,0) rotate(-7deg) scale(1.10)}
+    70%{transform: translate3d(2px,-1px,0) rotate(5deg) scale(1.14)}
+    100%{transform: translate3d(0,0,0) rotate(0deg) scale(1.18)}
+  }
+  .card.pickZoom{position:relative; z-index: 40; transform: scale(1.18);}
+  .card.pickGlow .cardInner{
+    filter:
+      drop-shadow(0 30px 60px rgba(0,0,0,.55))
+      drop-shadow(0 0 40px rgba(255,213,106,.22))
+      drop-shadow(0 0 44px rgba(255,79,216,.18));
+  }
+
+  /* win overlay (no buttons) */
+  .overlay{
+    position:fixed; inset:0;
+    display:none; place-items:center;
+    background: radial-gradient(900px 550px at 50% 40%, rgba(0,0,0,.55), rgba(0,0,0,.82));
+    z-index: 50; padding: 18px;
+  }
+  .overlay.show{display:grid}
+  .winBox{
+    width:min(680px, 96vw);
+    border-radius: 24px;
+    border:1px solid rgba(255,255,255,.14);
+    background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.05));
+    backdrop-filter: blur(16px);
+    box-shadow: 0 30px 120px rgba(0,0,0,.6);
+    padding: 18px 16px 16px;
+    position:relative; overflow:hidden;
+    text-align:center;
+  }
+  .winBox::before{
+    content:""; position:absolute; inset:-2px; pointer-events:none; filter: blur(8px);
+    background:
+      radial-gradient(360px 200px at 20% 20%, rgba(255,79,216,.22), transparent 60%),
+      radial-gradient(360px 200px at 80% 30%, rgba(255,213,106,.20), transparent 60%),
+      radial-gradient(360px 200px at 50% 90%, rgba(255,42,42,.16), transparent 60%);
+  }
+  .winTitle{position:relative; font-weight:1000; font-size: clamp(18px, 2.8vw, 28px); margin: 4px 0 6px; letter-spacing:.4px;}
+  .winAmt{
+    position:relative; margin: 10px 0 10px;
+    font-weight:1100; font-size: clamp(46px, 8vw, 86px);
+    letter-spacing:1px;
+    background: linear-gradient(90deg, #fff, #ffe19a, #ff7fe8, #fff);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow: 0 0 36px rgba(255,213,106,.14);
+    animation: pop .6s cubic-bezier(.2,.9,.2,1) both;
+  }
+  @keyframes pop{0%{transform:scale(.7); filter:blur(2px); opacity:.2}100%{transform:scale(1); filter:blur(0); opacity:1}}
+  .winNote{position:relative; color: rgba(255,255,255,.84); font-size: 14px;}
+  .mini{position:relative; margin-top:10px; font-size:12.5px; color: rgba(255,255,255,.65);}
+  canvas#fx{position:fixed; inset:0; pointer-events:none; z-index: 60;}
+</style>
+</head>
+<body>
+<div class="dust"></div>
+
+<header>
+  <div class="title">Bốc Lì Xì 5D • VIP Xịn • Mượt</div>
+  <div class="sub">
+    Click bao lần 1: hiện hết mệnh giá. Click bao lần 2: úp + ẩn + xáo. Sau đó chọn 1 bao để bốc (chỉ ra <b>10</b> hoặc <b>5</b>).
+  </div>
+</header>
+
+<div class="bar">
+  <div class="status">
+    <div class="line1" id="stateText">Trạng thái: <b>Chưa mở lần 1</b></div>
+    <div class="line2" id="hintMsg">👉 Click vào <b>bất kỳ bao lì xì</b> để bắt đầu.</div>
+  </div>
+  <button class="reset" id="btnReset">Đặt lại</button>
+</div>
+
+<section class="stage">
+  <div class="gridWrap">
+    <div class="hint" id="hintTop">
+      🎴 Tip: Lần 2 click sẽ xáo trộn và ẩn mệnh giá về dấu <b>?</b>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+</section>
+
+<div class="overlay" id="overlay">
+  <div class="winBox">
+    <div class="winTitle">🎉 TRÚNG LÌ XÌ!</div>
+    <div class="winAmt" id="winAmt">10</div>
+    <div class="winNote" id="winNote">Click ra ngoài để đóng. Muốn chơi lại bấm <b>Đặt lại</b>.</div>
+    <div class="mini">Hiệu ứng nổ + glow + shake 5D</div>
+  </div>
+</div>
+
+<canvas id="fx"></canvas>
+
+<script>
+(() => {
+  const firstDenoms = [500,500,100,200,200,50,50,10,10,5,5];
+
+  const grid = document.getElementById('grid');
+  const btnReset = document.getElementById('btnReset');
+  const stateText = document.getElementById('stateText');
+  const hintMsg = document.getElementById('hintMsg');
+
+  const overlay = document.getElementById('overlay');
+  const winAmtEl = document.getElementById('winAmt');
+  const winNote = document.getElementById('winNote');
+
+  // ====== WebAudio (no files) ======
+  let audioCtx;
+  function beep({freq=660, dur=0.08, type="sine", gain=0.06} = {}){
+    try{
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const t0 = audioCtx.currentTime;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type; o.frequency.setValueAtTime(freq, t0);
+      g.gain.setValueAtTime(gain, t0);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t0); o.stop(t0 + dur);
+    }catch(e){}
+  }
+  function sparkleSound(){
+    beep({freq:740, dur:0.06, type:"triangle", gain:0.05});
+    setTimeout(()=>beep({freq:980, dur:0.06, type:"triangle", gain:0.045}), 70);
+    setTimeout(()=>beep({freq:1240, dur:0.07, type:"triangle", gain:0.05}), 140);
+  }
+  function boomSound(){
+    beep({freq:160, dur:0.09, type:"sawtooth", gain:0.03});
+    setTimeout(()=>beep({freq:240, dur:0.08, type:"square", gain:0.018}), 60);
+  }
+
+  // ====== FX Canvas ======
+  const canvas = document.getElementById('fx');
+  const ctx = canvas.getContext('2d');
+  let W=0,H=0, particles=[], raf=0;
+
+  function resize(){
+    W = canvas.width = window.innerWidth * devicePixelRatio;
+    H = canvas.height = window.innerHeight * devicePixelRatio;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function burst(x, y, power=1){
+    const count = Math.floor(220 * power);
+    for(let i=0;i<count;i++){
+      const a = Math.random()*Math.PI*2;
+      const s = (Math.random()*8 + 5) * power;
+      particles.push({
+        x: x*devicePixelRatio, y: y*devicePixelRatio,
+        vx: Math.cos(a)*s, vy: Math.sin(a)*s - (Math.random()*3.5),
+        g: 0.13 + Math.random()*0.09,
+        life: 80 + Math.random()*55,
+        size: 1.9 + Math.random()*3.6,
+        rot: Math.random()*Math.PI*2,
+        vr: (Math.random()-0.5)*0.26,
+        kind: Math.random()<0.62 ? "confetti" : "spark"
+      });
+    }
+    if(!raf) raf = requestAnimationFrame(tick);
+  }
+  function tick(){
+    raf = requestAnimationFrame(tick);
+    ctx.clearRect(0,0,W,H);
+
+    for(let i=particles.length-1;i>=0;i--){
+      const p = particles[i];
+      p.vy += p.g;
+      p.x += p.vx; p.y += p.vy;
+      p.rot += p.vr;
+      p.life -= 1;
+
+      const alpha = Math.max(0, Math.min(1, p.life/110));
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+
+      if(p.kind==="confetti"){
+        const hue = (i*13 + p.x*0.002) % 360;
+        ctx.fillStyle = `hsla(${hue}, 95%, 66%, ${alpha})`;
+        ctx.fillRect(-p.size*1.8, -p.size*0.85, p.size*3.6, p.size*1.7);
+      }else{
+        ctx.globalCompositeOperation = "lighter";
+        const hue = (i*19 + p.y*0.002) % 360;
+        ctx.fillStyle = `hsla(${hue}, 100%, 72%, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(0,0, p.size*0.95, 0, Math.PI*2);
+        ctx.fill();
+        ctx.globalCompositeOperation = "source-over";
+      }
+      ctx.restore();
+
+      if(p.life<=0 || p.x<-240 || p.x>W+240 || p.y>H+260) particles.splice(i,1);
+    }
+
+    if(particles.length===0){
+      cancelAnimationFrame(raf);
+      raf=0;
+      ctx.clearRect(0,0,W,H);
+    }
+  }
+
+  // ====== Game Phases ======
+  // 0: start (click -> reveal all)
+  // 1: revealed all (click -> shuffle)
+  // 2: shuffled ready (click -> pick one)
+  // 3: finished
+  let phase = 0;
+
+  // ====== Cards ======
+  let cards = [];
+  function buildGrid(){
+    grid.innerHTML = "";
+    cards = [];
+    for(let i=0;i<firstDenoms.length;i++){
+      const card = document.createElement('div');
+      card.className = "card faceDown";
+      card.dataset.idx = String(i);
+
+      const inner = document.createElement('div');
+      inner.className = "cardInner";
+
+      const front = document.createElement('div');
+      front.className = "side front";
+      front.innerHTML = `
+        <div class="stamp">🧧</div>
+        <div class="ribbon"></div>
+        <div class="amt">?</div>
+        <div class="unit">VND</div>
+      `;
+
+      const back = document.createElement('div');
+      back.className = "side back";
+      back.innerHTML = `<div class="seal"><span>LÌ XÌ</span></div>`;
+
+      inner.appendChild(front);
+      inner.appendChild(back);
+      card.appendChild(inner);
+
+      // hover tilt
+      card.addEventListener('mousemove', (e)=>{
+        const r = card.getBoundingClientRect();
+        const px = (e.clientX - r.left)/r.width - 0.5;
+        const py = (e.clientY - r.top)/r.height - 0.5;
+        inner.style.transform += ` rotateX(${(-py*6).toFixed(2)}deg) rotateY(${(px*6).toFixed(2)}deg)`;
+      });
+      card.addEventListener('mouseleave', ()=>{
+        inner.style.transform = inner.style.transform.replace(/ rotateX\([^)]+\) rotateY\([^)]+\)/, "");
+      });
+
+      card.addEventListener('click', ()=>onCardClick(card));
+      grid.appendChild(card);
+      cards.push(card);
+    }
+  }
+
+  function setCardAmount(card, amount){ card.querySelector('.front .amt').textContent = amount; }
+  function hideCardAmount(card){ setCardAmount(card, "?"); }
+  function flipUp(card){ card.classList.remove('faceDown'); card.classList.add('revealed'); }
+  function flipDown(card){ card.classList.add('faceDown'); card.classList.remove('revealed'); }
+  function lockAll(lock=true){ cards.forEach(c => c.classList.toggle('locked', lock)); }
+  const sleep = (ms)=>new Promise(r=>setTimeout(r, ms));
+
+  function setStatus(titleBold, hintHTML){
+    stateText.innerHTML = `Trạng thái: <b>${titleBold}</b>`;
+    hintMsg.innerHTML = hintHTML;
+  }
+
+  async function revealAll(){
+    phase = 1;
+    lockAll(true);
+    setStatus("Đang hiện mệnh giá", "✨ Đang mở lần 1… sẽ hiện đúng list mệnh giá.");
+    for(let i=0;i<cards.length;i++){
+      const c = cards[i];
+      setCardAmount(c, firstDenoms[i]);
+      flipUp(c);
+      beep({freq: 520 + i*18, dur: 0.05, type:"sine", gain:0.035});
+      await sleep(85);
+    }
+    lockAll(false);
+    setStatus("Đã hiện mệnh giá", "👉 Click <b>bất kỳ bao</b> lần 2 để <b>úp + ẩn + xáo trộn</b>.");
+  }
+
+  async function shuffleAll(){
+    phase = 2;
+    lockAll(true);
+    setStatus("Đang xáo trộn", "🌀 Đang úp xuống + ẩn mệnh giá + xào…");
+
+    // Úp + ẩn
+    for(let i=0;i<cards.length;i++){
+      const c = cards[i];
+      hideCardAmount(c);
+      flipDown(c);
+      beep({freq: 410, dur: 0.03, type:"sine", gain:0.028});
+      await sleep(45);
+    }
+
+    // Xào mượt
+    for(let round=0; round<6; round++){
+      cards.forEach(c => c.classList.add('shuffle'));
+      beep({freq: 220 + round*38, dur: 0.05, type:"square", gain:0.02});
+      await sleep(140);
+      cards.forEach(c => c.classList.remove('shuffle'));
+
+      const shuffledCards = [...cards].sort(()=>Math.random()-0.5);
+      shuffledCards.forEach(el => grid.appendChild(el));
+      cards = shuffledCards;
+      await sleep(80);
+    }
+
+    lockAll(false);
+    setStatus("Xáo xong", "🔥 Giờ hãy chọn <b>1 bao</b> để bốc (chỉ ra <b>10</b> hoặc <b>5</b>).");
+  }
+
+  function riggedResult(){ return Math.random() < 0.55 ? 10 : 5; }
+
+  async function pickOne(card){
+    if(card.classList.contains('revealed')) return;
+
+    phase = 3;
+    lockAll(true);
+    setStatus("Đang mở bao trúng", "✨ Đang lắc mạnh + phóng to + nổ hiệu ứng…");
+
+    // hiệu ứng chọn
+    card.classList.add('pickGlow','pickZoom','pickShake');
+    sparkleSound();
+    await sleep(520);
+
+    // reveal
+    const amount = riggedResult();
+    setCardAmount(card, amount);
+    flipUp(card);
+
+    boomSound();
+    const r = card.getBoundingClientRect();
+    burst(r.left + r.width/2, r.top + r.height/2, 1.15);
+    setTimeout(()=>burst(window.innerWidth*0.22, window.innerHeight*0.24, .72), 120);
+    setTimeout(()=>burst(window.innerWidth*0.78, window.innerHeight*0.26, .72), 190);
+
+    winAmtEl.textContent = String(amount);
+    winNote.innerHTML = (amount===10 ? "Đỉnh! 10k siêu may mắn ✨" : "5k nhưng vẫn đỏ lắm nha 🔥") +
+      "<br><span style='opacity:.78'>Click ra ngoài để đóng. Muốn chơi lại bấm <b>Đặt lại</b>.</span>";
+    overlay.classList.add('show');
+
+    setStatus("Đã bốc xong", "✅ Ván kết thúc. Bấm <b>Đặt lại</b> để chơi lại.");
+  }
+
+  function onCardClick(card){
+    if(phase === 0) return revealAll();
+    if(phase === 1) return shuffleAll();
+    if(phase === 2) return pickOne(card);
+    // phase 3: ignore
+  }
+
+  function resetAll(){
+    phase = 0;
+    overlay.classList.remove('show');
+    buildGrid();
+    cards.forEach(c=>{
+      hideCardAmount(c);
+      flipDown(c);
+      c.classList.remove('locked','pickGlow','pickZoom','pickShake','shuffle');
+    });
+    setStatus("Chưa mở lần 1", "👉 Click vào <b>bất kỳ bao lì xì</b> để bắt đầu.");
+  }
+
+  // overlay click to close (no buttons)
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) overlay.classList.remove('show'); });
+
+  // Only one button
+  btnReset.addEventListener('click', resetAll);
+
+  // init
+  buildGrid();
+  setStatus("Chưa mở lần 1", "👉 Click vào <b>bất kỳ bao lì xì</b> để bắt đầu.");
+})();
+</script>
+</body>
+</html>
