@@ -22,16 +22,18 @@ TITLE_SUB  = "TOOL QUẢN LÝ OKVIP"
 BRANDS = ["okgif", "okvote", "okvip"]
 
 NOTE_TEXT = (
-    "⚠️ CHÚ Ý:\n"
+    "⚠️ CHÚ Ý (ĐỌC KỸ):\n"
     "• Bạn cần có GPM để chạy AN TOÀN cho nick OKVIP của bạn.\n"
     "• Dùng GPM để đăng nhập lấy token, sau đó chạy ẩn mượt mà.\n"
     "• Hỗ trợ đồng thời ~100 luồng (nhẹ, hiệu quả).\n"
-    f"• Hệ sinh thái: {', '.join(BRANDS)}"
+    f"• Hệ sinh thái: {', '.join(BRANDS)}\n"
+    "• Khuyến nghị: chạy đúng quy trình để tránh rủi ro."
 )
 
-def target_tomorrow_18(now: datetime) -> datetime:
-    tomorrow = (now + timedelta(days=1)).date()
-    return datetime(tomorrow.year, tomorrow.month, tomorrow.day, 18, 0, 0)
+def target_day_after_tomorrow_18(now: datetime) -> datetime:
+    # "ngày kia" = hôm nay + 2 ngày, mốc 18:00
+    day_after_tomorrow = (now + timedelta(days=2)).date()
+    return datetime(day_after_tomorrow.year, day_after_tomorrow.month, day_after_tomorrow.day, 18, 0, 0)
 
 def sec_to_parts(total: int):
     if total < 0:
@@ -51,7 +53,7 @@ class Digit3D(QLabel):
         self._font_size = font_size
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        self.setMinimumHeight(int(font_size * 1.55))
+        self.setMinimumHeight(int(font_size * 1.65))
         self.setStyleSheet("background: transparent;")
 
     def setText(self, text: str) -> None:
@@ -66,13 +68,10 @@ class Digit3D(QLabel):
 
         r = QRectF(self.rect())
 
-        # font
         f = QFont("Consolas", self._font_size, QFont.Weight.Black)
         p.setFont(f)
 
-        # Build text path
         path = QPainterPath()
-        # Center baseline manually
         metrics = p.fontMetrics()
         text_w = metrics.horizontalAdvance(t)
         text_h = metrics.height()
@@ -92,19 +91,19 @@ class Digit3D(QLabel):
             p.setBrush(Qt.BrushStyle.NoBrush)
             p.drawPath(path)
 
-        # Outer stroke (dark edge)
+        # Outer stroke
         p.setPen(QPen(QColor(10, 10, 20, 220), 6, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
         p.setBrush(Qt.BrushStyle.NoBrush)
         p.drawPath(path)
 
-        # "3D depth" offset layers
-        for k in range(1, 7):
-            offset = QPointF(k * 1.2, k * 1.3)
-            shade = QColor(10, 10, 20, 130 - k * 12)
-            p.setPen(QPen(shade, 2.4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        # 3D depth offset layers
+        for k in range(1, 8):
+            offset = QPointF(k * 1.25, k * 1.35)
+            shade = QColor(10, 10, 20, max(0, 135 - k * 12))
+            p.setPen(QPen(shade, 2.5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
             p.drawPath(path.translated(offset))
 
-        # Main fill gradient (inside digits)
+        # Main fill gradient
         grad = QLinearGradient(QPointF(r.left(), r.top()), QPointF(r.right(), r.bottom()))
         grad.setColorAt(0.00, QColor(240, 250, 255))
         grad.setColorAt(0.35, QColor(160, 220, 255))
@@ -121,7 +120,7 @@ class Digit3D(QLabel):
         hi.setColorAt(1, QColor(255, 255, 255, 0))
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(QBrush(hi))
-        p.drawPath(path.translated(QPointF(-2.0, -3.0)))
+        p.drawPath(path.translated(QPointF(-2.0, -3.5)))
 
         p.end()
 
@@ -132,16 +131,16 @@ class VipCountdown(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("SS3 OKVIP - VIP Countdown 5D")
-        self.resize(980, 560)
-        self.setMinimumSize(860, 520)
+        self.resize(1000, 600)
+        self.setMinimumSize(900, 560)
 
         # ===== Title =====
         self.lb_title = QLabel(TITLE_MAIN)
         self.lb_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lb_title.setStyleSheet("""
             QLabel{
-                color: rgba(255,255,255,240);
-                font-size: 34px;
+                color: rgba(255,255,255,245);
+                font-size: 36px;
                 font-weight: 900;
                 letter-spacing: 2px;
             }
@@ -153,21 +152,21 @@ class VipCountdown(QWidget):
             QLabel{
                 color: rgba(230,245,255,230);
                 font-size: 18px;
-                font-weight: 700;
+                font-weight: 800;
                 letter-spacing: 4px;
             }
         """)
 
         # ===== 3D Countdown Row =====
-        self.d_days = Digit3D("00", font_size=52)
-        self.d_hh   = Digit3D("00", font_size=52)
-        self.d_mm   = Digit3D("00", font_size=52)
-        self.d_ss   = Digit3D("00", font_size=52)
+        self.d_days = Digit3D("00", font_size=54)
+        self.d_hh   = Digit3D("00", font_size=54)
+        self.d_mm   = Digit3D("00", font_size=54)
+        self.d_ss   = Digit3D("00", font_size=54)
 
         def mk_unit(txt):
             lb = QLabel(txt)
             lb.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lb.setStyleSheet("color: rgba(220,240,255,200); font-size: 12px; font-weight: 700;")
+            lb.setStyleSheet("color: rgba(220,240,255,210); font-size: 12px; font-weight: 900; letter-spacing: 2px;")
             return lb
 
         box_days = self._wrap_digit(self.d_days, mk_unit("NGÀY"))
@@ -185,25 +184,23 @@ class VipCountdown(QWidget):
         # ===== Target info =====
         self.lb_target = QLabel("")
         self.lb_target.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lb_target.setStyleSheet("color: rgba(210,230,255,200); font-size: 12px;")
+        self.lb_target.setStyleSheet("color: rgba(210,230,255,210); font-size: 13px; font-weight: 800;")
 
-        # ===== NOTE BOX (big, not overlapped) =====
+        # ===== NOTE BOX (BIG) =====
         self.note = QFrame()
         self.note.setObjectName("noteBox")
         self.note.setStyleSheet("""
             QFrame#noteBox{
                 border-radius: 18px;
-                background: rgba(8, 12, 24, 170);
-                border: 1px solid rgba(160, 220, 255, 90);
+                background: rgba(8, 12, 24, 175);
+                border: 1px solid rgba(160, 220, 255, 95);
             }
-            QLabel{
-                background: transparent;
-            }
+            QLabel{ background: transparent; }
         """)
         note_shadow = QGraphicsDropShadowEffect(self.note)
-        note_shadow.setBlurRadius(36)
-        note_shadow.setOffset(0, 10)
-        note_shadow.setColor(QColor(0, 0, 0, 170))
+        note_shadow.setBlurRadius(40)
+        note_shadow.setOffset(0, 12)
+        note_shadow.setColor(QColor(0, 0, 0, 175))
         self.note.setGraphicsEffect(note_shadow)
 
         self.lb_note = QLabel(NOTE_TEXT)
@@ -211,55 +208,54 @@ class VipCountdown(QWidget):
         self.lb_note.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.lb_note.setStyleSheet("""
             QLabel{
-                color: rgba(255,255,255,235);
-                font-size: 16px;       /* TO HƠN */
-                font-weight: 800;      /* ĐẬM HƠN */
+                color: rgba(255,255,255,240);
+                font-size: 18px;       /* TO HƠN NỮA */
+                font-weight: 900;      /* ĐẬM HƠN NỮA */
+                padding: 16px 18px;    /* KHÔNG LẤP */
                 line-height: 1.35;
-                padding: 14px 16px;    /* KHÔNG BỊ LẤP */
             }
         """)
-
         note_layout = QVBoxLayout(self.note)
-        note_layout.setContentsMargins(14, 14, 14, 14)
+        note_layout.setContentsMargins(16, 16, 16, 16)
         note_layout.addWidget(self.lb_note)
 
         # ===== Telegram button =====
-        self.btn_tele = QPushButton("📣 VÀO GROUP TELE - NHẬN THÔNG BÁO")
+        self.btn_tele = QPushButton("📣 VÀO GROUP TELE - NHẬN THÔNG BÁO NGAY")
         self.btn_tele.clicked.connect(self.open_tele)
         self.btn_tele.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_tele.setStyleSheet("""
             QPushButton{
-                border: 1px solid rgba(255,255,255,60);
-                border-radius: 16px;
-                padding: 14px 16px;
-                color: rgba(255,255,255,240);
+                border: 1px solid rgba(255,255,255,65);
+                border-radius: 18px;
+                padding: 15px 18px;
+                color: rgba(255,255,255,245);
                 font-size: 14px;
-                font-weight: 900;
+                font-weight: 950;
                 letter-spacing: 1px;
                 background: qlineargradient(x1:0,y1:0,x2:1,y2:1,
-                    stop:0 rgba(60,180,255,170),
-                    stop:0.5 rgba(170,120,255,170),
-                    stop:1 rgba(255,120,220,170)
+                    stop:0 rgba(60,180,255,175),
+                    stop:0.5 rgba(170,120,255,175),
+                    stop:1 rgba(255,120,220,175)
                 );
             }
             QPushButton:hover{
-                border: 1px solid rgba(255,255,255,140);
+                border: 1px solid rgba(255,255,255,150);
                 background: qlineargradient(x1:0,y1:0,x2:1,y2:1,
-                    stop:0 rgba(80,200,255,210),
-                    stop:0.5 rgba(190,140,255,210),
-                    stop:1 rgba(255,140,230,210)
+                    stop:0 rgba(85,210,255,220),
+                    stop:0.5 rgba(195,150,255,220),
+                    stop:1 rgba(255,150,235,220)
                 );
             }
             QPushButton:pressed{
-                padding-top: 16px;
-                padding-bottom: 12px;
-                background: rgba(20, 30, 55, 210);
+                padding-top: 17px;
+                padding-bottom: 13px;
+                background: rgba(18, 24, 44, 220);
             }
         """)
         tele_shadow = QGraphicsDropShadowEffect(self.btn_tele)
-        tele_shadow.setBlurRadius(28)
-        tele_shadow.setOffset(0, 10)
-        tele_shadow.setColor(QColor(0, 0, 0, 160))
+        tele_shadow.setBlurRadius(30)
+        tele_shadow.setOffset(0, 12)
+        tele_shadow.setColor(QColor(0, 0, 0, 165))
         self.btn_tele.setGraphicsEffect(tele_shadow)
 
         # ===== Root layout =====
@@ -276,14 +272,16 @@ class VipCountdown(QWidget):
         root.addWidget(self.btn_tele)
         self.setLayout(root)
 
-        # ===== Timer =====
+        # ===== Timers =====
         self._t = QTimer(self)
         self._t.timeout.connect(self.tick)
         self._t.start(1000)
+
         self._phase = 0.0
         self._anim = QTimer(self)
         self._anim.timeout.connect(self._animate_bg)
-        self._anim.start(16)  # ~60fps
+        self._anim.start(16)
+
         self.tick()
 
     def _wrap_digit(self, digit: QLabel, unit: QLabel) -> QWidget:
@@ -291,14 +289,14 @@ class VipCountdown(QWidget):
         card.setStyleSheet("""
             QFrame{
                 border-radius: 18px;
-                background: rgba(8, 12, 24, 110);
-                border: 1px solid rgba(255,255,255,35);
+                background: rgba(8, 12, 24, 115);
+                border: 1px solid rgba(255,255,255,38);
             }
         """)
         sh = QGraphicsDropShadowEffect(card)
-        sh.setBlurRadius(28)
-        sh.setOffset(0, 10)
-        sh.setColor(QColor(0, 0, 0, 160))
+        sh.setBlurRadius(30)
+        sh.setOffset(0, 12)
+        sh.setColor(QColor(0, 0, 0, 165))
         card.setGraphicsEffect(sh)
 
         v = QVBoxLayout(card)
@@ -319,8 +317,9 @@ class VipCountdown(QWidget):
 
     def tick(self):
         now = datetime.now()
-        target = target_tomorrow_18(now)
-        self.lb_target.setText(f"Mốc ra mắt: 18:00 ngày mai ({target.strftime('%d/%m/%Y')})")
+        target = target_day_after_tomorrow_18(now)  # ✅ NGÀY KIA 18:00
+
+        self.lb_target.setText(f"Mốc ra mắt: 18:00 ngày kia ({target.strftime('%d/%m/%Y')})")
 
         diff = int((target - now).total_seconds())
         if diff <= 0:
@@ -338,14 +337,13 @@ class VipCountdown(QWidget):
         self.d_mm.setText(f"{m:02d}")
         self.d_ss.setText(f"{s:02d}")
 
-    # ===== 5D background painting =====
     def paintEvent(self, e):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         r = QRectF(self.rect())
 
-        # Base gradient background (FIX: use QPointF)
+        # Base gradient background (✅ FIX QPointF)
         g = QLinearGradient(QPointF(r.left(), r.top()), QPointF(r.right(), r.bottom()))
         g.setColorAt(0.0, QColor(7, 10, 20))
         g.setColorAt(0.35, QColor(12, 18, 40))
@@ -366,22 +364,22 @@ class VipCountdown(QWidget):
             p.drawEllipse(QPointF(x, y), radius, radius)
 
         blob(cx + math.cos(t*0.9)*260, cy + math.sin(t*1.1)*120, 220,
-             QColor(80, 210, 255, 80), QColor(80, 210, 255, 0))
-        blob(cx + math.sin(t*1.0)*220, cy + math.cos(t*0.8)*160, 260,
-             QColor(190, 120, 255, 75), QColor(190, 120, 255, 0))
-        blob(cx + math.cos(t*1.2)*180, cy + math.sin(t*0.7)*220, 240,
-             QColor(255, 120, 210, 60), QColor(255, 120, 210, 0))
+             QColor(80, 210, 255, 85), QColor(80, 210, 255, 0))
+        blob(cx + math.sin(t*1.0)*220, cy + math.cos(t*0.8)*160, 270,
+             QColor(190, 120, 255, 80), QColor(190, 120, 255, 0))
+        blob(cx + math.cos(t*1.2)*180, cy + math.sin(t*0.7)*220, 250,
+             QColor(255, 120, 210, 65), QColor(255, 120, 210, 0))
 
-        # Subtle grid lines for "5D" vibe
+        # Subtle grid lines
         p.setPen(QPen(QColor(255, 255, 255, 12), 1))
         step = 46
-        for x in range(0, int(r.width())+1, step):
+        for x in range(0, int(r.width()) + 1, step):
             p.drawLine(x, 0, x, int(r.height()))
-        for y in range(0, int(r.height())+1, step):
+        for y in range(0, int(r.height()) + 1, step):
             p.drawLine(0, y, int(r.width()), y)
 
         # Border glow frame
-        frame = QRectF(r.left()+10, r.top()+10, r.width()-20, r.height()-20)
+        frame = QRectF(r.left() + 10, r.top() + 10, r.width() - 20, r.height() - 20)
         p.setBrush(Qt.BrushStyle.NoBrush)
         p.setPen(QPen(QColor(160, 220, 255, 45), 2))
         p.drawRoundedRect(frame, 22, 22)
