@@ -4,7 +4,6 @@ import os
 import uuid
 import hashlib
 import math
-import json
 from datetime import datetime, timedelta, date
 
 import requests
@@ -26,8 +25,11 @@ from PyQt6.QtWidgets import (
 # =========================
 TELE_URL = "https://t.me/+qJARWJhWEI1hOGFl"
 
+# MỐC CỐ ĐỊNH: 15:00 ngày 22/12/2025 (giờ VN/Asia/Bangkok)
+TARGET_DT = datetime(2025, 12, 22, 15, 0, 0)
+
 TITLE_MAIN = "🛠️ BẢO TRÌ TOOL SS3"
-TITLE_SUB  = "TỚI 15:00 NGÀY MAI"
+TITLE_SUB  = "TỚI 15:00 22/12/2025"
 
 BRANDS = ["okgif", "okvote", "okvip"]
 
@@ -45,28 +47,122 @@ HELLO_URL = "https://raw.githubusercontent.com/Thuanvuse/thuanvuse.github.io/ref
 
 # Demo code chạy thử (an toàn hơn: bạn tự dán nội dung hello.py vào đây nếu muốn chạy)
 CODE_DEMO = r"""# DÁN NỘI DUNG hello.py VÀO ĐÂY NẾU MUỐN CHẠY
-print("Hello SS3 demo!") 
+print("Hello SS3 demo!")
 """
 
+# Lưu ý: để lộ user/pass trong code là rủi ro. Bạn cân nhắc chuyển sang file cấu hình/DB nếu dùng thật.
 MA_may_da_duoc_kich_hoat = {
-    "d7093738c24062a8": {"username": "admin", "password": "thuanadmin", "expires_at": "2029-12-05", "SoLuong": 100},
-    "d27c7078c1b600c6": {"username": "hung1409", "password": "hung2006", "expires_at": "2025-12-30", "SoLuong": 30},
-    "9a8aed8e71cbcdef": {"username": "hehe1601", "password": "789456456Su", "expires_at": "2025-12-10", "SoLuong": 30},
-    "703503837aff938a": {"username": "echdepzai", "password": "echvn123", "expires_at": "2026-01-03", "SoLuong": 50},
-    "1d168402a9f1afc1": {"username": "tho123", "password": "tho123", "expires_at": "2050-01-03", "SoLuong": 30},
-    "954a5e1f685a7d46": {"username": "Anhtri0409", "password": "Taolatri0409", "expires_at": "2025-12-17", "SoLuong": 30},
-    "87d01e411f92c4f7": {"username": "phamtranthienkhai", "password": "Pttk123", "expires_at": "2025-12-19", "SoLuong": 30},
-    "0f80315d3971036e": {"username": "kienkhe1234", "password": "kienkhe123", "expires_at": "2025-12-20", "SoLuong": 30},
-    "9890bbf812c2ecfd": {"username": "minduc2404", "password": "Daz124578", "expires_at": "2025-12-6", "SoLuong": 30},
-    "ffa76e91e767cfb3": {"username": "np70664", "password": "123", "expires_at": "2026-1-03", "SoLuong": 30},
-    "97e235cdd8d870e2": {"username": "hoakieu15", "password": "123", "expires_at": "2026-12-8", "SoLuong": 30},
-    "e536f1fc03f37c92": {"username": "buinek", "password": "123", "expires_at": "2026-12-8", "SoLuong": 30},
-    "e517a734593832fd": {"username": "lyhaiss2k", "password": "ns25112007", "expires_at": "2026-12-12", "SoLuong": 30},
-    "3c6a74554204ff61": {"username": "palo00", "password": "Kingktv123@", "expires_at": "2025-12-14", "SoLuong": 30},
-    "50863a5eaed8c5e8": {"username": "vip", "password": "vip8987", "expires_at": "2030-12-14", "SoLuong": 30},
-    "7713b134f005e91b": {"username": "vip", "password": "vipjqka", "expires_at": "2030-12-14", "SoLuong": 300},
-    "32b2eb25fb61f39a": {"username": "anhvu1010", "password": "anhvux2005", "expires_at": "2025-12-17", "SoLuong": 30},
-    "84277914554027bd": {"username": "KENDU", "password": "123123", "expires_at": "2026-01-10", "SoLuong": 300},
+    # Ví dụ: thiết bị thuê 30 ngày
+    # expires_at: NGÀY HẾT HẠN theo định dạng YYYY-MM-DD (tính theo giờ Việt Nam, không tính giờ)
+    "d7093738c24062a8": {
+        "username": "admin",
+        "password": "thuanadmin",
+        "expires_at": "2029-12-05",
+        "SoLuong": 100
+    },
+    # Thiết bị thuê 7 ngày
+    "d27c7078c1b600c6": {
+        "username": "hung1409",
+        "password": "hung2006",
+        "expires_at": "2025-12-30",
+        "SoLuong": 30
+    },
+    # Thiết bị thuê 30 ngày
+    "9a8aed8e71cbcdef": {
+        "username": "hehe1601",
+        "password": "789456456Su",
+        "expires_at": "2025-12-10",
+        "SoLuong": 30
+    },
+    # Thiết bị thuê 7 ngày
+    "703503837aff938a": {
+        "username": "echdepzai",
+        "password": "echvn123",
+        "expires_at": "2026-01-03",
+        "SoLuong": 50
+    },
+    "1d168402a9f1afc1": {
+        "username": "tho123",
+        "password": "tho123",
+        "expires_at": "2050-01-03",
+        "SoLuong": 30
+    },
+    "954a5e1f685a7d46": {
+        "username": "Anhtri0409",
+        "password": "Taolatri0409",
+        "expires_at": "2025-12-17",
+        "SoLuong": 30
+    },
+    "87d01e411f92c4f7": {
+        "username": "phamtranthienkhai",
+        "password": "Pttk123",
+        "expires_at": "2025-12-19",
+        "SoLuong": 30
+    },
+    "0f80315d3971036e": {
+        "username": "kienkhe1234",
+        "password": "kienkhe123",
+        "expires_at": "2025-12-20",
+        "SoLuong": 30
+    },
+    "9890bbf812c2ecfd": {
+        "username": "minduc2404",
+        "password": "Daz124578",
+        "expires_at": "2025-12-6",
+        "SoLuong": 30
+    },
+    "ffa76e91e767cfb3": {
+        "username": "np70664",
+        "password": "123",
+        "expires_at": "2026-1-03",
+        "SoLuong": 30
+    },
+    "97e235cdd8d870e2": {
+        "username": "hoakieu15",
+        "password": "123",
+        "expires_at": "2026-12-8",
+        "SoLuong": 30
+    },
+    "e536f1fc03f37c92": {
+        "username": "buinek",
+        "password": "123",
+        "expires_at": "2026-12-8",
+        "SoLuong": 30
+    },
+    "e517a734593832fd": {
+        "username": "lyhaiss2k",
+        "password": "ns25112007",
+        "expires_at": "2026-12-12",
+        "SoLuong": 30
+    },
+    "3c6a74554204ff61": {
+        "username": "palo00",
+        "password": "Kingktv123@",
+        "expires_at": "2025-12-14",
+        "SoLuong": 30
+    },
+    "50863a5eaed8c5e8": {
+        "username": "vip",
+        "password": "vip8987",
+        "expires_at": "2030-12-14",
+        "SoLuong": 30
+    },
+    "7713b134f005e91b": {
+        "username": "vip",
+        "password": "vipjqka",
+        "expires_at": "2030-12-14",
+        "SoLuong": 300
+    },"32b2eb25fb61f39a": {
+        "username": "anhvu1010",
+        "password": "anhvux2005",
+        "expires_at": "2025-12-17",
+        "SoLuong": 30
+    },"f99daa774eb8c16d": {
+        "username": "KENDU",
+        "password": "123123",
+        "expires_at": "2026-01-10",
+        "SoLuong": 300
+    }
 }
 
 # =========================
@@ -90,9 +186,7 @@ def get_device_id():
         return str(uuid.uuid4())[:16]
 
 def parse_date_loose(s: str) -> date:
-    """
-    Parse 'YYYY-M-D' or 'YYYY-MM-DD' safely -> date
-    """
+    """Parse 'YYYY-M-D' or 'YYYY-MM-DD' safely -> date"""
     if not s:
         raise ValueError("empty date")
     parts = s.strip().split("-")
@@ -102,10 +196,6 @@ def parse_date_loose(s: str) -> date:
     m = int(parts[1])
     d = int(parts[2])
     return date(y, m, d)
-
-def target_tomorrow_15(now: datetime) -> datetime:
-    tomorrow = (now + timedelta(days=1)).date()
-    return datetime(tomorrow.year, tomorrow.month, tomorrow.day, 15, 0, 0)
 
 def sec_to_parts(total: int):
     if total < 0:
@@ -334,11 +424,11 @@ class VipCountdown(QWidget):
         self.btn_gpm.clicked.connect(self.test_gpm)
         self._style_dark_btn(self.btn_gpm)
 
-        self.btn_demo = QPushButton("🧪 THỬ NGHIỆM TRƯỚC SS3 (XEM CODE DEMO)")
-        self.btn_demo.clicked.connect(self.show_demo_code)
-        self._style_dark_btn(self.btn_demo)
+        # self.btn_demo = QPushButton("🧪 THỬ NGHIỆM TRƯỚC SS3 (XEM CODE DEMO)")
+        # self.btn_demo.clicked.connect(self.show_demo_code)
+        # self._style_dark_btn(self.btn_demo)
 
-        # Root layout (GIỮ GIAO DIỆN, CHỈ THÊM NÚT)
+        # Root layout
         root = QVBoxLayout()
         root.setContentsMargins(26, 22, 26, 22)
         root.setSpacing(12)
@@ -357,7 +447,7 @@ class VipCountdown(QWidget):
         btn_row.addWidget(self.btn_gpm)
         root.addLayout(btn_row)
 
-        root.addWidget(self.btn_demo)
+        # root.addWidget(self.btn_demo)
 
         self.setLayout(root)
 
@@ -538,8 +628,6 @@ class VipCountdown(QWidget):
             )
 
     def show_demo_code(self):
-        # Lưu ý: KHÔNG auto-exec code từ URL vì rủi ro.
-        # Mình cho bạn 2 lựa chọn: mở link để xem hoặc chạy CODE_DEMO (bạn tự dán nội dung).
         msg = QMessageBox(self)
         msg.setWindowTitle("Thử nghiệm trước SS3")
         msg.setIcon(QMessageBox.Icon.Information)
@@ -560,7 +648,6 @@ class VipCountdown(QWidget):
             return
         if clicked == btn_run:
             try:
-                # chạy trong namespace riêng, tránh đè globals của app
                 ns = {"__name__": "__demo__", "__file__": "<memory>"}
                 exec(CODE_DEMO, ns, ns)
                 QMessageBox.information(self, "Demo", "✅ Đã chạy CODE_DEMO (xem output trong terminal).")
@@ -576,8 +663,9 @@ class VipCountdown(QWidget):
 
     def tick(self):
         now = datetime.now()
-        target = target_tomorrow_15(now)
-        self.lb_target.setText(f"Thời gian kết thúc bảo trì: 15:00 ngày mai ({target.strftime('%d/%m/%Y')})")
+        target = TARGET_DT
+
+        self.lb_target.setText(f"Thời gian kết thúc bảo trì: {target.strftime('%H:%M %d/%m/%Y')}")
 
         diff = int((target - now).total_seconds())
         if diff <= 0:
