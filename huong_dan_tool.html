@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng Dẫn Sử Dụng Tool Thun Ss4</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f1419 0%, #1a1a1a 100%);
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #00ff00 0%, #32cd32 100%);
+            padding: 30px 0;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 255, 0, 0.3);
+        }
+
+        .logo {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .version {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        /* Navigation */
+        nav {
+            background: #2a2a2a;
+            padding: 15px 0;
+            border-bottom: 2px solid #00ff00;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        nav ul li {
+            margin: 0 20px;
+        }
+
+        nav ul li a {
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        nav ul li a:hover {
+            background: #00ff00;
+            color: #000;
+        }
+
+        /* Sections */
+        section {
+            padding: 60px 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #00ff00;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            opacity: 0.8;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: #00ff00;
+            box-shadow: 0 10px 30px rgba(0, 255, 0, 0.2);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #00ff00;
+            text-align: center;
+        }
+
+        .card-content {
+            line-height: 1.7;
+        }
+
+        /* Steps */
+        .steps {
+            max-width: 800px;
+            margin: 40px auto;
+        }
+
+        .step {
+            background: rgba(0, 255, 0, 0.1);
+            border-left: 4px solid #00ff00;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .step-number {
+            background: #00ff00;
+            color: #000;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        /* Features */
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .feature-item {
+            background: rgba(0, 255, 0, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 0, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .feature-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #00ff00;
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, #00ff00 0%, #32cd32 100%);
+            color: #000;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 1px solid #00ff00;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 255, 0, 0.2);
+        }
+
+        /* Code blocks */
+        .code-block {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            color: #00ff00;
+        }
+
+        /* Footer */
+        footer {
+            background: #1a1a1a;
+            padding: 30px 0;
+            text-align: center;
+            border-top: 2px solid #00ff00;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .footer-section {
+            margin: 20px;
+        }
+
+        .footer-section h3 {
+            color: #00ff00;
+            margin-bottom: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2.5rem;
+            }
+
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            nav ul li {
+                margin: 5px 0;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                flex-direction: column;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00ff00;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #32cd32;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <h1 class="logo">🌸 Thun Ss4</h1>
+            <p class="subtitle">Công cụ tự động hóa OKVIP Professional</p>
+            <div class="version">Phiên bản v1.0.0</div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="#gioi-thieu">Giới thiệu</a></li>
+                <li><a href="#yeu-cau">Yêu cầu</a></li>
+                <li><a href="#setup">Setup</a></li>
+                <li><a href="#huong-dan">Hướng dẫn</a></li>
+                <li><a href="#chuc-nang">Chức năng</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#download">Download</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Yêu cầu hệ thống -->
+    <section id="yeu-cau" style="background: rgba(0, 255, 0, 0.05);">
+        <div class="container">
+            <h2 class="section-title">💻 Yêu cầu hệ thống</h2>
+            <p class="section-subtitle">Đảm bảo máy tính của bạn đáp ứng các yêu cầu tối thiểu để chạy tool hiệu quả.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">🖥️</div>
+                    <h3 class="card-title">Hệ điều hành</h3>
+                    <div class="card-content">
+                        <strong>Windows 10/11 (64-bit)</strong><br>
+                        <strong>Linux:</strong> Ubuntu 18.04+, CentOS 7+<br>
+                        <strong>macOS:</strong> 10.15+ (Catalina trở lên)<br>
+                        <em>Khuyến nghị: Windows 10/11</em>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">🧠</div>
+                    <h3 class="card-title">CPU & RAM</h3>
+                    <div class="card-content">
+                        <strong>CPU:</strong> Intel i3/Ryzen 3 trở lên<br>
+                        <strong>RAM:</strong> Tối thiểu 8GB, khuyến nghị 16GB+<br>
+                        <strong>Đa nhân:</strong> 4 cores trở lên<br>
+                        <em>SSD khuyến nghị cho tốc độ cao</em>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">💾</div>
+                    <h3 class="card-title">Ổ cứng</h3>
+                    <div class="card-content">
+                        <strong>Dung lượng trống:</strong> 5GB+<br>
+                        <strong>Loại:</strong> SSD > HDD > eMMC<br>
+                        <strong>Tốc độ:</strong> 500MB/s+ đọc/ghi<br>
+                        <em>GPM cần không gian cho profiles</em>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">🌐</div>
+                    <h3 class="card-title">Mạng & Proxy</h3>
+                    <div class="card-content">
+                        <strong>Tốc độ:</strong> 10Mbps+ upload/download<br>
+                        <strong>Proxy:</strong> SOCKS5/HTTP hỗ trợ auth<br>
+                        <strong>Rotation:</strong> Khuyến nghị để tránh ban<br>
+                        <em>IPv4 static cho stability</em>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Benchmarks -->
+            <div style="margin-top: 50px; text-align: center;">
+                <h3 style="color: #00ff00; margin-bottom: 30px;">📊 HIỆU SUẤT THỰC TẾ</h3>
+                <div class="card-grid">
+                    <div class="card">
+                        <h3 class="card-title">🔄 Tốc độ đăng nhập</h3>
+                        <div class="card-content">
+                            <strong>1 account:</strong> 15-30 giây<br>
+                            <strong>10 accounts:</strong> 2-3 phút<br>
+                            <strong>50 accounts:</strong> 8-12 phút<br>
+                            <em>Phụ thuộc vào mạng và proxy</em>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">💰 Tốc độ lấy điểm</h3>
+                        <div class="card-content">
+                            <strong>1 account:</strong> 100-200 điểm/phút<br>
+                            <strong>10 accounts:</strong> 800-1500 điểm/phút<br>
+                            <strong>50 accounts:</strong> 3000-8000 điểm/phút<br>
+                            <em>Tối ưu với đa luồng</em>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">🎯 Độ ổn định</h3>
+                        <div class="card-content">
+                            <strong>Uptime:</strong> 99.5%+ (với proxy tốt)<br>
+                            <strong>Error rate:</strong> <1% (trong điều kiện tốt)<br>
+                            <strong>Recovery:</strong> Tự động retry khi lỗi<br>
+                            <em>Monitor 24/7 khuyến nghị</em>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Giới thiệu -->
+    <section id="gioi-thieu">
+        <div class="container">
+            <h2 class="section-title">🎯 Giới thiệu</h2>
+            <p class="section-subtitle">Thun Ss4 là công cụ tự động hóa hàng đầu cho OKVIP, giúp bạn quản lý và thao tác tài khoản một cách hiệu quả.</p>
+
+            <div class="card-grid">
+                <div class="card fade-in-up">
+                    <div class="card-icon">🚀</div>
+                    <h3 class="card-title">Tự động hóa hoàn toàn</h3>
+                    <div class="card-content">
+                        <p>Tool tự động thực hiện tất cả các tác vụ OKVIP từ đăng nhập đến các hoạt động hàng ngày, giúp bạn tiết kiệm thời gian và công sức.</p>
+                    </div>
+                </div>
+
+                <div class="card fade-in-up">
+                    <div class="card-icon">🔒</div>
+                    <h3 class="card-title">Bảo mật cao</h3>
+                    <div class="card-content">
+                        <p>Sử dụng công nghệ GPM Login để quản lý profile browser riêng biệt, đảm bảo an toàn và tránh bị phát hiện.</p>
+                    </div>
+                </div>
+
+                <div class="card fade-in-up">
+                    <div class="card-icon">⚡</div>
+                    <h3 class="card-title">Hiệu suất tối ưu</h3>
+                    <div class="card-content">
+                        <p>Hỗ trợ đa luồng, xử lý hàng trăm tài khoản cùng lúc với tốc độ cao và ổn định.</p>
+                    </div>
+                </div>
+
+                <div class="card fade-in-up">
+                    <div class="card-icon">🎨</div>
+                    <h3 class="card-title">Giao diện thân thiện</h3>
+                    <div class="card-content">
+                        <p>Giao diện xanh lục tươi sáng, dễ sử dụng với các menu context menu tiện lợi.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screenshots -->
+            <div style="margin-top: 60px; text-align: center;">
+                <h3 style="color: #00ff00; margin-bottom: 30px;">📸 GIAO DIỆN MINH HỌA</h3>
+                <div class="card-grid">
+                    <div class="card">
+                        <h3 class="card-title">🏠 Màn hình chính</h3>
+                        <div class="card-content">
+                            <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 10px 0;">
+                                <div style="color: #00ff00; font-family: monospace;">
+                                    ┌─────────────────────────────────────┐<br>
+                                    │        🌸 THUN SS4 v1.0.0         │<br>
+                                    ├─────────────────────────────────────┤<br>
+                                    │ 🆔 User │ 💰 Điểm │ 🔄 Trạng thái │<br>
+                                    │ user1   │  1,250 │ ✅ Hoạt động   │<br>
+                                    │ user2   │    890 │ 🔄 Đang chơi   │<br>
+                                    │ user3   │  2,100 │ ❌ Lỗi mạng   │<br>
+                                    └─────────────────────────────────────┘<br>
+                                </div>
+                            </div>
+                            <p>Dashboard chính với danh sách tài khoản và trạng thái real-time.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">📋 Context Menu</h3>
+                        <div class="card-content">
+                            <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 10px 0;">
+                                <div style="color: #00ff00; font-family: monospace; text-align: left;">
+                                    Right-click Menu:<br>
+                                    🔐 Đăng nhập<br>
+                                    💰 Lấy điểm<br>
+                                    🔗 Check liên kết<br>
+                                    🔐 Set mã PIN<br>
+                                    📋 Copy → Token/User/FID/Proxy<br>
+                                    🗑️ Xóa tài khoản cấm<br>
+                                    📋 Lịch sử → Rút tiền/Điểm/Code<br>
+                                </div>
+                            </div>
+                            <p>Menu chuột phải với đầy đủ chức năng quản lý tài khoản.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">⚙️ Cài đặt</h3>
+                        <div class="card-content">
+                            <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 10px 0;">
+                                <div style="color: #00ff00; font-family: monospace;">
+                                    Settings:<br>
+                                    • API Key: *******<br>
+                                    • Max Threads: 10<br>
+                                    • Browser Version: 129.0.6668.59<br>
+                                    • Auto Backup: ✅<br>
+                                    • Dark Theme: ✅<br>
+                                </div>
+                            </div>
+                            <p>Cài đặt nâng cao với tùy chỉnh chi tiết.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Setup -->
+    <section id="setup" style="background: rgba(0, 255, 0, 0.05);">
+        <div class="container">
+            <h2 class="section-title">⚙️ Hướng dẫn Setup</h2>
+            <p class="section-subtitle">Các bước cài đặt và cấu hình để tool hoạt động tối ưu.</p>
+
+            <div class="steps">
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <strong>Cài đặt GoLogin Profile Manager (GPM)</strong><br>
+                    <p>Tải và cài đặt GPM từ trang chủ gollogin.com. GPM là công cụ quản lý profile browser cần thiết để tool hoạt động.</p>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <strong>Khởi động GPM</strong><br>
+                    <p>Mở ứng dụng GPM và đảm bảo nó chạy trên port 19995. Tool sẽ kết nối đến GPM để tạo và quản lý profile browser.</p>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>Cấu hình Settings</strong><br>
+                    <p>Chỉnh sửa file settings.json để cấu hình:</p>
+                    <div class="code-block">
+{
+    "api_key": "your_autocaptcha_key",
+    "browser_version": "129.0.6668.59",
+    "gpm_api_host": "http://127.0.0.1:19995"
+}</div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <strong>Thêm tài khoản</strong><br>
+                    <p>Thêm tài khoản OKVIP vào file data/accounts.json với format:</p>
+                    <div class="code-block">
+{
+    "token": "",
+    "proxy": "host:port:user:pass",
+    "user": "username",
+    "pass": "password",
+    "fid": "fid_value",
+    "rid": "rid_value"
+}</div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">5</span>
+                    <strong>Chạy tool</strong><br>
+                    <p>Mở command prompt và chạy: <code>python OKVIP_vip.py</code></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hướng dẫn sử dụng -->
+    <section id="huong-dan">
+        <div class="container">
+            <h2 class="section-title">📖 Hướng dẫn Sử dụng</h2>
+            <p class="section-subtitle">Cách sử dụng tool một cách hiệu quả và an toàn.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">🔐</div>
+                    <h3 class="card-title">Đăng nhập tài khoản</h3>
+                    <div class="card-content">
+                        <p><strong>Cách 1:</strong> Click chuột phải vào tài khoản → "🔐 Đăng nhập" → "Dòng đã chọn"</p>
+                        <p><strong>Cách 2:</strong> Sử dụng nút "Đăng nhập" trên giao diện chính</p>
+                        <p>Tool sẽ tự động tạo profile browser, nhập thông tin và giải captcha để đăng nhập.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">📋</div>
+                    <h3 class="card-title">Copy thông tin</h3>
+                    <div class="card-content">
+                        <p>Click chuột phải → "📋 Copy" → Chọn loại thông tin cần copy:</p>
+                        <ul>
+                            <li>Token - Token đăng nhập</li>
+                            <li>User - Tên đăng nhập</li>
+                            <li>User|Pass - User và password</li>
+                            <li>FID - ID Facebook</li>
+                            <li>Proxy - Thông tin proxy</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">💰</div>
+                    <h3 class="card-title">Thao tác tài khoản</h3>
+                    <div class="card-content">
+                        <p>Sử dụng các menu chức năng để thực hiện:</p>
+                        <ul>
+                            <li>💰 Lấy điểm - Thu thập điểm thưởng</li>
+                            <li>🎲 Quay chữ - Chơi game quay chữ</li>
+                            <li>🎰 Quay vòng quay - Tham gia vòng quay</li>
+                            <li>📅 Điểm danh - Điểm danh hàng ngày</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">🔄</div>
+                    <h3 class="card-title">Quản lý tài khoản</h3>
+                    <div class="card-content">
+                        <p>Các chức năng quản lý nâng cao:</p>
+                        <ul>
+                            <li>🔐 Set mã PIN - Thiết lập PIN rút tiền</li>
+                            <li>🔗 Check liên kết - Kiểm tra trạng thái liên kết</li>
+                            <li>🔄 Thay Proxy - Đổi proxy cho tài khoản</li>
+                            <li>🗑️ Xóa tài khoản cấm - Xóa acc bị khóa</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chức năng chi tiết -->
+    <section id="chuc-nang" style="background: rgba(0, 255, 0, 0.05);">
+        <div class="container">
+            <h2 class="section-title">🔧 Chi tiết các chức năng</h2>
+            <p class="section-subtitle">Mô tả đầy đủ tác dụng của từng tính năng trong tool.</p>
+
+            <div class="feature-list">
+                <div class="feature-item">
+                    <div class="feature-icon">🔐</div>
+                    <div class="feature-title">Đăng nhập tự động</div>
+                    <p>Tự động đăng nhập tài khoản OKVIP với giải captcha thông minh. Hỗ trợ retry khi captcha sai, set FID/RID tự động.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">💰</div>
+                    <div class="feature-title">Lấy điểm thưởng</div>
+                    <p>Tự động thu thập điểm thưởng từ các hoạt động OKVIP. Hỗ trợ đa luồng để xử lý nhiều tài khoản cùng lúc.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🎲</div>
+                    <div class="feature-title">Quay chữ</div>
+                    <p>Chơi game quay chữ tự động để nhận thưởng. Có thể quay số lượng lớn với tốc độ cao.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🎰</div>
+                    <div class="feature-title">Vòng quay may mắn</div>
+                    <p>Tham gia vòng quay may mắn tự động. Kiểm tra số lượt trước khi quay, tối ưu hóa lợi nhuận.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🎲</div>
+                    <div class="feature-title">Chơi Loto</div>
+                    <p>Chơi game Loto tự động với chiến lược tối ưu. Hỗ trợ chơi số lượng lớn và theo dõi kết quả.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">📅</div>
+                    <div class="feature-title">Điểm danh</div>
+                    <p>Điểm danh hàng ngày tự động. Xem lịch điểm danh và chuỗi ngày liên tiếp.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">❓</div>
+                    <div class="feature-title">Trả lời câu hỏi</div>
+                    <p>Tự động trả lời câu hỏi OKVIP. Hỗ trợ nhiều loại câu hỏi với độ chính xác cao.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🔥</div>
+                    <div class="feature-title">OKGift</div>
+                    <p>Tham gia chương trình OKGift tự động. Nhận quà tặng và tích điểm thưởng.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🗳️</div>
+                    <div class="feature-title">Vote OKVIP Brand</div>
+                    <p>Tự động vote cho thương hiệu OKVIP. Hỗ trợ vote số lượng lớn.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🔗</div>
+                    <div class="feature-title">Check liên kết</div>
+                    <p>Kiểm tra trạng thái liên kết tài khoản. Phát hiện tài khoản chưa liên kết hoặc lỗi.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🔐</div>
+                    <div class="feature-title">Set mã PIN</div>
+                    <p>Thiết lập mã PIN rút tiền tự động. Hỗ trợ set cho nhiều tài khoản cùng lúc.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🔄</div>
+                    <div class="feature-title">Thay đổi Proxy</div>
+                    <p>Đổi proxy cho tài khoản một cách nhanh chóng. Hỗ trợ nhiều loại proxy format.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">📋</div>
+                    <div class="feature-title">Copy thông tin</div>
+                    <p>Sao chép nhanh thông tin tài khoản: token, user, password, FID, proxy.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">📋</div>
+                    <div class="feature-title">Lịch sử</div>
+                    <p>Xem lịch sử rút tiền, lịch sử điểm, lịch sử code redeem chi tiết.</p>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🗑️</div>
+                    <div class="feature-title">Xóa tài khoản cấm</div>
+                    <p>Tự động xóa các tài khoản bị khóa hoặc vi phạm. Dọn dẹp danh sách tài khoản.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq">
+        <div class="container">
+            <h2 class="section-title">❓ Câu hỏi thường gặp & Xử lý lỗi</h2>
+            <p class="section-subtitle">Giải đáp đầy đủ các thắc mắc và cách khắc phục tất cả lỗi có thể xảy ra.</p>
+
+            <div class="card-grid">
+                <!-- Lỗi GPM -->
+                <div class="card">
+                    <h3 class="card-title">❌ "GPM Login đang tắt"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> GoLogin Profile Manager chưa được khởi động<br>
+                        <strong>Khắc phục:</strong><br>
+                        1. Tải GPM từ gollogin.com<br>
+                        2. Cài đặt và khởi động GPM<br>
+                        3. Đảm bảo GPM chạy trên port 19995<br>
+                        4. Kiểm tra firewall không chặn port
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">❌ "Not found browser version"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> Phiên bản browser trong settings.json không đúng<br>
+                        <strong>Khắc phục:</strong><br>
+                        1. Mở GPM Login<br>
+                        2. Vào Settings → Browser Version<br>
+                        3. Copy phiên bản hiển thị (vd: "129.0.6668.59")<br>
+                        4. Cập nhật vào settings.json<br>
+                        5. Khởi động lại tool
+                    </div>
+                </div>
+
+                <!-- Lỗi đăng nhập -->
+                <div class="card">
+                    <h3 class="card-title">🚫 "Đăng nhập bị hạn chế"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> Tài khoản bị tạm khóa hoặc vi phạm<br>
+                        <strong>Khắc phục:</strong><br>
+                        • Đợi 24-48 giờ để khóa tự động hết<br>
+                        • Liên hệ hỗ trợ OKVIP<br>
+                        • Tool sẽ dừng ngay khi gặp lỗi này
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">🚫 "Tài khoản bị cấm"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> Tài khoản vi phạm nghiêm trọng<br>
+                        <strong>Khắc phục:</strong><br>
+                        • Sử dụng menu "🗑️ Xóa tài khoản cấm dùng"<br>
+                        • Xóa tài khoản khỏi danh sách<br>
+                        • Tool sẽ dừng ngay khi gặp lỗi này
+                    </div>
+                </div>
+
+                <!-- Lỗi captcha -->
+                <div class="card">
+                    <h3 class="card-title">🔄 "Mã xác minh hình ảnh sai"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> Captcha giải sai<br>
+                        <strong>Khắc phục:</strong><br>
+                        • Tool tự động giải lại captcha mới<br>
+                        • Kiểm tra api_key autocaptcha còn tiền<br>
+                        • Nạp thêm tiền vào tài khoản captcha<br>
+                        • Tool chỉ thử 1 lần cho mỗi captcha
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">❌ "Không thể giải captcha"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> API captcha lỗi hoặc hết tiền<br>
+                        <strong>Khắc phục:</strong><br>
+                        • Kiểm tra api_key trong settings.json<br>
+                        • Nạp tiền vào autocaptcha.pro<br>
+                        • Chuyển sang dịch vụ captcha khác<br>
+                        • Kiểm tra kết nối internet
+                    </div>
+                </div>
+
+                <!-- Lỗi token -->
+                <div class="card">
+                    <h3 class="card-title">🔑 "Token die hoặc không có token"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> Token hết hạn hoặc sai<br>
+                        <strong>Khắc phục:</strong><br>
+                        • Tool sẽ tự động đăng nhập để lấy token mới<br>
+                        • Đảm bảo tài khoản OKVIP còn hoạt động<br>
+                        • Kiểm tra username/password đúng
+                    </div>
+                </div>
+
+                <!-- Lỗi form -->
+                <div class="card">
+                    <h3 class="card-title">📝 "Lỗi khi điền form"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> Website OKVIP thay đổi hoặc lỗi mạng<br>
+                        <strong>Khắc phục:</strong><br>
+                        • Thử lại sau vài phút<br>
+                        • Kiểm tra kết nối internet ổn định<br>
+                        • Đảm bảo OKVIP không đang bảo trì
+                    </div>
+                </div>
+
+                <!-- Lỗi profile -->
+                <div class="card">
+                    <h3 class="card-title">🌐 "Lỗi tạo profile"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> GPM không tạo được profile<br>
+                        <strong>Khắc phục:</strong><br>
+                        • Kiểm tra GPM đang chạy<br>
+                        • Đảm bảo đủ dung lượng ổ cứng<br>
+                        • Restart GPM<br>
+                        • Xóa các profile cũ không dùng
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">🚀 "Lỗi khởi động profile"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> GPM không start được browser<br>
+                        <strong>Khắc phục:</strong><br>
+                        • Đóng các browser khác<br>
+                        • Đảm bảo đủ RAM (ít nhất 4GB trống)<br>
+                        • Restart GPM<br>
+                        • Kiểm tra antivirus không chặn
+                    </div>
+                </div>
+
+                <!-- Lỗi khác -->
+                <div class="card">
+                    <h3 class="card-title">💰 "Không đủ tiền rút"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> Số dư không đủ<br>
+                        <strong>Khắc phục:</strong><br>
+                        • Chơi thêm game để tích điểm<br>
+                        • Điểm danh hàng ngày<br>
+                        • Quay chữ và vòng quay<br>
+                        • Tham gia OKGift
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">🔗 "Chưa liên kết tài khoản"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> Chưa liên kết với game/ví<br>
+                        <strong>Khắc phục:</strong><br>
+                        • Menu "🔗 Liên kết / Game"<br>
+                        • Chọn "🎮 Liên kết game"<br>
+                        • Hoàn tất liên kết để rút tiền
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">⚡ "Tool chạy chậm"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> Máy yếu hoặc quá tải<br>
+                        <strong>Khắc phục:</strong><br>
+                        • Giảm số luồng trong Settings<br>
+                        • Đóng các chương trình không cần<br>
+                        • Đảm bảo ít nhất 8GB RAM<br>
+                        • Sử dụng SSD thay vì HDD
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">🔒 "Lỗi set PIN"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> Lỗi khi thiết lập PIN<br>
+                        <strong>Khắc phục:</strong><br>
+                        • Thử lại với ít tài khoản hơn<br>
+                        • Kiểm tra tài khoản còn hoạt động<br>
+                        • Đợi GPM ổn định rồi thử lại
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">🌐 "Lỗi kết nối mạng"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> Mạng không ổn định<br>
+                        <strong>Khắc phục:</strong><br>
+                        • Kiểm tra kết nối internet<br>
+                        • Thử lại sau vài phút<br>
+                        • Thay đổi proxy nếu dùng<br>
+                        • Restart router/modem
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">💾 "Lỗi lưu file"?</h3>
+                    <div class="card-content">
+                        <strong>Nguyên nhân:</strong> Không ghi được file<br>
+                        <strong>Khắc phục:</strong><br>
+                        • Chạy tool với quyền Administrator<br>
+                        • Kiểm tra ổ cứng còn trống<br>
+                        • Đóng file accounts.json nếu đang mở<br>
+                        • Thư mục data có quyền write
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thêm section hướng dẫn nâng cao -->
+            <div style="margin-top: 60px; text-align: center;">
+                <h3 style="color: #00ff00; margin-bottom: 30px;">🚀 HƯỚNG DẪN NÂNG CAO</h3>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <h3 class="card-title">⚙️ Tối ưu hiệu suất</h3>
+                        <div class="card-content">
+                            <strong>CPU & RAM:</strong> Đóng các app không cần, dùng SSD<br>
+                            <strong>Luồng:</strong> 5-10 luồng cho máy yếu, 20-50 cho máy mạnh<br>
+                            <strong>Proxy:</strong> Dùng proxy chất lượng, rotate IP<br>
+                            <strong>Thời gian:</strong> Chạy vào khung giờ ít người dùng
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">🛡️ Bảo mật tài khoản</h3>
+                        <div class="card-content">
+                            <strong>Password mạnh:</strong> Kết hợp chữ, số, ký tự đặc biệt<br>
+                            <strong>2FA:</strong> Bật xác thực 2 yếu tố nếu có<br>
+                            <strong>Proxy riêng:</strong> Mỗi account dùng proxy khác<br>
+                            <strong>Monitor:</strong> Theo dõi hoạt động bất thường
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">📊 Quản lý rủi ro</h3>
+                        <div class="card-content">
+                            <strong>Limit:</strong> Không chơi quá nhiều trong 1 ngày<br>
+                            <strong>Balance:</strong> Để lại ít nhất 50% điểm không rút<br>
+                            <strong>Backup:</strong> Sao lưu file accounts.json<br>
+                            <strong>Logs:</strong> Theo dõi log để phát hiện vấn đề sớm
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download -->
+    <section id="download" style="background: rgba(0, 255, 0, 0.05);">
+        <div class="container">
+            <h2 class="section-title">📥 Download & Cài đặt</h2>
+            <p class="section-subtitle">Tải xuống tool và các thành phần cần thiết.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">📦</div>
+                    <h3 class="card-title">Tool Thun Ss4 v1.0.0</h3>
+                    <div class="card-content">
+                        <p><strong>Phiên bản:</strong> v1.0.0 (Stable)</p>
+                        <p><strong>Dung lượng:</strong> ~50MB</p>
+                        <p><strong>Yêu cầu:</strong> Python 3.8+</p>
+                        <p><strong>OS:</strong> Windows 10/11, Linux, macOS</p>
+                        <a href="#" class="btn btn-secondary">📥 Download Tool</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">🌐</div>
+                    <h3 class="card-title">GoLogin Profile Manager</h3>
+                    <div class="card-content">
+                        <p><strong>Phiên bản:</strong> Latest</p>
+                        <p><strong>Dung lượng:</strong> ~100MB</p>
+                        <p><strong>Yêu cầu:</strong> Windows/Linux/macOS</p>
+                        <p><strong>Mục đích:</strong> Quản lý browser profiles</p>
+                        <a href="https://gologin.com/" class="btn btn-secondary" target="_blank">🌐 Download GPM</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">🤖</div>
+                    <h3 class="card-title">Auto Captcha API</h3>
+                    <div class="card-content">
+                        <p><strong>Dịch vụ:</strong> autocaptcha.pro</p>
+                        <p><strong>Giá:</strong> ~$1/1000 captcha</p>
+                        <p><strong>Tốc độ:</strong> 10-30 giây/captcha</p>
+                        <p><strong>Độ chính xác:</strong> 95%+</p>
+                        <a href="https://autocaptcha.pro/" class="btn btn-secondary" target="_blank">🤖 Đăng ký API</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Installation Steps -->
+            <div style="margin-top: 50px; text-align: center;">
+                <h3 style="color: #00ff00; margin-bottom: 30px;">🛠️ HƯỚNG DẪN CÀI ĐẶT CHI TIẾT</h3>
+
+                <div class="steps">
+                    <div class="step">
+                        <span class="step-number">1</span>
+                        <strong>Tải và giải nén Tool</strong><br>
+                        <p>Tải file ZIP từ link download → Giải nén vào thư mục bất kỳ → Đảm bảo thư mục có quyền đọc/ghi</p>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">2</span>
+                        <strong>Cài đặt Python (nếu chưa có)</strong><br>
+                        <p>Tải Python 3.8+ từ python.org → Chạy installer → Đảm bảo thêm Python vào PATH → Restart máy</p>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">3</span>
+                        <strong>Cài đặt dependencies</strong><br>
+                        <div class="code-block">
+cd thư-mục-tool<br>
+pip install -r requirements.txt
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">4</span>
+                        <strong>Cài đặt GPM</strong><br>
+                        <p>Tải GPM từ gollogin.com → Cài đặt → Khởi động → Đảm bảo chạy trên port 19995</p>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">5</span>
+                        <strong>Cấu hình Settings</strong><br>
+                        <p>Chỉnh sửa settings.json → Thêm API key captcha → Cập nhật browser version</p>
+                    </div>
+
+                    <div class="step">
+                        <span class="step-number">6</span>
+                        <strong>Test chạy</strong><br>
+                        <div class="code-block">
+python OKVIP_vip.py
+                        </div>
+                        <p>Đảm bảo tool khởi động thành công và không có lỗi GPM</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Changelog -->
+            <div style="margin-top: 60px; text-align: center;">
+                <h3 style="color: #00ff00; margin-bottom: 30px;">📋 CHANGELOG</h3>
+
+                <div class="card" style="max-width: 800px; margin: 0 auto; text-align: left;">
+                    <h4 style="color: #00ff00; margin-bottom: 20px;">🎉 v1.0.0 - Phát hành chính thức (Latest)</h4>
+                    <ul style="line-height: 1.8;">
+                        <li>✨ <strong>UI hoàn toàn mới:</strong> Giao diện xanh lục tươi sáng, responsive</li>
+                        <li>🚀 <strong>Đăng nhập tự động:</strong> Logic nâng cao với check token live</li>
+                        <li>🔄 <strong>Captcha intelligent:</strong> Retry tự động, clear field hoàn toàn</li>
+                        <li>📊 <strong>Dashboard real-time:</strong> Theo dõi trạng thái từng account</li>
+                        <li>⚙️ <strong>Quản lý profile:</strong> Tự động tạo/xóa profile GPM</li>
+                        <li>🛡️ <strong>Bảo mật cao:</strong> FID/RID tự động, localStorage management</li>
+                        <li>📋 <strong>Context menu:</strong> Đầy đủ chức năng click chuột phải</li>
+                        <li>💰 <strong>Tích hợp OKVIP:</strong> Lấy điểm, quay chữ, chơi loto, etc.</li>
+                        <li>🔧 <strong>Error handling:</strong> Xử lý 16+ loại lỗi tự động</li>
+                        <li>⚡ <strong>Performance:</strong> Đa luồng, tối ưu RAM/CPU</li>
+                    </ul>
+
+                    <h4 style="color: #32cd32; margin: 20px 0 10px 0;">🔧 v0.9.0 - Beta Release</h4>
+                    <ul style="line-height: 1.8; opacity: 0.8;">
+                        <li>🎨 UI cơ bản với theme xanh</li>
+                        <li>🔐 Đăng nhập GPM + Selenium</li>
+                        <li>📈 10+ chức năng OKVIP</li>
+                        <li>🛡️ Cơ chế bảo mật cơ bản</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>📞 Hỗ trợ & Liên hệ</h3>
+                    <p><strong>Email:</strong> support@thunss4.com</p>
+                    <p><strong>Telegram:</strong> @thunss4</p>
+                    <p><strong>Discord:</strong> Thun Ss4 Community</p>
+                    <p><strong>GitHub:</strong> github.com/thunss4</p>
+                    <p><strong>Website:</strong> thunss4.com</p>
+                </div>
+
+                <div class="footer-section">
+                    <h3>📋 Thông tin kỹ thuật</h3>
+                    <p><strong>Phiên bản:</strong> v1.0.0</p>
+                    <p><strong>Cập nhật:</strong> December 2024</p>
+                    <p><strong>Tác giả:</strong> Thun Development Team</p>
+                    <p><strong>License:</strong> Proprietary</p>
+                    <p><strong>Python:</strong> 3.8+</p>
+                </div>
+
+                <div class="footer-section">
+                    <h3>⚖️ Điều khoản & Bảo mật</h3>
+                    <p><strong>Sử dụng hợp pháp:</strong> Chỉ cho mục đích cá nhân</p>
+                    <p><strong>Tuân thủ OKVIP:</strong> Không vi phạm điều khoản</p>
+                    <p><strong>Bảo mật:</strong> Không chia sẻ thông tin tài khoản</p>
+                    <p><strong>Pháp lý:</strong> Tự chịu trách nhiệm về hành động</p>
+                </div>
+
+                <div class="footer-section">
+                    <h3>🎯 Mục tiêu phát triển</h3>
+                    <p><strong>Tự động hóa:</strong> Giảm thời gian thủ công</p>
+                    <p><strong>Hiệu quả:</strong> Tối ưu hóa tài nguyên</p>
+                    <p><strong>An toàn:</strong> Bảo vệ tài khoản người dùng</p>
+                    <p><strong>Cộng đồng:</strong> Hỗ trợ cộng đồng OKVIP</p>
+                </div>
+            </div>
+
+            <!-- Terms & Conditions -->
+            <div style="margin-top: 40px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; text-align: left;">
+                <h4 style="color: #00ff00; margin-bottom: 15px;">📜 Điều khoản sử dụng</h4>
+                <div style="font-size: 0.9rem; line-height: 1.6; opacity: 0.8;">
+                    <p><strong>1. Mục đích sử dụng:</strong> Tool được phát triển để hỗ trợ tự động hóa các tác vụ hợp pháp trên OKVIP.</p>
+                    <p><strong>2. Trách nhiệm người dùng:</strong> Người dùng tự chịu trách nhiệm về việc sử dụng tool. Không sử dụng để vi phạm điều khoản OKVIP hoặc pháp luật.</p>
+                    <p><strong>3. Bảo mật thông tin:</strong> Không chia sẻ thông tin tài khoản, API key, hoặc dữ liệu nhạy cảm với bên thứ ba.</p>
+                    <p><strong>4. Hỗ trợ kỹ thuật:</strong> Hỗ trợ miễn phí cho bugs và cải tiến. Premium support available cho doanh nghiệp.</p>
+                    <p><strong>5. Cập nhật:</strong> Tool được cập nhật thường xuyên. Backup dữ liệu trước khi update.</p>
+                    <p><strong>6. Từ chối bảo đảm:</strong> Tool được cung cấp "như hiện tại". Không có bảo đảm về hiệu suất 100%.</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #333; text-align: center;">
+                <p>&copy; 2024 Thun Ss4. Tất cả quyền được bảo lưu.</p>
+                <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.7;">
+                    Phát triển với ❤️ để hỗ trợ cộng đồng OKVIP | Made with Python & Selenium
+                </p>
+                <div style="margin-top: 15px;">
+                    <a href="#gioi-thieu" class="btn btn-secondary">⬆️ Lên đầu trang</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add fade-in animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in-up');
+                }
+            });
+        }, observerOptions);
+
+        // Observe all cards
+        document.querySelectorAll('.card').forEach(card => {
+            observer.observe(card);
+        });
+
+        // Dynamic version update
+        const versionElements = document.querySelectorAll('.version');
+        versionElements.forEach(el => {
+            el.textContent = 'Phiên bản v1.0.0';
+        });
+
+        // FAQ Accordion (optional enhancement)
+        document.querySelectorAll('.card h3').forEach(header => {
+            header.addEventListener('click', function() {
+                const content = this.nextElementSibling;
+                if (content && content.classList.contains('card-content')) {
+                    content.style.display = content.style.display === 'none' ? 'block' : 'none';
+                }
+            });
+        });
+
+        // Copy code blocks functionality
+        document.querySelectorAll('.code-block').forEach(block => {
+            const copyBtn = document.createElement('button');
+            copyBtn.textContent = '📋 Copy';
+            copyBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: #00ff00;
+                color: #000;
+                border: none;
+                padding: 5px 10px;
+                border-radius: 3px;
+                cursor: pointer;
+                font-size: 0.8rem;
+            `;
+
+            block.style.position = 'relative';
+            block.appendChild(copyBtn);
+
+            copyBtn.addEventListener('click', function() {
+                const text = block.textContent.replace('📋 Copy', '').trim();
+                navigator.clipboard.writeText(text).then(() => {
+                    const original = this.textContent;
+                    this.textContent = '✅ Copied!';
+                    setTimeout(() => this.textContent = original, 2000);
+                });
+            });
+        });
+
+        // Performance monitoring (just for demo)
+        let loadTime = Date.now();
+        window.addEventListener('load', function() {
+            const loadDuration = Date.now() - loadTime;
+            console.log(`📊 Trang web tải xong trong ${loadDuration}ms`);
+        });
+
+        // Add loading animation for images
+        document.querySelectorAll('img').forEach(img => {
+            img.addEventListener('load', function() {
+                this.style.opacity = '1';
+            });
+            img.style.opacity = '0';
+            img.style.transition = 'opacity 0.3s ease';
+        });
+    </script>
+</body>
+</html>
