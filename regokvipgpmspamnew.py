@@ -32,6 +32,9 @@ CREATE_PROFILE_PATH = "/api/v3/profiles/create"
 HEADERS = {"Content-Type": "application/json"}
 TIMEOUT = 50
 
+# UI scale factor (1.0 = 100%). Set to 0.5 to reduce UI by 50%.
+UI_SCALE = 0.8
+
 # --- Tên file cấu hình ---
 CONFIG_FILE = "gui_config.json"
 
@@ -606,12 +609,54 @@ class WorkerThread(QThread):
 
                 # Kiểm tra xem số điện thoại đã đăng ký chưa
                 if self.check_phone_registered(driver, cfg):
-                    self.log_signal.emit(f"[{cfg['name']}] 🔄 Số đã đăng ký. Load lại trang HOÀN TOÀN và tạo thông tin mới...")
-                    driver.get("https://m.oklavip16.live/register?isIOSPure")  # Load lại trang từ đầu
-                    self.emulate_mobile_properties(driver, cfg)  # Áp dụng lại mobile emulation
-                    self.mute_audio(driver, cfg)  # Tắt tiếng lại
-                    time.sleep(3)  # Chờ trang load
-                    continue  # Tiếp tục vòng lặp với thông tin hoàn toàn mới
+                    # Nếu số đã được đăng ký, tải lại trang và lấy số mới nhưng KHÔNG đóng profile/driver.
+                    self.log_signal.emit(f"[{cfg['name']}] 🔄 Số đã đăng ký. Reload trang, tạo thông tin mới và lấy số mới trong cùng profile...")
+
+                    try:
+                        driver.get("https://m.oklavip16.live/register?isIOSPure")  # Load lại trang từ đầu
+                        # Áp dụng mobile emulation và tắt tiếng lại
+                        try:
+                            self.emulate_mobile_properties(driver, cfg)
+                        except Exception:
+                            pass
+                        try:
+                            self.mute_audio(driver, cfg)
+                        except Exception:
+                            pass
+                        time.sleep(2)
+                    except Exception as e:
+                        self.log_signal.emit(f"[{cfg['name']}] ⚠️ Lỗi khi reload trang: {e}. Sẽ đóng profile để an toàn.")
+                        return
+
+                    # Thử lấy số mới tại chỗ (không tạo profile mới). Nếu không có số, chờ 10s và thử lại.
+                    new_phone = None
+                    new_request_id = None
+                    attempt = 0
+                    while self.running and new_phone is None:
+                        attempt += 1
+                        self.log_signal.emit(f"[{cfg['name']}] 🔄 Lấy số mới tại chỗ (lần {attempt})...")
+                        new_phone, new_request_id = self.get_phone_number(cfg)
+                        if new_phone:
+                            phone_number = new_phone
+                            request_id = new_request_id
+                            self.log_signal.emit(f"[{cfg['name']}] ✅ Đã lấy số mới: {phone_number}. Tiếp tục điền thông tin trong cùng profile.")
+                            break
+                        else:
+                            self.log_signal.emit(f"[{cfg['name']}] ⏳ Chưa có số mới, chờ 10 giây rồi thử lại...")
+                            time.sleep(10)
+
+                    # Nếu bị stop trong lúc chờ thì thoát
+                    if not self.running:
+                        self.log_signal.emit(f"[{cfg['name']}] ⏹️ Dừng do chương trình bị stop while waiting new phone")
+                        return
+
+                    # Nếu vẫn không lấy được số mới (vì lý do khác), thoát để worker_loop xử lý lại
+                    if new_phone is None:
+                        self.log_signal.emit(f"[{cfg['name']}] ❌ Không lấy được số mới trong profile này, thoát run_instance để thử lại.")
+                        return
+
+                    # Tiếp tục vòng lặp: lưu ý phone_number đã cập nhật, vòng while sẽ tiếp tục và tạo thông tin mới
+                    continue
 
                 # Nếu không có thông báo lỗi, kiểm tra đã chuyển sang registerStep chưa
                 if self.check_register_step_url(driver, cfg):
@@ -781,8 +826,22 @@ class WorkerThread(QThread):
             if provider == "VIOTP":
                 network = cfg['network']
                 if network == "ALL":
-                    # Với VIOTP, thử từng network một
-                    networks_to_try = ["MOBIFONE", "VIETTEL", "VINAPHONE", "VIETNAMOBILE"]
+                    # Với VIOTP, thử từng network một (mở rộng danh sách theo yêu cầu)
+                    networks_to_try = [
+                        "MOBIFONE",
+                        "VINAPHONE",
+                        "VIETTEL",
+                        "VIETNAMOBILE",
+                        "ITELECOM",
+                        "VODAFONE",
+                        "WINTEL",
+                        "METFONE",
+                        "UNITEL",
+                        "ETL",
+                        "BEELINE",
+                        "LAOTEL",
+                        "GMOBILE",
+                    ]
                 else:
                     networks_to_try = [network]
 
@@ -824,8 +883,22 @@ class WorkerThread(QThread):
                 # Xử lý network selection
                 network = cfg['network']
                 if network == "ALL":
-                    # Thử tất cả network tuần hoàn
-                    networks_to_try = ["MOBIFONE", "VIETTEL", "VINAPHONE", "VIETNAMOBILE", "GMOBILE"]
+                    # Thử tất cả network tuần hoàn (mở rộng danh sách theo yêu cầu)
+                    networks_to_try = [
+                        "MOBIFONE",
+                        "VINAPHONE",
+                        "VIETTEL",
+                        "VIETNAMOBILE",
+                        "ITELECOM",
+                        "VODAFONE",
+                        "WINTEL",
+                        "METFONE",
+                        "UNITEL",
+                        "ETL",
+                        "BEELINE",
+                        "LAOTEL",
+                        "GMOBILE",
+                    ]
                 else:
                     networks_to_try = [network]
 
@@ -1467,7 +1540,7 @@ class MainWindow(QMainWindow):
 
     def init_ui(self):
         self.setWindowTitle("Reg Đa Luồng + GPM GUI v9 - Ultimate Edition")
-        self.setGeometry(100, 100, 1200, 800)
+        self.setGeometry(100, 100, int(500 * UI_SCALE), int(300 * UI_SCALE))
 
         # Widget chính
         central_widget = QWidget()
@@ -1541,7 +1614,22 @@ class MainWindow(QMainWindow):
         common_row2.addWidget(QLabel("Network:"))
         self.common_network_combo = QComboBox()
         # Network options cho cả VIOTP và BOSSOTP
-        networks = ["ALL", "MOBIFONE", "VIETTEL", "VINAPHONE", "VIETNAMOBILE", "GMOBILE"]
+        networks = [
+            "ALL",
+            "MOBIFONE",
+            "VINAPHONE",
+            "VIETTEL",
+            "VIETNAMOBILE",
+            "ITELECOM",
+            "VODAFONE",
+            "WINTEL",
+            "METFONE",
+            "UNITEL",
+            "ETL",
+            "BEELINE",
+            "LAOTEL",
+            "GMOBILE",
+        ]
         self.common_network_combo.addItems(networks)
         self.common_network_combo.setCurrentText("ALL")  # Mặc định chọn ALL
         self.common_network_combo.setCurrentText("MOBIFONE")
@@ -1598,8 +1686,8 @@ class MainWindow(QMainWindow):
         keys_layout.addWidget(QLabel("Kito Proxy Keys (mỗi key 1 dòng):"))
         self.keys_text = QTextEdit()
         self.keys_text.setPlainText("")  # Will be loaded from config
-        self.keys_text.setFont(QFont("Consolas", 9))
-        self.keys_text.setMaximumHeight(150)
+        self.keys_text.setFont(QFont("Consolas", int(9 * UI_SCALE)))
+        self.keys_text.setMaximumHeight(int(150 * UI_SCALE))
         keys_layout.addWidget(self.keys_text)
 
         api_keys_layout.addLayout(keys_layout)
@@ -1667,7 +1755,7 @@ class MainWindow(QMainWindow):
         self.configs_container.setStyleSheet("background-color: transparent;")
         self.configs_layout_inner = QVBoxLayout(self.configs_container)
         self.configs_scroll.setWidget(self.configs_container)
-        self.configs_scroll.setMinimumHeight(200)
+        self.configs_scroll.setMinimumHeight(int(200 * UI_SCALE))
 
         configs_layout.addWidget(self.configs_scroll)
         api_configs_layout.addWidget(configs_group)
@@ -1692,20 +1780,20 @@ class MainWindow(QMainWindow):
         # Stats labels
         stats_layout = QVBoxLayout()
         self.acc_success_label = QLabel("✅ ACC TẠO THÀNH CÔNG: 0")
-        self.acc_success_label.setStyleSheet("color: #4CAF50; font-weight: bold; font-size: 12px;")
+        self.acc_success_label.setStyleSheet(f"color: #4CAF50; font-weight: bold; font-size: {int(12 * UI_SCALE)}px;")
         stats_layout.addWidget(self.acc_success_label)
 
         self.phones_rented_label = QLabel("📞 TỔNG SỐ ĐÃ THUÊ: 0")
-        self.phones_rented_label.setStyleSheet("color: #FF9800; font-weight: bold; font-size: 12px;")
+        self.phones_rented_label.setStyleSheet(f"color: #FF9800; font-weight: bold; font-size: {int(12 * UI_SCALE)}px;")
         stats_layout.addWidget(self.phones_rented_label)
 
         # Browser version input
         browser_layout = QVBoxLayout()
         browser_layout.addWidget(QLabel("Browser Version:"))
         self.browser_version_input = QLineEdit(DEFAULT_BROWSER_VERSION)
-        self.browser_version_input.setFont(QFont("Consolas", 9))
+        self.browser_version_input.setFont(QFont("Consolas", int(9 * UI_SCALE)))
         self.browser_version_input.setPlaceholderText("129.0.6668.59")
-        self.browser_version_input.setFixedWidth(150)
+        self.browser_version_input.setFixedWidth(int(150 * UI_SCALE))
         browser_layout.addWidget(self.browser_version_input)
 
         # Target accounts input
@@ -1714,7 +1802,7 @@ class MainWindow(QMainWindow):
         self.target_acc_input = QSpinBox()
         self.target_acc_input.setRange(0, 1000000)
         self.target_acc_input.setValue(0)
-        self.target_acc_input.setFixedWidth(120)
+        self.target_acc_input.setFixedWidth(int(120 * UI_SCALE))
         self.target_acc_input.setToolTip("Số lượng ACC muốn tạo. 0 = không giới hạn")
         target_layout.addWidget(self.target_acc_input)
         header_layout.addLayout(target_layout)
@@ -1722,23 +1810,23 @@ class MainWindow(QMainWindow):
         # Balance controls
         balance_controls = QHBoxLayout()
         self.balance_label = QLabel("Túi tiền OTP: Đang tải...")
-        self.balance_label.setStyleSheet("""
-            QLabel {
+        self.balance_label.setStyleSheet(f"""
+            QLabel {{
                 color: #FFD700;
                 font-weight: bold;
-                font-size: 14px;
-                padding: 5px 10px;
+                font-size: {int(14 * UI_SCALE)}px;
+                padding: {int(5 * UI_SCALE)}px {int(10 * UI_SCALE)}px;
                 background-color: rgba(0, 0, 0, 0.7);
                 border-radius: 5px;
-            }
+            }}
         """)
-        self.balance_label.setFixedHeight(30)
+        self.balance_label.setFixedHeight(int(30 * UI_SCALE))
         balance_controls.addWidget(self.balance_label)
 
         # Nút check số dư
         self.check_balance_btn = QPushButton("🔄")
         self.check_balance_btn.setToolTip("Check số dư ngay lập tức")
-        self.check_balance_btn.setFixedSize(30, 30)
+        self.check_balance_btn.setFixedSize(int(30 * UI_SCALE), int(30 * UI_SCALE))
         self.check_balance_btn.clicked.connect(self.update_balance)
         balance_controls.addWidget(self.check_balance_btn)
 
@@ -1751,71 +1839,71 @@ class MainWindow(QMainWindow):
         buttons_layout = QHBoxLayout()
 
         self.start_button = QPushButton("▶️ Bắt đầu")
-        self.start_button.setStyleSheet("""
-            QPushButton {
+        self.start_button.setStyleSheet(f"""
+            QPushButton {{
                 background-color: #4CAF50;
                 color: white;
-                padding: 10px 20px;
+                padding: {int(10 * UI_SCALE)}px {int(20 * UI_SCALE)}px;
                 border: none;
                 border-radius: 5px;
-                font-size: 14px;
+                font-size: {int(14 * UI_SCALE)}px;
                 font-weight: bold;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: #45a049;
-            }
+            }}
         """)
         self.start_button.clicked.connect(self.start_worker)
 
         self.stop_button = QPushButton("⏹️ Dừng")
-        self.stop_button.setStyleSheet("""
-            QPushButton {
+        self.stop_button.setStyleSheet(f"""
+            QPushButton {{
                 background-color: #f44336;
                 color: white;
-                padding: 10px 20px;
+                padding: {int(10 * UI_SCALE)}px {int(20 * UI_SCALE)}px;
                 border: none;
                 border-radius: 5px;
-                font-size: 14px;
+                font-size: {int(14 * UI_SCALE)}px;
                 font-weight: bold;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: #da190b;
-            }
+            }}
         """)
         self.stop_button.clicked.connect(self.stop_worker)
         self.stop_button.setEnabled(True)  # Always enabled now
 
         self.open_acc_button = QPushButton("📂 Mở File ACC")
-        self.open_acc_button.setStyleSheet("""
-            QPushButton {
+        self.open_acc_button.setStyleSheet(f"""
+            QPushButton {{
                 background-color: #2196F3;
                 color: white;
-                padding: 10px 20px;
+                padding: {int(10 * UI_SCALE)}px {int(20 * UI_SCALE)}px;
                 border: none;
                 border-radius: 5px;
-                font-size: 14px;
+                font-size: {int(14 * UI_SCALE)}px;
                 font-weight: bold;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: #1976D2;
-            }
+            }}
         """)
         self.open_acc_button.clicked.connect(self.open_acc_file)
 
         self.reset_stats_button = QPushButton("🔄 Reset Stats")
-        self.reset_stats_button.setStyleSheet("""
-            QPushButton {
+        self.reset_stats_button.setStyleSheet(f"""
+            QPushButton {{
                 background-color: #9C27B0;
                 color: white;
-                padding: 10px 20px;
+                padding: {int(10 * UI_SCALE)}px {int(20 * UI_SCALE)}px;
                 border: none;
                 border-radius: 5px;
-                font-size: 14px;
+                font-size: {int(14 * UI_SCALE)}px;
                 font-weight: bold;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: #7B1FA2;
-            }
+            }}
         """)
         self.reset_stats_button.clicked.connect(self.reset_stats)
 
@@ -1825,57 +1913,57 @@ class MainWindow(QMainWindow):
         buttons_layout.addWidget(self.open_acc_button)
         self.check_proxy_btn = QPushButton("🔍 Check PROXY")
         buttons_layout.addWidget(self.check_proxy_btn)
-        self.check_proxy_btn.setStyleSheet("""
-            QPushButton {
+        self.check_proxy_btn.setStyleSheet(f"""
+            QPushButton {{
                 background-color: #FF9800;
                 color: white;
-                padding: 10px 20px;
+                padding: {int(10 * UI_SCALE)}px {int(20 * UI_SCALE)}px;
                 border: none;
                 border-radius: 5px;
-                font-size: 12px;
+                font-size: {int(12 * UI_SCALE)}px;
                 font-weight: bold;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: #F57C00;
-            }
+            }}
         """)
         self.check_proxy_btn.setToolTip("Check thông tin proxy từ key đầu tiên")
         self.check_proxy_btn.clicked.connect(self.check_proxy_info)
 
         self.check_all_proxy_btn = QPushButton("🔍 Check All PROXY")
         buttons_layout.addWidget(self.check_all_proxy_btn)
-        self.check_all_proxy_btn.setStyleSheet("""
-            QPushButton {
+        self.check_all_proxy_btn.setStyleSheet(f"""
+            QPushButton {{
                 background-color: #FF6B35;
                 color: white;
-                padding: 10px 20px;
+                padding: {int(10 * UI_SCALE)}px {int(20 * UI_SCALE)}px;
                 border: none;
                 border-radius: 5px;
-                font-size: 12px;
+                font-size: {int(12 * UI_SCALE)}px;
                 font-weight: bold;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: #E55A2B;
-            }
+            }}
         """)
         self.check_all_proxy_btn.setToolTip("Check thông tin proxy từ tất cả keys")
         self.check_all_proxy_btn.clicked.connect(self.check_all_proxy_info)
 
         # Save config button (ensure it's created before adding)
         self.save_config_btn = QPushButton("💾 Lưu cấu hình")
-        self.save_config_btn.setStyleSheet("""
-            QPushButton {
+        self.save_config_btn.setStyleSheet(f"""
+            QPushButton {{
                 background-color: #4CAF50;
                 color: white;
-                padding: 10px 20px;
+                padding: {int(10 * UI_SCALE)}px {int(20 * UI_SCALE)}px;
                 border: none;
                 border-radius: 5px;
-                font-size: 12px;
+                font-size: {int(12 * UI_SCALE)}px;
                 font-weight: bold;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: #45a049;
-            }
+            }}
         """)
         self.save_config_btn.clicked.connect(self.save_configuration)
         buttons_layout.addWidget(self.save_config_btn)
@@ -1883,19 +1971,19 @@ class MainWindow(QMainWindow):
 
         # Clear log button (added to the controls row)
         self.clear_log_btn = QPushButton("🧹 Xóa Log")
-        self.clear_log_btn.setStyleSheet("""
-            QPushButton {
+        self.clear_log_btn.setStyleSheet(f"""
+            QPushButton {{
                 background-color: #607D8B;
                 color: white;
-                padding: 10px 20px;
+                padding: {int(10 * UI_SCALE)}px {int(20 * UI_SCALE)}px;
                 border: none;
                 border-radius: 5px;
-                font-size: 12px;
+                font-size: {int(12 * UI_SCALE)}px;
                 font-weight: bold;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: #546E7A;
-            }
+            }}
         """)
         self.clear_log_btn.setToolTip("Xóa toàn bộ nội dung log")
         self.clear_log_btn.clicked.connect(self.clear_log)
@@ -2027,16 +2115,16 @@ class MainWindow(QMainWindow):
 
         # Position preview
         preview_label = QLabel(f"📍 ({win_x.value()}, {win_y.value()})")
-        preview_label.setStyleSheet("""
-            QLabel {
+        preview_label.setStyleSheet(f"""
+            QLabel {{
                 background-color: rgba(76, 175, 80, 0.2);
                 border: 1px solid #4CAF50;
                 border-radius: 3px;
-                padding: 2px 8px;
+                padding: {int(2 * UI_SCALE)}px {int(8 * UI_SCALE)}px;
                 color: #4CAF50;
                 font-weight: bold;
-                font-size: 11px;
-            }
+                font-size: {int(11 * UI_SCALE)}px;
+            }}
         """)
         preview_label.setMaximumWidth(120)
 
@@ -2051,18 +2139,18 @@ class MainWindow(QMainWindow):
 
         # Auto-layout info button
         info_btn = QPushButton("ℹ️ Auto")
-        info_btn.setStyleSheet("""
-            QPushButton {
+        info_btn.setStyleSheet(f"""
+            QPushButton {{
                 background-color: #2196F3;
                 color: white;
                 border: none;
                 border-radius: 3px;
-                padding: 2px 8px;
-                font-size: 10px;
-            }
-            QPushButton:hover {
+                padding: {int(2 * UI_SCALE)}px {int(8 * UI_SCALE)}px;
+                font-size: {int(10 * UI_SCALE)}px;
+            }}
+            QPushButton:hover {{
                 background-color: #1976D2;
-            }
+            }}
         """)
         info_btn.setToolTip("Tự động: 9 luồng/hàng, mỗi luồng cách 500px, hàng cách 1000px")
         info_btn.clicked.connect(lambda: QMessageBox.information(
@@ -2096,7 +2184,7 @@ class MainWindow(QMainWindow):
 
         # Common settings note (compact)
         note_label = QLabel("💡 Token/ServiceID/Network từ 'Cài đặt chung'")
-        note_label.setStyleSheet("color: #888; font-size: 10px; font-style: italic; margin-left: 10px;")
+        note_label.setStyleSheet(f"color: #888; font-size: {int(10 * UI_SCALE)}px; font-style: italic; margin-left: {int(10 * UI_SCALE)}px;")
         row_layout.addWidget(note_label)
 
         row_layout.addStretch()
